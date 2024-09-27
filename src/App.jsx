@@ -19,7 +19,6 @@ function App() {
         <ToggledContext.Provider value={values}>
           <Box sx={{ display: "flex", height: "100vh", maxWidth: "100%" }}>
             <SideBar />
-            <Fetch></Fetch>
             <Box
               sx={{
                 flexGrow: 1,
