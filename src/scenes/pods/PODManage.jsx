@@ -11,7 +11,7 @@ import Fetch from "../../Fetch";
 import { useState, useEffect } from 'react';
 const baseUrl = 'http://3.27.69.109:3000/api/v1'
 
-const Team = () => {
+const PODManage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data, setData] = useState([]);
@@ -139,4 +139,4 @@ const Team = () => {
   );
 };
 
-export default Team;
+export default PODManage;

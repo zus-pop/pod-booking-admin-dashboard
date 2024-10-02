@@ -1,61 +1,63 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import { Header } from "../../components";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { mockDataContacts } from "../../data/mockData";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
+import { useState, useEffect } from 'react';
 
-const Contacts = () => {
+const ManageUsers = () => {
+  const baseUrl = 'http://3.27.69.109:3000/api/v1'
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    fetchData();
+  }, []); 
+
+  const fetchData = async () => {
+    try {
+      // Make a GET request using the Fetch API
+      const response = await fetch(`${baseUrl}/auth/users`);
+      
+      // Check if the response is successful (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse the JSON data from the response
+      const result = await response.json();
+
+      // Update the state with the fetched data
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
 
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "registrarId", headerName: "Registrar ID" },
+    { field: "user_id", headerName: "ID" },
     {
-      field: "name",
+      field: "user_name",
       headerName: "Name",
       flex: 1,
       cellClassName: "name-column--cell",
     },
-    {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
-    {
-      field: "phone",
-      headerName: "Phone Number",
-      flex: 1,
-    },
+
     {
       field: "email",
       headerName: "Email",
       flex: 1,
     },
     {
-      field: "address",
-      headerName: "Address",
+      field: "role_id",
+      headerName: "Role",
       flex: 1,
+   
     },
-    {
-      field: "city",
-      headerName: "City",
-      flex: 1,
-    },
-    {
-      field: "zipCode",
-      headerName: "Zip Code",
-      flex: 1,
-    },
+   
   ];
   return (
     <Box m="20px">
-      <Header
-        title="CONTACTS"
-        subtitle="List of Contacts for Future Reference"
-      />
+      <Header title="Users" subtitle="List of Users" />
       <Box
         mt="40px"
         height="75vh"
@@ -87,15 +89,12 @@ const Contacts = () => {
           "& .MuiDataGrid-iconSeparator": {
             color: colors.primary[100],
           },
-          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: `${colors.gray[100]} !important`,
-          },
         }}
       >
         <DataGrid
-          rows={mockDataContacts}
+          rows={data}
           columns={columns}
-          components={{ Toolbar: GridToolbar }}
+          getRowId={(row) => row.user_id} 
           initialState={{
             pagination: {
               paginationModel: {
@@ -110,4 +109,4 @@ const Contacts = () => {
   );
 };
 
-export default Contacts;
+export default ManageUsers;

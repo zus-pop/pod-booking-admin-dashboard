@@ -154,20 +154,20 @@ const SideBar = () => {
           }}
         >
           <Item
-            title="Manage Team"
-            path="/team"
+            title="Manage Users"
+            path="/users"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
           <Item
-            title="Contacts Information"
-            path="/contacts"
+            title="POD"
+            path="/pod"
             colors={colors}
             icon={<ContactsOutlined />}
           />
           <Item
-            title="Invoices Balances"
-            path="/invoices"
+            title="Stores"
+            path="/store"
             colors={colors}
             icon={<ReceiptOutlined />}
           />
