@@ -22,12 +22,46 @@ import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
+import { useEffect } from 'react';
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [userName, setUserName] = useState("Quoc Huy"); // Default name
+  const [roleName, setRole] = useState("Role");
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUserName(data.user_name); 
+            setRole(data.role.role_name);
+          } else {
+            console.error('Failed to fetch user profile');
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+    
 
   return (
     <Sidebar
@@ -104,14 +138,14 @@ const SideBar = () => {
           />
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h3" fontWeight="bold" color={colors.gray[100]}>
-            {}{}
+            {userName}
             </Typography>
             <Typography
               variant="h6"
               fontWeight="500"
               color={colors.greenAccent[500]}
             >
-              {}{}  of POD System
+              {roleName}  of POD System
             </Typography>
           </Box>
         </Box>

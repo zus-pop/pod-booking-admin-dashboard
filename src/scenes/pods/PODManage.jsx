@@ -129,7 +129,7 @@ const PODManage = () => {
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize:  (data.length)/5,
+                pageSize:  10,
               },
             },
           }}

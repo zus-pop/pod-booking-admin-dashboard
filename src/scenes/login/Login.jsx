@@ -12,7 +12,6 @@ const loginSchema = yup.object().shape({
 const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-
   const handleLogin = async (values, actions) => {
     try {
       const response = await fetch('http://3.27.69.109:3000/api/v1/auth/login', {
@@ -34,16 +33,19 @@ const Login = () => {
       console.log('Login successful:', data);
       localStorage.setItem("token", data.token); // Lưu token vào localStorage
      
-      // const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
-      //   method: 'GET',
-      //   headers: {
-      //     'Authorization': `Bearer ${data.token}`,
-      //   },
-      // });
-  
-  
-      
-      
+      const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${data.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (profileResponse.ok) {
+        const data = await response.json();
+        setRole(data.role.role_name);
+      } else {
+        console.error('Failed to fetch user profile');
+      }
       navigate('/'); 
     } catch (error) {
       setErrorMessage('An error occurred. Please try again.');
