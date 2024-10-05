@@ -16,7 +16,7 @@ const Stores = () => {
   // Function to fetch data
   const fetchData = async () => {
     try {
-      // Make a GET request using the Fetch API
+      // Make a GET request using the Fetch APIttttttttttttttt
       const response = await fetch(`${baseUrl}/stores`);
       
       // Check if the response is successful (status code 200-299)

@@ -28,6 +28,7 @@ const SideBar = () => {
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+
   return (
     <Sidebar
       backgroundColor={colors.primary[400]}
@@ -58,7 +59,7 @@ const SideBar = () => {
               justifyContent: "space-between",
             }}
           >
-            {!collapsed && (
+            {!collapsed &&  (
               <Box
                 display="flex"
                 alignItems="center"
@@ -103,14 +104,14 @@ const SideBar = () => {
           />
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h3" fontWeight="bold" color={colors.gray[100]}>
-              Quoc Huy
+            {}{}
             </Typography>
             <Typography
               variant="h6"
               fontWeight="500"
               color={colors.greenAccent[500]}
             >
-              Admin of POD System
+              {}{}  of POD System
             </Typography>
           </Box>
         </Box>
@@ -130,7 +131,7 @@ const SideBar = () => {
         >
           <Item
             title="Dashboard"
-            path="/"
+            path="/dashboard"
             colors={colors}
             icon={<DashboardOutlined />}
           />
@@ -154,7 +155,7 @@ const SideBar = () => {
           }}
         >
           <Item
-            title="Manage Users"
+            title="User"
             path="/users"
             colors={colors}
             icon={<PeopleAltOutlined />}

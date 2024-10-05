@@ -32,6 +32,18 @@ const Login = () => {
 
       const data = await response.json();
       console.log('Login successful:', data);
+      localStorage.setItem("token", data.token); // Lưu token vào localStorage
+     
+      // const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+      //   method: 'GET',
+      //   headers: {
+      //     'Authorization': `Bearer ${data.token}`,
+      //   },
+      // });
+  
+  
+      
+      
       navigate('/'); 
     } catch (error) {
       setErrorMessage('An error occurred. Please try again.');
