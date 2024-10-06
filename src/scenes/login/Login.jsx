@@ -32,22 +32,27 @@ const Login = () => {
       const data = await response.json();
       console.log('Login successful:', data);
       localStorage.setItem("token", data.token); // Lưu token vào localStorage
-     
-      const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${data.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (profileResponse.ok) {
-        const data = await response.json();
-        setRole(data.role.role_name);
-      } else {
-        console.error('Failed to fetch user profile');
-      }
-      navigate('/'); 
+      navigate('/');
+      // const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+      //   method: 'GET',
+      //   headers: {
+      //     'Authorization': `Bearer ${data.token}`,
+      //     'Content-Type': 'application/json',
+      //   },
+      // });
+      // if (profileResponse.ok) {
+      //   const profileData = await profileResponse.json();
+      //   if (profileData.role.role_name === "Admin" || profileData.role.role_name === "Staff" || profileData.role.role_name === "Manager") {
+      //     navigate('/');
+      //   } else {
+      //     setErrorMessage('You need permission to log in this website');
+      //   }
+      // } else {
+      //   console.error('Failed to fetch user profile');
+      //   setErrorMessage('Failed to fetch user profile');
+      // }
     } catch (error) {
+      console.error('Error during login:', error);
       setErrorMessage('An error occurred. Please try again.');
     } finally {
       actions.setSubmitting(false);
