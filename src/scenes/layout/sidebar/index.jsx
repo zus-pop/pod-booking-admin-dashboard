@@ -10,7 +10,6 @@ import {
   DashboardOutlined,
   DonutLargeOutlined,
   HelpOutlineOutlined,
-  MapOutlined,
   MenuOutlined,
   PeopleAltOutlined,
   PersonOutlined,
@@ -244,55 +243,7 @@ const SideBar = () => {
             icon={<HelpOutlineOutlined />}
           />
         </Menu>
-        <Typography
-          variant="h6"
-          color={colors.gray[300]}
-          sx={{ m: "15px 0 5px 20px" }}
-        >
-          {!collapsed ? "Charts" : " "}
-        </Typography>
-        <Menu
-          menuItemStyles={{
-            button: {
-              ":hover": {
-                color: "#868dfb",
-                background: "transparent",
-                transition: ".4s ease",
-              },
-            },
-          }}
-        >
-          <Item
-            title="Bar Chart"
-            path="/bar"
-            colors={colors}
-            icon={<BarChartOutlined />}
-          />
-          <Item
-            title="Pie Chart"
-            path="/pie"
-            colors={colors}
-            icon={<DonutLargeOutlined />}
-          />
-          <Item
-            title="Line Chart"
-            path="/line"
-            colors={colors}
-            icon={<TimelineOutlined />}
-          />
-          <Item
-            title="Geography Chart"
-            path="/geography"
-            colors={colors}
-            icon={<MapOutlined />}
-          />
-          <Item
-            title="Stream Chart"
-            path="/stream"
-            colors={colors}
-            icon={<WavesOutlined />}
-          />
-        </Menu>
+       
       </Box>
     </Sidebar>
   );

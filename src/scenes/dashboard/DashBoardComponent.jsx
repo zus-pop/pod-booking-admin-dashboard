@@ -1,7 +1,6 @@
 import {
   Box,
   Button,
-  IconButton,
   Typography,
   useMediaQuery,
   useTheme,
@@ -9,10 +8,7 @@ import {
 import {
   Header,
   StatBox,
-  LineChart,
   ProgressCircle,
-  BarChart,
-  GeographyChart,
 } from "../../components";
 import {
   DownloadOutlined,
@@ -29,33 +25,11 @@ function Dashboard() {
   const colors = tokens(theme.palette.mode);
   const isXlDevices = useMediaQuery("(min-width: 1260px)");
   const isMdDevices = useMediaQuery("(min-width: 724px)");
-  const isXsDevices = useMediaQuery("(max-width: 436px)");
+
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
-        {!isXsDevices && (
-          <Box>
-            <Button
-              variant="contained"
-              sx={{
-                bgcolor: colors.blueAccent[700],
-                color: "#fcfcfc",
-                fontSize: isMdDevices ? "14px" : "10px",
-                fontWeight: "bold",
-                p: "10px 20px",
-                mt: "18px",
-                transition: ".3s ease",
-                ":hover": {
-                  bgcolor: colors.blueAccent[800],
-                },
-              }}
-              startIcon={<DownloadOutlined />}
-            >
-              DOWNLOAD REPORTS
-            </Button>
-          </Box>
-        )}
       </Box>
 
       {/* GRID & CHARTS */}
@@ -148,52 +122,12 @@ function Dashboard() {
             }
           />
         </Box>
-
-        {/* ---------------- Row 2 ---------------- */}
-
-        {/* Line Chart */}
-        <Box
-          gridColumn={
-            isXlDevices ? "span 8" : isMdDevices ? "span 6" : "span 3"
-          }
-          gridRow="span 2"
-          bgcolor={colors.primary[400]}
-        >
-          <Box
-            mt="25px"
-            px="30px"
-            display="flex"
-            justifyContent="space-between"
-          >
-            <Box>
-              <Typography
-                variant="h5"
-                fontWeight="600"
-                color={colors.gray[100]}
-              >
-                Revenue Generated
-              </Typography>
-              <Typography
-                variant="h5"
-                fontWeight="bold"
-                color={colors.greenAccent[500]}
-              >
-                $59,342.32
-              </Typography>
-            </Box>
-            <IconButton>
-              <DownloadOutlined
-                sx={{ fontSize: "26px", color: colors.greenAccent[500] }}
-              />
-            </IconButton>
-          </Box>
-          <Box height="250px" mt="-20px">
-            <LineChart isDashboard={true} />
-          </Box>
+      
         </Box>
 
         {/* Transaction Data */}
         <Box
+          mt="15px"
           gridColumn={isXlDevices ? "span 4" : "span 3"}
           gridRow="span 2"
           bgcolor={colors.primary[400]}
@@ -242,6 +176,7 @@ function Dashboard() {
 
         {/* Revenue Details */}
         <Box
+        mt="15px"
           gridColumn={isXlDevices ? "span 4" : "span 3"}
           gridRow="span 2"
           backgroundColor={colors.primary[400]}
@@ -270,35 +205,8 @@ function Dashboard() {
             </Typography>
           </Box>
         </Box>
-
-        {/* Bar Chart */}
-        <Box
-          gridColumn={isXlDevices ? "span 4" : "span 3"}
-          gridRow="span 2"
-          backgroundColor={colors.primary[400]}
-        >
-          <Typography
-            variant="h5"
-            fontWeight="600"
-            sx={{ p: "30px 30px 0 30px" }}
-          >
-            Sales Quantity
-          </Typography>
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            height="250px"
-            mt="-20px"
-          >
-            <BarChart isDashboard={true} />
-          </Box>
-        </Box>
-
-        {/* Geography Chart */}
        
       </Box>
-    </Box>
   );
 }
 
