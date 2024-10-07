@@ -25,9 +25,14 @@ const ManageUsers = () => {
 
       // Parse the JSON data from the response
       const result = await response.json();
-
+      const formattedData = result.map(user => ({
+        user_id: user.user_id,
+        user_name: user.user_name,
+        email: user.email,
+        role: user.role.role_name, // Accessing role_name here
+      }));
       // Update the state with the fetched data
-      setData(result);
+      setData(formattedData);
     } catch (error) {
       console.error('Error fetching data:', error.message);
     }
@@ -46,15 +51,16 @@ const ManageUsers = () => {
       field: "email",
       headerName: "Email",
       flex: 1,
-    },
-    {
-      field: "role_id",
+    },  
+    { 
+      field: "role",
       headerName: "Role",
       flex: 1,
    
     },
    
   ];
+
   return (
     <Box m="20px">
       <Header title="Users" subtitle="List of Users" />
