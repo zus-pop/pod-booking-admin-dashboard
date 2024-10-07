@@ -4,19 +4,18 @@ import { useContext, useState } from "react";
 import { tokens } from "../../../theme";
 import { Menu, MenuItem, Sidebar } from "react-pro-sidebar";
 import {
-  BarChartOutlined,
   CalendarTodayOutlined,
   ContactsOutlined,
   DashboardOutlined,
-  DonutLargeOutlined,
   HelpOutlineOutlined,
   MenuOutlined,
   PeopleAltOutlined,
   PersonOutlined,
-  ReceiptOutlined,
-  TimelineOutlined,
-  WavesOutlined,
+  InventoryOutlined,
 } from "@mui/icons-material";
+import StoreIcon from '@mui/icons-material/Store';
+import PaymentIcon from '@mui/icons-material/Payment';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
@@ -203,7 +202,25 @@ const SideBar = () => {
             title="Stores"
             path="/store"
             colors={colors}
-            icon={<ReceiptOutlined />}
+            icon={<StoreIcon/>}
+          />
+          <Item
+            title="Booking"
+            path="/booking"
+            colors={colors}
+            icon={<ChecklistIcon/>}
+          />
+          <Item
+            title="Payment"
+            path="/payment"
+            colors={colors}
+            icon={<PaymentIcon/>}
+          />
+          <Item
+            title="Product"
+            path="/product"
+            colors={colors}
+            icon={<InventoryOutlined/>}
           />
         </Menu>
         <Typography

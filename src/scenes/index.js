@@ -1,5 +1,5 @@
-import Navbar from "./layout/navbar";
-import SideBar from "./layout/sidebar";
+import Navbar from "./layout/navbar/NavBarComponent";
+import SideBar from "./layout/sidebar/SideBarComponent";
 import Dashboard from "./dashboard/DashBoardComponent";
 import Team from "./pods/PODManage";
 import Invoices from "./users/ManageUsers";
