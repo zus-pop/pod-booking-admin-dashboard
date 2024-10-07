@@ -4,30 +4,63 @@ import { useContext, useState } from "react";
 import { tokens } from "../../../theme";
 import { Menu, MenuItem, Sidebar } from "react-pro-sidebar";
 import {
-  BarChartOutlined,
   CalendarTodayOutlined,
   ContactsOutlined,
   DashboardOutlined,
-  DonutLargeOutlined,
   HelpOutlineOutlined,
-  MapOutlined,
   MenuOutlined,
   PeopleAltOutlined,
   PersonOutlined,
-  ReceiptOutlined,
-  TimelineOutlined,
-  WavesOutlined,
+  InventoryOutlined,
 } from "@mui/icons-material";
+import StoreIcon from '@mui/icons-material/Store';
+import PaymentIcon from '@mui/icons-material/Payment';
+import ChecklistIcon from '@mui/icons-material/Checklist';
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
+import { useEffect } from 'react';
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [userName, setUserName] = useState("Quoc Huy"); // Default name
+  const [roleName, setRole] = useState("Role");
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUserName(data.user_name); 
+            setRole(data.role.role_name);
+          } else {
+            console.error('Failed to fetch user profile');
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+    
+
   return (
     <Sidebar
       backgroundColor={colors.primary[400]}
@@ -58,7 +91,7 @@ const SideBar = () => {
               justifyContent: "space-between",
             }}
           >
-            {!collapsed && (
+            {!collapsed &&  (
               <Box
                 display="flex"
                 alignItems="center"
@@ -103,14 +136,14 @@ const SideBar = () => {
           />
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h3" fontWeight="bold" color={colors.gray[100]}>
-              Quoc Huy
+            {userName}
             </Typography>
             <Typography
               variant="h6"
               fontWeight="500"
               color={colors.greenAccent[500]}
             >
-              Admin of POD System
+              {roleName}  of POD System
             </Typography>
           </Box>
         </Box>
@@ -130,7 +163,7 @@ const SideBar = () => {
         >
           <Item
             title="Dashboard"
-            path="/"
+            path="/dashboard"
             colors={colors}
             icon={<DashboardOutlined />}
           />
@@ -154,22 +187,40 @@ const SideBar = () => {
           }}
         >
           <Item
-            title="Manage Team"
-            path="/team"
+            title="User"
+            path="/users"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
           <Item
-            title="Contacts Information"
-            path="/contacts"
+            title="POD"
+            path="/pod"
             colors={colors}
             icon={<ContactsOutlined />}
           />
           <Item
-            title="Invoices Balances"
-            path="/invoices"
+            title="Stores"
+            path="/store"
             colors={colors}
-            icon={<ReceiptOutlined />}
+            icon={<StoreIcon/>}
+          />
+          <Item
+            title="Booking"
+            path="/booking"
+            colors={colors}
+            icon={<ChecklistIcon/>}
+          />
+          <Item
+            title="Payment"
+            path="/payment"
+            colors={colors}
+            icon={<PaymentIcon/>}
+          />
+          <Item
+            title="Product"
+            path="/product"
+            colors={colors}
+            icon={<InventoryOutlined/>}
           />
         </Menu>
         <Typography
@@ -209,55 +260,7 @@ const SideBar = () => {
             icon={<HelpOutlineOutlined />}
           />
         </Menu>
-        <Typography
-          variant="h6"
-          color={colors.gray[300]}
-          sx={{ m: "15px 0 5px 20px" }}
-        >
-          {!collapsed ? "Charts" : " "}
-        </Typography>
-        <Menu
-          menuItemStyles={{
-            button: {
-              ":hover": {
-                color: "#868dfb",
-                background: "transparent",
-                transition: ".4s ease",
-              },
-            },
-          }}
-        >
-          <Item
-            title="Bar Chart"
-            path="/bar"
-            colors={colors}
-            icon={<BarChartOutlined />}
-          />
-          <Item
-            title="Pie Chart"
-            path="/pie"
-            colors={colors}
-            icon={<DonutLargeOutlined />}
-          />
-          <Item
-            title="Line Chart"
-            path="/line"
-            colors={colors}
-            icon={<TimelineOutlined />}
-          />
-          <Item
-            title="Geography Chart"
-            path="/geography"
-            colors={colors}
-            icon={<MapOutlined />}
-          />
-          <Item
-            title="Stream Chart"
-            path="/stream"
-            colors={colors}
-            icon={<WavesOutlined />}
-          />
-        </Menu>
+       
       </Box>
     </Sidebar>
   );

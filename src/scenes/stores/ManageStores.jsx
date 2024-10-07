@@ -1,60 +1,64 @@
 import { Box, useTheme } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { mockDataContacts } from "../../data/mockData";
 import { tokens } from "../../theme";
-
-const Contacts = () => {
+import { useState, useEffect } from 'react';
+const Stores = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const baseUrl = 'http://3.27.69.109:3000/api/v1'
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    fetchData();
+  }, []); // Empty dependency array ensures the effect runs once on mount
 
+  // Function to fetch data
+  const fetchData = async () => {
+    try {
+      // Make a GET request using the Fetch APIttttttttttttttt
+      const response = await fetch(`${baseUrl}/stores`);
+      
+      // Check if the response is successful (status code 200-299)
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Parse the JSON data from the response
+      const result = await response.json();
+
+      // Update the state with the fetched data
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
   const columns = [
-    { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "registrarId", headerName: "Registrar ID" },
+    { field: "store_id", headerName: "ID", flex: 1 },
     {
-      field: "name",
+      field: "store_name",
       headerName: "Name",
       flex: 1,
       cellClassName: "name-column--cell",
     },
+
     {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
-    {
-      field: "phone",
+      field: "hotline",
       headerName: "Phone Number",
       flex: 1,
     },
-    {
-      field: "email",
-      headerName: "Email",
-      flex: 1,
-    },
+
     {
       field: "address",
       headerName: "Address",
       flex: 1,
     },
-    {
-      field: "city",
-      headerName: "City",
-      flex: 1,
-    },
-    {
-      field: "zipCode",
-      headerName: "Zip Code",
-      flex: 1,
-    },
+
   ];
   return (
     <Box m="20px">
       <Header
-        title="CONTACTS"
-        subtitle="List of Contacts for Future Reference"
+        title="Stores"
+        subtitle="List of Stores"
       />
       <Box
         mt="40px"
@@ -93,9 +97,9 @@ const Contacts = () => {
         }}
       >
         <DataGrid
-          rows={mockDataContacts}
+          rows={data}
           columns={columns}
-          components={{ Toolbar: GridToolbar }}
+          getRowId={(row) => row.store_id} 
           initialState={{
             pagination: {
               paginationModel: {
@@ -110,4 +114,4 @@ const Contacts = () => {
   );
 };
 
-export default Contacts;
+export default Stores;

@@ -1,44 +1,39 @@
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import {
-  AdminPanelSettingsOutlined,
-  LockOpenOutlined,
-  SecurityOutlined,
-} from "@mui/icons-material";
-import Fetch from "../../Fetch";
 import { useState, useEffect } from 'react';
 const baseUrl = 'http://3.27.69.109:3000/api/v1'
 
-const Team = () => {
+const PODManage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data, setData] = useState([]);
-  useEffect(() => {
+  useEffect( () => {
+    const fetchData = async () => {
+      try {
+        // Make a GET request using the Fetch API
+        const response = await fetch(`${baseUrl}/pods`);
+        
+        // Check if the response is successful (status code 200-299)
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+  
+        // Parse the JSON data from the response
+        const result = await response.json();
+  
+        // Update the state with the fetched data
+        setData(result);
+      } catch (error) {
+        console.error('Error fetching data:', error.message);
+      }
+    }; 
     fetchData();
   }, []); // Empty dependency array ensures the effect runs once on mount
 
   // Function to fetch data
-  const fetchData = async () => {
-    try {
-      // Make a GET request using the Fetch API
-      const response = await fetch(`${baseUrl}/pods`);
-      
-      // Check if the response is successful (status code 200-299)
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      // Parse the JSON data from the response
-      const result = await response.json();
-
-      // Update the state with the fetched data
-      setData(result);
-    } catch (error) {
-      console.error('Error fetching data:', error.message);
-    }
-  };
+  
 
   const columns = [
     { field: "pod_id", headerName: "POD_ID" },
@@ -128,7 +123,7 @@ const Team = () => {
           initialState={{
             pagination: {
               paginationModel: {
-                pageSize: 10,
+                pageSize:  10,
               },
             },
           }}
@@ -139,4 +134,4 @@ const Team = () => {
   );
 };
 
-export default Team;
+export default PODManage;

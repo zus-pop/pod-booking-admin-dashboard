@@ -1,38 +1,51 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import App from "./App";
+import React, { useState, useEffect } from "react";
 import {
-  Dashboard,
-  Team,
-  Invoices,
-  Contacts,
-  Form,
-  Bar,
-  Line,
-  Pie,
-  FAQ,
-  Geography,
-  Calendar,
-  Stream,
-} from "./scenes";
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import App from "./App";
+import Login from "./scenes/login/Login";
+import { Dashboard, Form, FAQ, Calendar } from "./scenes";
+import ManageUsers from "./scenes/users/ManageUsers";
+import PODManage from "./scenes/pods/PODManage";
+import Stores from "./scenes/stores/ManageStores";
+import Payment from "./scenes/payment/Payment";
+import BookingComponent from "./scenes/booking/BookingComponent";
+import Product from "./scenes/product/Product";
 
 const AppRouter = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<App />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/invoices" element={<Invoices />} />
+        <Route
+          path="/login"
+          element={<Login setIsLoggedIn={setIsLoggedIn} />}
+        />
+        <Route
+          path="/"
+          element={isLoggedIn ? <App /> : <Navigate to="/login" />}
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/users" element={<ManageUsers />} />
+          <Route path="/store" element={<Stores />} />
+          <Route path="/booking" element={<BookingComponent/>} />
+          <Route path="/payment" element={<Payment/>} />
+          <Route path="/product" element={<Product/>} />
+          <Route path="/pod" element={<PODManage />} />
           <Route path="/form" element={<Form />} />
           <Route path="/calendar" element={<Calendar />} />
-          <Route path="/bar" element={<Bar />} />
-          <Route path="/pie" element={<Pie />} />
-          <Route path="/stream" element={<Stream />} />
-          <Route path="/line" element={<Line />} />
           <Route path="/faq" element={<FAQ />} />
-          <Route path="/geography" element={<Geography />} />
         </Route>
       </Routes>
     </Router>
