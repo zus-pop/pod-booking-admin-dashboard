@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 const Stores = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const baseUrl = 'https://poddy.store/api/v1'
+  const API_URL = import.meta.env.VITE_API_URL
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData();
@@ -16,7 +16,7 @@ const Stores = () => {
   const fetchData = async () => {
     try {
       // Make a GET request using the Fetch APIttttttttttttttt
-      const response = await fetch(`${baseUrl}/stores`);
+      const response = await fetch(`${API_URL}/api/v1/stores`);
       
       // Check if the response is successful (status code 200-299)
       if (!response.ok) {

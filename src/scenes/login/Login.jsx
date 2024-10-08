@@ -4,6 +4,7 @@ import { Formik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL
 const loginSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Required'),
   password: yup.string().required('Required'),
@@ -14,7 +15,7 @@ const Login = ({ setIsLoggedIn }) => {
   const navigate = useNavigate();
   const handleLogin = async (values, actions) => {
     try {
-      const response = await fetch('https://poddy.store/api/v1/auth/login', {
+      const response = await fetch(`${API_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
