@@ -34,7 +34,7 @@ const Login = ({ setIsLoggedIn }) => {
       console.log('Login successful:', data);
       localStorage.setItem("token", data.token);
       setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập
-      const profileResponse = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+      const profileResponse = await fetch(`${API_URL}/api/v1/auth/profile`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${data.token}`,
