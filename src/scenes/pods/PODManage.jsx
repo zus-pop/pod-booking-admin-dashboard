@@ -3,7 +3,7 @@ import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
-const baseUrl = 'http://3.27.69.109:3000/api/v1'
+const API_URL = import.meta.env.VITE_API_URL
 
 const PODManage = () => {
   const theme = useTheme();
@@ -13,7 +13,7 @@ const PODManage = () => {
     const fetchData = async () => {
       try {
         // Make a GET request using the Fetch API
-        const response = await fetch(`${baseUrl}/pods`);
+        const response = await fetch(`${API_URL}/api/v1/pods`);
         
         // Check if the response is successful (status code 200-299)
         if (!response.ok) {

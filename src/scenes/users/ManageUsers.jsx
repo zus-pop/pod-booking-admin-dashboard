@@ -5,7 +5,7 @@ import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
 
 const ManageUsers = () => {
-  const baseUrl = 'http://3.27.69.109:3000/api/v1'
+  const API_URL = import.meta.env.VITE_API_URL
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [data, setData] = useState([]);
@@ -16,7 +16,7 @@ const ManageUsers = () => {
   const fetchData = async () => {
     try {
       // Make a GET request using the Fetch API
-      const response = await fetch(`${baseUrl}/auth/users`);
+      const response = await fetch(`${API_URL}/api/v1/auth/users`);
       
       // Check if the response is successful (status code 200-299)
       if (!response.ok) {
