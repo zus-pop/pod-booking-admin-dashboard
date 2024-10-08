@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 const Booking = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const baseUrl = "http://3.27.69.109:3000/api/v1";
+  const baseUrl = "https://poddy.store/api/v1";
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData();

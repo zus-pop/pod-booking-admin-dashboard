@@ -35,7 +35,7 @@ const SideBar = () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await fetch('http://3.27.69.109:3000/api/v1/auth/profile', {
+          const response = await fetch('https://poddy.store/api/v1/auth/profile', {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${token}`,

@@ -3,7 +3,7 @@ import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
-const baseUrl = 'http://3.27.69.109:3000/api/v1'
+const baseUrl = 'https://poddy.store/api/v1'
 
 const PODManage = () => {
   const theme = useTheme();
