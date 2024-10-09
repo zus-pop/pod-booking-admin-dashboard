@@ -10,7 +10,7 @@ const loginSchema = yup.object().shape({
   password: yup.string().required('Required'),
 });
 
-const Login = ({ setIsLoggedIn }) => {
+const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
   const handleLogin = async (values, actions) => {
@@ -33,7 +33,6 @@ const Login = ({ setIsLoggedIn }) => {
       const data = await response.json();
       console.log('Login successful:', data);
       localStorage.setItem("token", data.token);
-      setIsLoggedIn(true); // Cập nhật trạng thái đăng nhập
       const profileResponse = await fetch(`${API_URL}/api/v1/auth/profile`, {
         method: 'GET',
         headers: {

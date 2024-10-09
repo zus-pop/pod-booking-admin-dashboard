@@ -16,32 +16,17 @@ import BookingComponent from "./scenes/booking/BookingComponent";
 import Product from "./scenes/product/Product";
 
 const AppRouter = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      setIsLoggedIn(true);
-    }
-  }, []);
-
   return (
     <Router>
       <Routes>
-        <Route
-          path="/login"
-          element={<Login setIsLoggedIn={setIsLoggedIn} />}
-        />
-        <Route
-          path="/"
-          element={isLoggedIn ? <App /> : <Navigate to="/login" />}
-        >
+        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<App />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<ManageUsers />} />
           <Route path="/store" element={<Stores />} />
-          <Route path="/booking" element={<BookingComponent/>} />
-          <Route path="/payment" element={<Payment/>} />
-          <Route path="/product" element={<Product/>} />
+          <Route path="/booking" element={<BookingComponent />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/product" element={<Product />} />
           <Route path="/pod" element={<PODManage />} />
           <Route path="/form" element={<Form />} />
           <Route path="/calendar" element={<Calendar />} />

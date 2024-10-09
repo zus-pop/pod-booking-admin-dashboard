@@ -1,67 +1,87 @@
 import { Box, useTheme } from "@mui/material";
 import { Header } from "../../components";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from "react";
+import {
+  IconButton,
+  InputBase,
+  useMediaQuery,
+} from "@mui/material";
+import {
+  SearchOutlined,
+} from "@mui/icons-material";
+
 const Booking = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const API_URL = import.meta.env.VITE_API_URL
+  const isXsDevices = useMediaQuery("(max-width:466px)");
+  const API_URL = import.meta.env.VITE_API_URL;
   const [data, setData] = useState([]);
+  const [searchId, setSearchId] = useState("");
+
   useEffect(() => {
     fetchData();
-  }, []); // Empty dependency array ensures the effect runs once on mount
+  }, []); // Fetch all bookings on mount
 
-  // Function to fetch data
-  const fetchData = async () => {
+  const fetchData = async (id = "") => {
     try {
-      // Make a GET request using the Fetch APIttttttttttttttt
-      const response = await fetch(`${API_URL}/api/v1/bookings`);
-
-      // Check if the response is successful (status code 200-299)
+      const response = await fetch(`${API_URL}/api/v1/bookings${id ? `/${id}` : ''}`);
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-
-      // Parse the JSON data from the response
       const result = await response.json();
 
-      // Update the state with the fetched data
-      setData(result);
+  
+      const updatedData = result.map(item => ({
+        booking_id: item.booking_id,
+        pod_name: item.pod ? item.pod.pod_name : "N/A", 
+        slot_id: item.slots ? item.slots.slot_id : "N/A", 
+        booking_date: item.booking_date,
+        booking_status: item.booking_status,
+      }));
+  
+      setData(updatedData);
     } catch (error) {
       console.error("Error fetching data:", error.message);
     }
   };
+  const handleSearch = () => {
+    if (searchId) {
+      fetchData(searchId);
+    }
+  };
+
   const columns = [
     { field: "booking_id", headerName: "Booking_ID", flex: 1 },
-    {
-      field: "pod_id",
-      headerName: "POD_ID",
-      flex: 1,
-      cellClassName: "name-column--cell",
-    },
-
-    {
-      field: "user_id",
-      headerName: "User ID",
-      flex: 1,
-    },
-    {
-      field: "booking_date",
-      headerName: "Date",
-      flex: 1,
-    },
-
-    {
-      field: "booking_status",
-      headerName: "Status",
-      flex: 1,
-    },
-
+    { field: "booking_date", headerName: "Date", flex: 1 },
+    { field: "booking_status", headerName: "Status", flex: 1 },
   ];
+
   return (
     <Box m="20px">
       <Header title="Booking" subtitle="Manage Booking Data" />
+      <Box
+        display="flex"
+        alignItems="center"
+        borderRadius="3px"
+        sx={{ display: `${isXsDevices ? "none" : "flex"}` }}
+      >
+        <InputBase
+          placeholder="Search by Booking ID"
+          sx={{ ml: 2, flex: 0.2 }}
+          value={searchId}
+          onChange={(e) => setSearchId(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleSearch();
+            }
+          }}
+        />
+        <IconButton type="button" sx={{ p: 1 }} onClick={handleSearch}>
+          <SearchOutlined />
+        </IconButton>
+      </Box>
       <Box
         mt="40px"
         height="75vh"
@@ -87,28 +107,13 @@ const Booking = () => {
             borderTop: "none",
             backgroundColor: colors.blueAccent[700],
           },
-          "& .MuiCheckbox-root": {
-            color: `${colors.greenAccent[200]} !important`,
-          },
-          "& .MuiDataGrid-iconSeparator": {
-            color: colors.primary[100],
-          },
-          "& .MuiDataGrid-toolbarContainer .MuiButton-text": {
-            color: `${colors.gray[100]} !important`,
-          },
         }}
       >
         <DataGrid
           rows={data}
           columns={columns}
           getRowId={(row) => row.booking_id}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-              },
-            },
-          }}
+          
           checkboxSelection
         />
       </Box>
