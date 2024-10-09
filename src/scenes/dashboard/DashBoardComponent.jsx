@@ -31,7 +31,7 @@ function Dashboard() {
       <Box display="flex" justifyContent="space-between">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
       </Box>
-
+      
       {/* GRID & CHARTS */}
       <Box
         display="grid"

@@ -13,53 +13,60 @@ import {
   PersonOutlined,
   InventoryOutlined,
 } from "@mui/icons-material";
-import StoreIcon from '@mui/icons-material/Store';
-import PaymentIcon from '@mui/icons-material/Payment';
-import ChecklistIcon from '@mui/icons-material/Checklist';
+import StoreIcon from "@mui/icons-material/Store";
+import PaymentIcon from "@mui/icons-material/Payment";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 import { ToggledContext } from "../../../App";
-import { useEffect } from 'react';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
+  const navigate = useNavigate();
   const colors = tokens(theme.palette.mode);
-  const [userName, setUserName] = useState("Quoc Huy"); // Default name
-  const [roleName, setRole] = useState("Role");
+  const [userName, setUserName] = useState(""); // Default name
+  const [roleName, setRole] = useState("");
 
   useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login", { relative: false });
+        return; 
+      }
       if (token) {
         try {
-          const response = await fetch('https://poddy.store/api/v1/auth/profile', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+          const response = await fetch(
+            "https://poddy.store/api/v1/auth/profile",
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           if (response.ok) {
             const data = await response.json();
-            setUserName(data.user_name); 
+            setUserName(data.user_name);
             setRole(data.role.role_name);
           } else {
-            console.error('Failed to fetch user profile');
+            console.error("Failed to fetch user profile");
           }
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error("Error fetching user profile:", error);
         }
       }
     };
 
     fetchUserProfile();
   }, []);
-
-    
 
   return (
     <Sidebar
@@ -91,7 +98,7 @@ const SideBar = () => {
               justifyContent: "space-between",
             }}
           >
-            {!collapsed &&  (
+            {!collapsed && (
               <Box
                 display="flex"
                 alignItems="center"
@@ -136,14 +143,14 @@ const SideBar = () => {
           />
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="h3" fontWeight="bold" color={colors.gray[100]}>
-            {userName}
+              {userName}
             </Typography>
             <Typography
               variant="h6"
               fontWeight="500"
               color={colors.greenAccent[500]}
             >
-              {roleName}  of POD System
+              {roleName} of POD System
             </Typography>
           </Box>
         </Box>
@@ -202,25 +209,25 @@ const SideBar = () => {
             title="Stores"
             path="/store"
             colors={colors}
-            icon={<StoreIcon/>}
+            icon={<StoreIcon />}
           />
           <Item
             title="Booking"
             path="/booking"
             colors={colors}
-            icon={<ChecklistIcon/>}
+            icon={<ChecklistIcon />}
           />
           <Item
             title="Payment"
             path="/payment"
             colors={colors}
-            icon={<PaymentIcon/>}
+            icon={<PaymentIcon />}
           />
           <Item
             title="Product"
             path="/product"
             colors={colors}
-            icon={<InventoryOutlined/>}
+            icon={<InventoryOutlined />}
           />
         </Menu>
         <Typography
@@ -260,7 +267,6 @@ const SideBar = () => {
             icon={<HelpOutlineOutlined />}
           />
         </Menu>
-       
       </Box>
     </Sidebar>
   );
