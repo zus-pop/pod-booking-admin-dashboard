@@ -12,8 +12,8 @@ import ManageUsers from "./scenes/users/ManageUsers";
 import PODManage from "./scenes/pods/PODManage";
 import Stores from "./scenes/stores/ManageStores";
 import Payment from "./scenes/payment/Payment";
-import BookingComponent from "./scenes/booking/BookingComponent";
 import Product from "./scenes/product/Product";
+import Booking from "./scenes/booking/BookingComponent";
 
 const AppRouter = () => {
   return (
@@ -24,7 +24,7 @@ const AppRouter = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/users" element={<ManageUsers />} />
           <Route path="/store" element={<Stores />} />
-          <Route path="/booking" element={<BookingComponent />} />
+          <Route path="/booking" element={<Booking/>} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/product" element={<Product />} />
           <Route path="/pod" element={<PODManage />} />
