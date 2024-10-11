@@ -31,8 +31,6 @@ const Login = () => {
       }
 
       const data = await response.json();
-      console.log('Login successful:', data);
-      localStorage.setItem("token", data.token);
       const profileResponse = await fetch(`${API_URL}/api/v1/auth/profile`, {
         method: 'GET',
         headers: {
@@ -43,13 +41,25 @@ const Login = () => {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         if (profileData.role.role_name === "Admin" || profileData.role.role_name === "Staff" || profileData.role.role_name === "Manager") {
+          console.log('Login successful:', data);
+          localStorage.setItem("token", data.token);
           navigate('/');
         } else {
           setErrorMessage('You need permission to log in this website');
         }
+      } else if (profileResponse.status === 401) {
+        console.error("Unauthorized access. Redirecting to login.");
+        localStorage.removeItem("token");
+        navigate("/login", { replace: true });
+      } else if (profileResponse.status === 403) {
+        console.error("Token expired. Please login again.");
+        localStorage.removeItem("token");
+        navigate("/login", { replace: true });
       } else {
         console.error('Failed to fetch user profile');
         setErrorMessage('Failed to fetch user profile');
+        localStorage.removeItem("token");
+        return;
       }
     } catch (error) {
       console.error('Error during login:', error);
