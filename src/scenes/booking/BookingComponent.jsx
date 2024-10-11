@@ -17,7 +17,9 @@ const Booking = ()  => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isXsDevices = useMediaQuery("(max-width:466px)");
+  
   const API_URL = import.meta.env.VITE_API_URL;
+
   const [data, setData] = useState([]);
   const [searchId, setSearchId] = useState("");
   const [searchType, setSearchType] = useState("id"); // New state for search type

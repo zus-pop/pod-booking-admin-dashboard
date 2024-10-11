@@ -36,32 +36,40 @@ const SideBar = () => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate("/login", { relative: false });
-        return; 
+        navigate("/login", { replace: true });
+        return;
       }
-      if (token) {
-        try {
-          const response = await fetch(
-            "https://poddy.store/api/v1/auth/profile",
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setUserName(data.user_name);
-            setRole(data.role.role_name);
-          } else {
-            console.error("Failed to fetch user profile");
+      try {
+        const response = await fetch(
+          "https://poddy.store/api/v1/auth/profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
           }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
+        );
+  
+        if (response.ok) {
+          const data = await response.json();
+          setUserName(data.user_name);
+          setRole(data.role.role_name);
+        } else if (response.status === 401) {
+          console.error("Unauthorized access. Redirecting to login.");
+          localStorage.removeItem("token");
+          navigate("/login", { replace: true });
+        } else if (response.status === 403) {
+          console.error("Token expired. Please login again.");
+          localStorage.removeItem("token");
+          navigate("/login", { replace: true });
+        } else {
+          console.error("Failed to fetch user profile");
+          // Có thể thêm xử lý lỗi khác ở đây nếu cần
         }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        // Xử lý lỗi mạng hoặc lỗi không mong đợi
       }
     };
 
