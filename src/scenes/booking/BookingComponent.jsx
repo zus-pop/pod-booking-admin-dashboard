@@ -7,6 +7,7 @@ import {
   IconButton,
   InputBase,
   useMediaQuery,
+  Button,
 } from "@mui/material";
 import {  Select, MenuItem } from "@mui/material";
 import {
@@ -105,6 +106,7 @@ const Booking = ()  => {
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
+        <Button>Create New Booking</Button>
         
       </Box>
       <Box
