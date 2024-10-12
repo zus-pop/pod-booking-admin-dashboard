@@ -256,12 +256,7 @@ const SideBar = () => {
             },
           }}
         >
-          <Item
-            title="Profile Form"
-            path="/form"
-            colors={colors}
-            icon={<PersonOutlined />}
-          />
+         
           <Item
             title="Calendar"
             path="/calendar"

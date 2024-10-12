@@ -7,13 +7,14 @@ import {
 } from "react-router-dom";
 import App from "./App";
 import Login from "./scenes/login/Login";
-import { Dashboard, Form, FAQ, Calendar } from "./scenes";
+import { Dashboard, FAQ, Calendar } from "./scenes";
 import ManageUsers from "./scenes/users/ManageUsers";
 import PODManage from "./scenes/pods/PODManage";
 import Stores from "./scenes/stores/ManageStores";
 import Payment from "./scenes/payment/Payment";
 import Product from "./scenes/product/Product";
 import Booking from "./scenes/booking/BookingComponent";
+import PodForm from "./scenes/form/PodForm";
 
 const AppRouter = () => {
   return (
@@ -28,7 +29,7 @@ const AppRouter = () => {
           <Route path="/payment" element={<Payment />} />
           <Route path="/product" element={<Product />} />
           <Route path="/pod" element={<PODManage />} />
-          <Route path="/form" element={<Form />} />
+          <Route path="/podform" element={<PodForm/>} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/faq" element={<FAQ />} />
         </Route>
