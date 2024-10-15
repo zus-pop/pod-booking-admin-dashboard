@@ -15,6 +15,7 @@ import Payment from "./scenes/payment/Payment";
 import Product from "./scenes/product/Product";
 import Booking from "./scenes/booking/BookingComponent";
 import PodForm from "./scenes/form/PodForm";
+import BookingDetail from "./scenes/booking/BookingDetail";
 
 const AppRouter = () => {
   return (
@@ -26,6 +27,7 @@ const AppRouter = () => {
           <Route path="/users" element={<ManageUsers />} />
           <Route path="/store" element={<Stores />} />
           <Route path="/booking" element={<Booking/>} />
+          <Route path="/booking/:id" element={<BookingDetail/>} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/product" element={<Product />} />
           <Route path="/pod" element={<PODManage />} />
