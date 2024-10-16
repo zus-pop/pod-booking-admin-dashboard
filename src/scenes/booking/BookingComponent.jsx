@@ -33,6 +33,7 @@ const Booking = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
   const fetchData = async (id = "") => {
     try {
       const response = await fetch(
@@ -175,7 +176,7 @@ const Booking = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate(`/booking/${params.row.booking_id}`)}
+            onClick={() => navigate(`/web/booking/${params.row.booking_id}`)}
           >
             View Detail
           </Button>
@@ -242,7 +243,7 @@ const Booking = () => {
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
-        <Button>Create New Booking</Button>
+     
       </Box>
       <Box
         mt="40px"

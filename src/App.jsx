@@ -11,6 +11,8 @@ import Booking from "./scenes/booking/BookingComponent";
 import PodForm from "./scenes/form/PodForm";
 import BookingDetail from "./scenes/booking/BookingDetail";
 import Welcome from "./scenes/welcome/Welcome";
+import StoreForm from "./scenes/form/StoreForm";
+import StoreDetail from "./scenes/stores/StoreDetail";
 
 function App() {
   return (
@@ -20,7 +22,10 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="store" element={<Stores />} />
+          <Route path="store/:id" element={<StoreDetail/>} />
+          <Route path="storeform" element={<StoreForm/>} />
           <Route path="booking" element={<Booking />} />
+          <Route path="booking/:id" element={<BookingDetail />} />
           <Route path="payment" element={<Payment />} />
           <Route path="product" element={<Product />} />
           <Route path="pod" element={<PODManage />} />

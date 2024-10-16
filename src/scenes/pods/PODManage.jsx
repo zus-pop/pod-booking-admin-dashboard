@@ -124,7 +124,7 @@ const PODManage = () => {
           variant="contained"
           color="primary"
           sx={{ ml: 'auto' }} 
-          onClick={() => navigate('/podform')} 
+          onClick={() => navigate('/web/podform')} 
         >
           Create POD
         </Button>
