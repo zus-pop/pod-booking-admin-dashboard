@@ -18,8 +18,9 @@ import {
   SearchOutlined,
   SettingsOutlined,
 } from "@mui/icons-material";
-import { ToggledContext } from "../../../App";
+
 import { useNavigate } from "react-router-dom";
+import { ToggledContext } from "../../welcome/Welcome";
 
 const Navbar = () => {
   const theme = useTheme();
@@ -42,7 +43,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("token"); // Xóa token
-    navigate("/login"); // Điều hướng đến trang đăng nhập
+    navigate("/"); // Điều hướng đến trang đăng nhập
     handleClose(); // Đóng menu
   };
 

@@ -43,18 +43,18 @@ const Login = () => {
         if (profileData.role.role_name === "Admin" || profileData.role.role_name === "Staff" || profileData.role.role_name === "Manager") {
           console.log('Login successful:', data);
           localStorage.setItem("token", data.token);
-          navigate('/');
+          navigate('/web');
         } else {
           setErrorMessage('You need permission to log in this website');
         }
       } else if (profileResponse.status === 401) {
         console.error("Unauthorized access. Redirecting to login.");
         localStorage.removeItem("token");
-        navigate("/login", { replace: true });
+        navigate("/", { replace: true });
       } else if (profileResponse.status === 403) {
         console.error("Token expired. Please login again.");
         localStorage.removeItem("token");
-        navigate("/login", { replace: true });
+        navigate("/", { replace: true });
       } else {
         console.error('Failed to fetch user profile');
         setErrorMessage('Failed to fetch user profile');

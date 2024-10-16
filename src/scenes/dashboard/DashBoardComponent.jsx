@@ -19,6 +19,7 @@ import {
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
 import { mockTransactions } from "../../data/mockData";
+import Welcome from "../welcome/Welcome";
 
 function Dashboard() {
   const theme = useTheme();
@@ -27,6 +28,7 @@ function Dashboard() {
   const isMdDevices = useMediaQuery("(min-width: 724px)");
 
   return (
+
     <Box m="20px">
       <Box display="flex" justifyContent="space-between">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
