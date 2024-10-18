@@ -102,7 +102,7 @@ const Login = () => {
         <Typography variant="h6">POD are more than just a service</Typography>
       </LeftPanel>
     <RightPanel>
-      <Typography variant="h4" align="center" sx={{mb : 3, fontWeight: 'bold'}}>Welcome to Login Page</Typography>
+      <Typography variant="h4" align="center" sx={{mb : 3, fontWeight: 'bold'}}> Login </Typography>
       {errorMessage && <Typography color="error">{errorMessage}</Typography>}
       <Formik
         initialValues={{ email: '', password: '' }}

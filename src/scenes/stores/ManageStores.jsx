@@ -39,8 +39,8 @@ const Stores = () => {
       }
 
       const result = await response.json();
-
-      setData(result);
+      
+      setData(result.stores);
     } catch (error) {
       console.error('Error fetching data:', error.message);
     }
@@ -55,7 +55,7 @@ const Stores = () => {
 
       const result = await response.json();
       let formattedData;
-      if (result && typeof result === "object") {
+     if (result && typeof result === "object") {
         formattedData = [
           {
             store_id: result.store_id,

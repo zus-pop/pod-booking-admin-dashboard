@@ -7,88 +7,111 @@ import {
   IconButton,
   InputBase,
   Button,
+  Typography
 } from "@mui/material";
 import {  Select, MenuItem } from "@mui/material";
 import {
   SearchOutlined,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom"; 
+import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL
 
 const PODManage = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-  const [data, setData] = useState([]);
-  const [searchId, setSearchId] = useState("");
+
   const navigate = useNavigate();
+
+  const [data, setData] = useState([]);
+
+  const [searchId, setSearchId] = useState("");
   const [searchType, setSearchType] = useState("id");
-  useEffect( () => {
-    fetchData();
-  }, []);
 
-    const fetchData = async (id = '',name = '', type_id = '', column = '', order = '') => {
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+  
+  const [pageSize, setPageSize] = useState(4); 
+  const [loading,setLoading] = useState(false);
+
+  const [filters,setFilters] = useState({
+    name: '',
+    type_id: '',
+    id : '',
+
+  })
+  const totalPages = Math.ceil(total / pageSize);
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: pageSize,
+    page: pages,
+  });
+
+
+
+    const fetchData = async (  ) => {
       try {
-        const url= new URL(`${API_URL}/api/v1/pods`);
-        if (id) {
-          url.pathname += `/${id}`;
-        }
-        if (name) {
-          url.searchParams.append('name', name);
-        }
-        if (type_id) {
-          url.searchParams.append('type_id', type_id);
-        }
-        if (column) {
-          url.searchParams.append('column', column);
-        }
-        if (order) {
-          url.searchParams.append('order', order);
-        }
-        
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const result = await response.json();
-        console.log("Fetched result:", result);
-
+        setLoading(true)
+      
+        const result = await axios.get(`${API_URL}/api/v1/pods`, {
+            params: {
+              name: filters.name,
+              type_id: filters.type_id,
+              limit: pageSize,
+              page : pages + 1,
+            }
+        } )
         let formattedData;
-        if (Array.isArray(result)) {
-        formattedData = result.map(pod => ({
-          pod_id: pod.pod_id,
-          pod_name: pod.pod_name,
-          pod_type: pod.type_id,
-          pod_available: pod.is_available,
-        }));
-      } else if (result && typeof result === 'object') {
+        if (Array.isArray(result.data.pods)) {
+          formattedData = result.data.pods.map(pod => ({
+            pod_id: pod.pod_id,
+            pod_name: pod.pod_name,
+            pod_type: pod.type_id,
+            pod_available: pod.is_available,
+          }));
+      } else if (result.data && typeof result.data === 'object') {
         formattedData = [{
-          pod_id: result.pod_id,
-          pod_name: result.pod_name,
-          pod_type: result.type_id,
-          pod_available: result.is_available,
+          pod_id: result.data.pod_id,
+          pod_name: result.data.pod_name,
+          pod_type: result.data.type_id,
+          pod_available: result.data.is_available,
         }];
       } else {
         formattedData = [];
       }
+   
       setData(formattedData)
+      setTotal(result.data.total);
+      console.log("Formatted data:", formattedData); 
       } catch (error) {
         console.error('Error fetching data:', error.message);
+      } finally {
+        setLoading(false)
       }
     }; 
-  
+    const handlePaginationModelChange = (newPaginationModel) => {
+      setPaginationModel(newPaginationModel);
+      setPages(newPaginationModel.page);
+      setPageSize(newPaginationModel.pageSize); 
+    };
+    
+    useEffect( () => {
+      console.log(3)
+      fetchData();
+    }, [pages, pageSize]);
   const handleSearch = () => {
-    console.log(`Current searchId: ${searchId}`);
-    if (searchType === "id" && searchId) {
-      console.log(`Fetching pod with ID: ${searchId}`);
-      fetchData(searchId); 
-      console.log(data)
-    } else if (searchType === "name" && searchId) {
-       console.log(`Fetching pod with name: ${searchId}`);
-       fetchData('', searchId);
-    } else {
-      fetchData(); 
-    }
-    console.log("Data after fetch:", data);
+    // console.log(`Current searchId: ${searchId}`);
+    // if (searchType === "id" && searchId) {
+    //   console.log(`Fetching pod with ID: ${searchId}`);
+    //   fetchData(searchId); 
+    //   console.log(data)
+    // } else if (searchType === "name" && searchId) {
+    //    console.log(`Fetching pod with name: ${searchId}`);
+    //    fetchData('', searchId);
+    // } else {
+    //   fetchData(); 
+    // }
+    // console.log("Data after fetch:", data);
+
   };
 
   const columns = [
@@ -146,7 +169,7 @@ const PODManage = () => {
       </Box>
       <Box
         mt="40px"
-        height="75vh"
+       
         flex={1}
         sx={{
           "& .MuiDataGrid-root": {
@@ -181,15 +204,21 @@ const PODManage = () => {
           rows={data}
           columns={columns}
           getRowId={(row) => row.pod_id} 
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize:  10,
-              },
-            },
-          }}
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}
+        
+          pageSizeOptions={[4,6,8]}
+          rowCount={total}
+          paginationMode="server" 
           checkboxSelection
+          loading= {loading}
         />
+      </Box>
+      <Box mt="20px">
+        <Typography variant="body1">
+          Page {pages+1} of {totalPages}
+        </Typography>
       </Box>
     </Box>
   );
