@@ -103,7 +103,7 @@ const BookingDetail = () => {
                 </Box>
               ))}
               <Button variant="contained"
-               onClick={() => navigate('/booking')}
+               onClick={() => navigate('/web/booking')}
                color="primary" sx={{  fontSize: '1.25rem' }}>
                 Go Back
               </Button>

@@ -44,7 +44,7 @@ export default function Welcome() {
                                     maxWidth: "100%",
                                 }}
                             >
-                                {location.pathname === "/welcome" && (
+                                {location.pathname === "/web" && (
                                     <Typography
                                         variant="h4"
                                         sx={{

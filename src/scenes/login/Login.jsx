@@ -3,11 +3,37 @@ import { Box, Button, TextField, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
+import { styled } from '@mui/material/styles';
 
 const API_URL = import.meta.env.VITE_API_URL
 const loginSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Required'),
   password: yup.string().required('Required'),
+});
+
+const Container = styled(Box)({
+  display: 'flex',
+  flexDirection: 'row',
+  height: '100vh',
+});
+
+const LeftPanel = styled(Box)({
+  flex: 1,
+  background: 'linear-gradient(to right, #000, #4cceac)',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  color: '#fff',
+});
+
+const RightPanel = styled(Box)({
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  backgroundColor: '#fff',
 });
 
 const Login = () => {
@@ -68,10 +94,15 @@ const Login = () => {
       actions.setSubmitting(false);
     }
   };
-
+  
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 5 }}>
-      <Typography variant="h4" align="center">Login</Typography>
+    <Container>
+      <LeftPanel> 
+        <Typography variant="h4">We Are The POD Admin Team</Typography>
+        <Typography variant="h6">POD are more than just a service</Typography>
+      </LeftPanel>
+    <RightPanel>
+      <Typography variant="h4" align="center" sx={{mb : 3, fontWeight: 'bold'}}>Welcome to Login Page</Typography>
       {errorMessage && <Typography color="error">{errorMessage}</Typography>}
       <Formik
         initialValues={{ email: '', password: '' }}
@@ -116,7 +147,11 @@ const Login = () => {
             <Button
               fullWidth
               variant="contained"
-              color="primary"
+              sx={{backgroundColor: ' #4cceac ',
+                '&:hover': {
+                  backgroundColor: '#3da58a', 
+                },
+              }}
               type="submit"
               disabled={isSubmitting}
             >
@@ -125,7 +160,8 @@ const Login = () => {
           </form>
         )}
       </Formik>
-    </Box>
+      </RightPanel>
+       </Container>
   );
 };
 

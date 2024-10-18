@@ -18,14 +18,33 @@ import {
   Traffic,
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
-import { mockTransactions } from "../../data/mockData";
-import Welcome from "../welcome/Welcome";
+
+import { useState, useEffect } from 'react';
 
 function Dashboard() {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isXlDevices = useMediaQuery("(min-width: 1260px)");
   const isMdDevices = useMediaQuery("(min-width: 724px)");
+  const API_URL = import.meta.env.VITE_API_URL
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/payments`);
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const result = await response.json(); 
+      setData(result);
+    } catch (error) {
+      console.error('Error fetching data:', error.message);
+    }
+  };
 
   return (
 
@@ -141,9 +160,9 @@ function Dashboard() {
             </Typography>
           </Box>
 
-          {mockTransactions.map((transaction, index) => (
+          {data.map((transaction, index) => (
             <Box
-              key={`${transaction.txId}-${index}`}
+              key={`${transaction.transaction_id}-${index}`}
               display="flex"
               alignItems="center"
               justifyContent="space-between"
@@ -156,21 +175,21 @@ function Dashboard() {
                   variant="h5"
                   fontWeight="600"
                 >
-                  {transaction.txId}
+                  {transaction.transaction_id}  
                 </Typography>
                 <Typography color={colors.gray[100]}>
-                  {transaction.user}
+                  {transaction.booking_id}
                 </Typography>
               </Box>
               <Typography color={colors.gray[100]}>
-                {transaction.date}
+                {transaction.payment_date}
               </Typography>
               <Box
                 bgcolor={colors.greenAccent[500]}
                 p="5px 10px"
                 borderRadius="4px"
               >
-                ${transaction.cost}
+                ${transaction.total_cost}
               </Box>
             </Box>
           ))}

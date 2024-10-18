@@ -28,6 +28,7 @@ const Payment = () => {
 
       // Update the state with the fetched data
       setData(result);
+      
     } catch (error) {
       console.error('Error fetching data:', error.message);
     }
@@ -45,6 +46,13 @@ const Payment = () => {
       field: "total_cost",
       headerName: "Total Cost",
       flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
     },
 
     {

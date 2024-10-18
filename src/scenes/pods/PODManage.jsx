@@ -22,19 +22,36 @@ const PODManage = () => {
   const [searchId, setSearchId] = useState("");
   const navigate = useNavigate();
   const [searchType, setSearchType] = useState("id");
-  useEffect( () => {fetchData();
+  useEffect( () => {
+    fetchData();
   }, []);
-    const fetchData = async (id = '') => {
+
+    const fetchData = async (id = '',name = '', type_id = '', column = '', order = '') => {
       try {
-        // Make a GET request using the Fetch API
-        const response = await fetch(`${API_URL}/api/v1/pods${id ? `/${id}` : ''}`);
+        const url= new URL(`${API_URL}/api/v1/pods`);
+        if (id) {
+          url.pathname += `/${id}`;
+        }
+        if (name) {
+          url.searchParams.append('name', name);
+        }
+        if (type_id) {
+          url.searchParams.append('type_id', type_id);
+        }
+        if (column) {
+          url.searchParams.append('column', column);
+        }
+        if (order) {
+          url.searchParams.append('order', order);
+        }
         
-        // Check if the response is successful (status code 200-299)
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const result = await response.json();
         console.log("Fetched result:", result);
+
         let formattedData;
         if (Array.isArray(result)) {
         formattedData = result.map(pod => ({
@@ -58,20 +75,18 @@ const PODManage = () => {
         console.error('Error fetching data:', error.message);
       }
     }; 
-     // Empty dependency array ensures the effect runs once on mount
-
-  // Function to fetch data
   
   const handleSearch = () => {
     console.log(`Current searchId: ${searchId}`);
     if (searchType === "id" && searchId) {
       console.log(`Fetching pod with ID: ${searchId}`);
-      fetchData(searchId); // Gọi API để tìm kiếm theo ID
+      fetchData(searchId); 
       console.log(data)
     } else if (searchType === "name" && searchId) {
-      // Nếu bạn muốn thêm chức năng tìm kiếm theo tên, bạn có thể thêm logic ở đây
+       console.log(`Fetching pod with name: ${searchId}`);
+       fetchData('', searchId);
     } else {
-      fetchData(); // Nếu không có ID, gọi lại để lấy tất cả dữ liệu
+      fetchData(); 
     }
     console.log("Data after fetch:", data);
   };
