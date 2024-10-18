@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Button, Card, CardContent } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { Header } from "../../components";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -37,18 +38,21 @@ const StoreDetail = () => {
   }, [id]);
 
   return (
+    
     <Box
-      mt="90px"
+      mt="20px"
+      ml="20px"
       height="100vh"
-      display="flex"
-      justifyContent="center"
-      
+     
     >
+      <Header
+        title="Detail"
+        subtitle="Detail of store"
+      />
       {storeDetail && (
-        <Box textAlign="center"> {/* Thêm Box để căn giữa nội dung */}
-          <Typography variant="h2" gutterBottom>
-            Detail of Store
-          </Typography>
+        <Box  display="flex"
+        justifyContent="center" textAlign="center"> {/* Thêm Box để căn giữa nội dung */}
+         
           <StyledCard>
             <CardContent sx={{ mt: 1 }}>
               <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>

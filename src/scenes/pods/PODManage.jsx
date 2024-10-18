@@ -21,21 +21,20 @@ const PODManage = () => {
   const [searchNameValue, setSearchNameValue] = useState("");
   const [searchTypeId, setSearchTypeId] = useState("");
 
-  const totalPages = Math.ceil(total / pageSize);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
 
+  const [pageSize, setPageSize] = useState(4);
+  const [loading, setLoading] = useState(false);
+  
   const [paginationModel, setPaginationModel] = useState({
     pageSize: pageSize,
     page: pages,
   });
-  const [pageSize, setPageSize] = useState(4);
-  const [loading, setLoading] = useState(false);
-
+  const totalPages = Math.ceil(total / pageSize);
   const [filters, setFilters] = useState({
     name: "",
     type_id: "",
-    id: "",
     orderBy: "pod_id",
   });
 
@@ -61,7 +60,7 @@ const PODManage = () => {
         formattedData = result.data.pods.map((pod) => ({
           pod_id: pod.pod_id,
           pod_name: pod.pod_name,
-          pod_type: pod.type_id,
+          pod_type: pod.type.type_name,
           pod_available: pod.is_available,
         }));
       } else if (result.data && typeof result.data === "object") {
@@ -69,7 +68,7 @@ const PODManage = () => {
           {
             pod_id: result.data.pod_id,
             pod_name: result.data.pod_name,
-            pod_type: result.data.type_id,
+            pod_type: result.data.type.type_name,
             pod_available: result.data.is_available,
           },
         ];
@@ -121,6 +120,7 @@ const PODManage = () => {
       headerName: "Type",
       type: "number",
       headerAlign: "left",
+      flex: 1.5,
       align: "left",
     },
     { field: "pod_available", headerName: "Available", flex: 1 },
@@ -140,9 +140,9 @@ const PODManage = () => {
             onChange={(e) => setSearchTypeId(e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
-            <MenuItem value="1">Type 1</MenuItem>
-            <MenuItem value="2">Type 2</MenuItem>
-            <MenuItem value="3">Type 3</MenuItem>
+            <MenuItem value="1">Single POD</MenuItem>
+            <MenuItem value="2">Double POD</MenuItem>
+            <MenuItem value="3">Meeting Room</MenuItem>
           </Select>
         </FormControl>
         <InputBase
