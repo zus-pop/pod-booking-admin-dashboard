@@ -4,7 +4,10 @@ import { Formik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
+const notify = () => toast.warning("Token Expired! Please login again");
 const API_URL = import.meta.env.VITE_API_URL
 const loginSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Required'),
@@ -79,6 +82,7 @@ const Login = () => {
         navigate("/", { replace: true });
       } else if (profileResponse.status === 403) {
         console.error("Token expired. Please login again.");
+        notify();
         localStorage.removeItem("token");
         navigate("/", { replace: true });
       } else {
@@ -97,6 +101,18 @@ const Login = () => {
   
   return (
     <Container>
+        <ToastContainer
+                  position="top-center"
+                  autoClose={5000}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable
+                  pauseOnHover
+                  theme="light"
+                />
       <LeftPanel> 
         <Typography variant="h4">We Are The POD Admin Team</Typography>
         <Typography variant="h6">POD are more than just a service</Typography>
