@@ -19,9 +19,10 @@ import ChecklistIcon from "@mui/icons-material/Checklist";
 import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
-import { ToggledContext } from "../../../App";
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToggledContext } from "../../welcome/Welcome";
 
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -58,11 +59,11 @@ const SideBar = () => {
         } else if (response.status === 401) {
           console.error("Unauthorized access. Redirecting to login.");
           localStorage.removeItem("token");
-          navigate("/login", { replace: true });
+          navigate("/", { replace: true });
         } else if (response.status === 403) {
           console.error("Token expired. Please login again.");
           localStorage.removeItem("token");
-          navigate("/login", { replace: true });
+          navigate("/", { replace: true });
         } else {
           console.error("Failed to fetch user profile");
           // Có thể thêm xử lý lỗi khác ở đây nếu cần
@@ -178,7 +179,7 @@ const SideBar = () => {
         >
           <Item
             title="Dashboard"
-            path="/dashboard"
+            path="/web/dashboard"
             colors={colors}
             icon={<DashboardOutlined />}
           />
@@ -203,37 +204,37 @@ const SideBar = () => {
         >
           <Item
             title="User"
-            path="/users"
+            path="/web/users"
             colors={colors}
             icon={<PeopleAltOutlined />}
           />
           <Item
             title="POD"
-            path="/pod"
+            path="/web/pod"
             colors={colors}
             icon={<ContactsOutlined />}
           />
           <Item
             title="Stores"
-            path="/store"
+            path="/web/store"
             colors={colors}
             icon={<StoreIcon />}
           />
           <Item
             title="Booking"
-            path="/booking"
+            path="/web/booking"
             colors={colors}
             icon={<ChecklistIcon />}
           />
           <Item
             title="Payment"
-            path="/payment"
+            path="/web/payment"
             colors={colors}
             icon={<PaymentIcon />}
           />
           <Item
             title="Product"
-            path="/product"
+            path="/web/product"
             colors={colors}
             icon={<InventoryOutlined />}
           />
@@ -259,13 +260,13 @@ const SideBar = () => {
          
           <Item
             title="Calendar"
-            path="/calendar"
+            path="/web/calendar"
             colors={colors}
             icon={<CalendarTodayOutlined />}
           />
           <Item
             title="FAQ Page"
-            path="/faq"
+            path="/web/faq"
             colors={colors}
             icon={<HelpOutlineOutlined />}
           />

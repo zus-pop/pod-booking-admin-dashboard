@@ -58,7 +58,7 @@ const PodForm = () => {
                 const res = await fetch(`${API_URL}/api/v1/stores`);
                 if (res.ok) {
                     const data = await res.json();
-                    setStores(data);
+                    setStores(data.stores);
                 } else {
                     console.log("Res is not ok");
                 }
@@ -169,8 +169,6 @@ const PodForm = () => {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={5}
-                                maxRows={8}
                                 variant="filled"
                                 label="Description"
                                 onBlur={handleBlur}
