@@ -1,14 +1,15 @@
-import { Box, useTheme,Menu, MenuItem, Select,InputBase } from "@mui/material";
+import { Box, useTheme,Menu, MenuItem,InputBase } from "@mui/material";
 import { Header } from "../../components";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UpdateIcon from "@mui/icons-material/Update";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { IconButton, Button } from "@mui/material";
+import { IconButton, Button, Typography, } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SearchOutlined } from "@mui/icons-material";
+import axios from "axios";
 
 const Stores = () => {
   const theme = useTheme();
@@ -19,59 +20,79 @@ const Stores = () => {
 
   const [data, setData] = useState([]);
 
+  const [searchNameValue, setSearchNameValue] = useState("");
+
   
-  const [searchId, setSearchId] = useState("");
-  const [searchType, setSearchType] = useState("id");
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+
+  const [pageSize, setPageSize] = useState(4);
+  const [loading, setLoading] = useState(false);
+  
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: pageSize,
+    page: pages,
+  });
+  const totalPages = Math.ceil(total / pageSize);
+  const [filters, setFilters] = useState({
+    store_name: "",
+  });
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStoreId,setSelectedStoreId] =  useState(null);
 
   useEffect(() => {
     fetchData();
-  }, []); 
+  }, [pages, pageSize,filters]); 
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/stores`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
-      
-      setData(result.stores);
-    } catch (error) {
-      console.error('Error fetching data:', error.message);
-    }
-  };
-  const fetchDataById = async (id = "") => {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/stores/${id}`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
+      setLoading(true);
+      const result = await axios.get(`${API_URL}/api/v1/stores`, {
+        params: {
+          store_name: filters.store_name,      
+          limit: pageSize,
+          page: pages + 1,
+        },
+      });
       let formattedData;
-     if (result && typeof result === "object") {
+      if (Array.isArray(result.data.stores)) {
+        formattedData = result.data.stores.map((store) => ({
+          store_id: store.store_id,
+          store_name: store.store_name,
+          address: store.address,
+          hotline: store.hotline,
+          image: store.image,
+        }));
+      } else if (result.data && typeof result.data === "object") {
         formattedData = [
           {
-            store_id: result.store_id,
-            store_name: result.store_name,
-            hotline: result.hotline,
-            address: result.address,
+            store_id: result.data.store_id,
+            store_name: result.data.store_name,
+            address: result.data.address,
+            hotline: result.data.hotline,
+            image: result.data.image,
           },
         ];
       } else {
         formattedData = [];
       }
+
       setData(formattedData);
+      setTotal(result.data.total);
+      console.log("Formatted data:", formattedData);
     } catch (error) {
-      console.error('Error fetching data:', error.message);
+      if (error.response && error.response.status === 404) {
+        console.error("Không tìm thấy Store với tên đã cho.");
+        setData([]);
+      } else {
+        console.error("Error fetching data:", error.message);
+      }
+    } finally {
+      setLoading(false);
     }
   };
+
   
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
@@ -90,23 +111,24 @@ const Stores = () => {
     console.log("Delete booking with ID: ",selectedBookingId);
     handleClose();
   };
+  
+  const handlePaginationModelChange = (newPaginationModel) => {
+    setPaginationModel(newPaginationModel);
+    setPages(newPaginationModel.page);
+    setPageSize(newPaginationModel.pageSize);
+  };
 
   const handleSearch = () => {
-    console.log(`Current searchId: ${searchId}`);
-    if (searchType === "id" && searchId) {
-      console.log(`Fetching store with ID: ${searchId}`);
-      fetchDataById(searchId); // Gọi API để tìm kiếm theo ID
-      console.log(data);
-    } else if (searchType === "name" && searchId) {
-      //
-    } else {
-      fetchData();
-    }
-    console.log("Data after fetch:", data);
+     setFilters((prevFilters) => ({
+      ...prevFilters,
+      store_name: searchNameValue,
+    }));
+    setPages(0);
+    fetchData();
   };
 
   const columns = [
-    { field: "store_id", headerName: "ID", flex: 1 },
+    { field: "store_id", headerName: "ID", flex: 0.2 },
     {
       field: "store_name",
       headerName: "Name",
@@ -123,7 +145,7 @@ const Stores = () => {
     {
       field: "address",
       headerName: "Address",
-      flex: 1,
+      flex: 1.2,
     },
     {
       field: "detail",
@@ -171,18 +193,9 @@ const Stores = () => {
         borderRadius="3px"
         sx={{ display: "flex"} }
       >
-        <Select
-          value={searchType}
-          onChange={(e) => setSearchType(e.target.value)}
-          sx={{ ml: 2, flex: 0.2 }}
-        >
-          <MenuItem value="id">Search by ID</MenuItem>
-          <MenuItem value="name">Search by Name</MenuItem>
-        </Select>
+        
         <InputBase
-          placeholder={` Search by ${
-            searchType === "id" ? "Store ID" : "Name"
-          }`}
+          placeholder=" Search By Name"
           sx={{
             ml: 2,
             flex: 0.2,
@@ -191,8 +204,8 @@ const Stores = () => {
             px: 1.5,
             borderRadius: 2,
           }}
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
+          value={searchNameValue}
+          onChange={(e) => setSearchNameValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleSearch();
@@ -248,20 +261,34 @@ const Stores = () => {
         }}
       >
         <DataGrid
-          rows={data}
-          columns={columns}
-          getRowId={(row) => row.store_id} 
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-              },
-            },
-          }}
-          checkboxSelection
-        />
-      </Box>
-    </Box>
+           rows={data}
+           columns={columns}
+           getRowId={(row) => row.store_id}
+           pagination
+           paginationModel={paginationModel}
+           onPaginationModelChange={handlePaginationModelChange}
+           pageSizeOptions={[4, 6, 8]}
+           rowCount={total}
+           paginationMode="server"
+           checkboxSelection
+           loading={loading}
+           autoHeight
+           sx={{
+             "& .MuiDataGrid-cell": {
+               fontSize: "15px", 
+             },
+             "& .MuiDataGrid-columnHeaders": {
+               fontSize: "15px", 
+             },
+           }}
+         />
+       </Box>
+       <Box mt="20px">
+         <Typography variant="body1">
+           Page {pages + 1} of {totalPages}
+         </Typography>
+       </Box>
+     </Box>
   );
 };
 
