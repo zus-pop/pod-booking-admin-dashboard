@@ -23,7 +23,7 @@ import Item from "./Item";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToggledContext } from "../../welcome/Welcome";
-
+const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
@@ -42,7 +42,7 @@ const SideBar = () => {
       }
       try {
         const response = await fetch(
-          "https://poddy.store/api/v1/auth/profile",
+          `${API_URL}/api/v1/auth/profile`,
           {
             method: "GET",
             headers: {

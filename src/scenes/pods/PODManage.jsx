@@ -1,4 +1,4 @@
-import { Box, InputLabel, useTheme, FormControl } from "@mui/material";
+   import { Box, InputLabel, useTheme, FormControl } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -39,7 +39,6 @@ const PODManage = () => {
   });
 
   useEffect(() => {
-    console.log(3);
     fetchData();
   }, [pages, pageSize,filters]);
 
@@ -124,6 +123,22 @@ const PODManage = () => {
       align: "left",
     },
     { field: "pod_available", headerName: "Available", flex: 1 },
+    { field: "generate_slot",
+      headerName: "Generate", 
+      renderCell: (params) => (
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate(`/web/pod/${params.row.pod_id}`)}
+          >
+            Generate Slot  
+        </Button>
+      
+      </div>
+    ),
+    flex: 1,
+  },
   ];
   return (
     <Box m="20px">

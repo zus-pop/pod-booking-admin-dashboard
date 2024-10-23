@@ -9,42 +9,63 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import {
-
   SearchOutlined,
 } from "@mui/icons-material";
+import axios from "axios";
+
 const ManageUsers = () => {
   const API_URL = import.meta.env.VITE_API_URL
+
   const theme = useTheme();
   const isXsDevices = useMediaQuery("(max-width:466px)");
   const colors = tokens(theme.palette.mode);
+
   const [data, setData] = useState([]);
+
+  const [searchValue,setSearchValue] = useState("")
+  
+  const [loading, setLoading] = useState(false);
+
+  const [filters, setFilters] = useState({
+    search: "",
+  });
+
+
   useEffect(() => {
     fetchData();
-  }, []); 
+  }, [filters]); 
 
   const fetchData = async () => {
     try {
-      // Make a GET request using the Fetch API
-      const response = await fetch(`${API_URL}/api/v1/auth/users`);
-      
-      // Check if the response is successful (status code 200-299)
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      // Parse the JSON data from the response
-      const result = await response.json();
-      const formattedData = result.map(user => ({
+       setLoading(true);
+      const result = await axios.get(`${API_URL}/api/v1/auth/users`, {
+        params: {
+          search: filters.search,
+        }
+      })
+      const formattedData = result.data.map(user => ({
         user_id: user.user_id,
         user_name: user.user_name,
         email: user.email,
-        role: user.role.role_name, // Accessing role_name here
+        role: user.role.role_name, 
       }));
-      // Update the state with the fetched data
       setData(formattedData);
+      console.log("Formatted data:", formattedData);
     } catch (error) {
       console.error('Error fetching data:', error.message);
+    } finally {
+      setLoading(false);
     }
+  };
+  
+
+
+  const handleSearch = () => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      search: searchValue,
+    }));
+    fetchData();
   };
 
   const columns = [
@@ -80,10 +101,27 @@ const ManageUsers = () => {
           borderRadius="3px"
           sx={{ display: `${isXsDevices ? "none" : "flex"}` }}
         >
-          <InputBase placeholder="Search" sx={{ ml: 2, flex: 0.2}} />
-          <IconButton type="button" sx={{ p: 1 }}>
-            <SearchOutlined />
-          </IconButton>
+          <InputBase
+          placeholder=" Search By Name or Gmail"
+          sx={{
+            ml: 2,
+            flex: 0.2,
+            border: 0.5,
+            py: 1.5,
+            px: 1.5,
+            borderRadius: 2,
+          }}
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch();
+            }
+          }}
+        />
+        <IconButton type="button" onClick={handleSearch}>
+          <SearchOutlined />
+        </IconButton>
         </Box>
       <Box
         mt="40px"
@@ -119,20 +157,25 @@ const ManageUsers = () => {
         }}
       >
         <DataGrid
-          rows={data}
-          columns={columns}
-          getRowId={(row) => row.user_id} 
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-              },
-            },
-          }}
-          checkboxSelection
-        />
-      </Box>
-    </Box>
+           rows={data}
+           columns={columns}
+           getRowId={(row) => row.user_id}          
+           pageSizeOptions={[4, 6, 8]}
+           checkboxSelection
+           loading={loading}
+           autoHeight
+           sx={{
+             "& .MuiDataGrid-cell": {
+               fontSize: "15px", 
+             },
+             "& .MuiDataGrid-columnHeaders": {
+               fontSize: "15px", 
+             },
+           }}
+         />
+       </Box>
+     
+     </Box>
   );
 };
 

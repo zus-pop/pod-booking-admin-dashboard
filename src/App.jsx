@@ -13,6 +13,7 @@ import BookingDetail from "./scenes/booking/BookingDetail";
 import Welcome from "./scenes/welcome/Welcome";
 import StoreForm from "./scenes/form/StoreForm";
 import StoreDetail from "./scenes/stores/StoreDetail";
+import GenerateSlot from "./scenes/form/GenerateSlot";
 
 function App() {
   return (
@@ -26,9 +27,11 @@ function App() {
           <Route path="storeform" element={<StoreForm/>} />
           <Route path="booking" element={<Booking />} />
           <Route path="booking/:id" element={<BookingDetail />} />
+
           <Route path="payment" element={<Payment />} />
           <Route path="product" element={<Product />} />
           <Route path="pod" element={<PODManage />} />
+          <Route path="pod/:pod_id" element={<GenerateSlot/>} />
           <Route path="podform" element={<PodForm />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="faq" element={<FAQ />} />
