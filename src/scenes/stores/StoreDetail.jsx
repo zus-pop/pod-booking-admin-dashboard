@@ -76,10 +76,10 @@ const StoreDetail = () => {
                     Name: {pod.pod_name}
                   </Typography>
                   <Typography sx={{ fontSize: '1.5rem' }}>
-                    Type: {pod.type_id}
+                    Type: {pod.type.type_name}
                   </Typography>
                   <Typography sx={{ fontSize: '1.5rem' }}>
-                    Available: {pod.is_available}
+                    Available: {pod.is_available? 'Yes':"No"}
                   </Typography>
                 </Box>
               ))}

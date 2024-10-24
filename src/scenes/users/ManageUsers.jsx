@@ -1,4 +1,4 @@
-import { Box, useTheme } from "@mui/material";
+import { Box, useTheme,Typography } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -24,6 +24,16 @@ const ManageUsers = () => {
 
   const [searchValue,setSearchValue] = useState("")
   
+  
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+
+  const [pageSize, setPageSize] = useState(4);
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: pageSize,
+    page: pages,
+  });
+  const totalPages = Math.ceil(total / pageSize);
   const [loading, setLoading] = useState(false);
 
   const [filters, setFilters] = useState({
@@ -33,7 +43,7 @@ const ManageUsers = () => {
 
   useEffect(() => {
     fetchData();
-  }, [filters]); 
+  }, [pages, pageSize,filters]); 
 
   const fetchData = async () => {
     try {
@@ -41,15 +51,18 @@ const ManageUsers = () => {
       const result = await axios.get(`${API_URL}/api/v1/auth/users`, {
         params: {
           search: filters.search,
+          limit: pageSize,
+          page: pages + 1,
         }
       })
-      const formattedData = result.data.map(user => ({
+      const formattedData = result.data.users.map(user => ({
         user_id: user.user_id,
         user_name: user.user_name,
         email: user.email,
         role: user.role.role_name, 
       }));
       setData(formattedData);
+      setTotal(result.data.total);
       console.log("Formatted data:", formattedData);
     } catch (error) {
       console.error('Error fetching data:', error.message);
@@ -57,7 +70,11 @@ const ManageUsers = () => {
       setLoading(false);
     }
   };
-  
+  const handlePaginationModelChange = (newPaginationModel) => {
+    setPaginationModel(newPaginationModel);
+    setPages(newPaginationModel.page);
+    setPageSize(newPaginationModel.pageSize);
+  };
 
 
   const handleSearch = () => {
@@ -159,11 +176,16 @@ const ManageUsers = () => {
         <DataGrid
            rows={data}
            columns={columns}
-           getRowId={(row) => row.user_id}          
+           getRowId={(row) => row.user_id}        
+           pagination
+           paginationModel={paginationModel}
+           onPaginationModelChange={handlePaginationModelChange}  
            pageSizeOptions={[4, 6, 8]}
+           rowCount={total}
+           paginationMode="server"
            checkboxSelection
            loading={loading}
-           autoHeight
+           autoHeight 
            sx={{
              "& .MuiDataGrid-cell": {
                fontSize: "15px", 
@@ -173,8 +195,12 @@ const ManageUsers = () => {
              },
            }}
          />
-       </Box>
-     
+         <Box mt="10px">
+      <Typography variant="body1">
+        Page {pages + 1 } of {totalPages}
+      </Typography>
+    </Box>
+    </Box>
      </Box>
   );
 };

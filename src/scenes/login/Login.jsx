@@ -115,7 +115,9 @@ const Login = () => {
                 />
       <LeftPanel> 
         <Typography variant="h4">We Are The POD Admin Team</Typography>
-        <Typography variant="h6">POD are more than just a service</Typography>
+        <Typography variant="h6" sx={{padding: "20px", textAlign: "justify"}}>
+        This website is a management platform designed for the POD admin team. It offers a secure login system, allowing only authorized users such as Admins, Staff, or Managers to access the management features. The interface is user-friendly, providing easy navigation and access to essential information. Notifications are integrated to alert users about important events, like session expiration, ensuring a secure and efficient management experience.
+        </Typography>
       </LeftPanel>
     <RightPanel>
       <Typography variant="h4" align="center" sx={{mb : 3, fontWeight: 'bold'}}> Login </Typography>
