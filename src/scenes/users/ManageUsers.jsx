@@ -1,4 +1,4 @@
-import { Box, useTheme,Typography,Button } from "@mui/material";
+import { Box, useTheme,Typography,Button,FormControl,Select,MenuItem } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -12,16 +12,19 @@ import {
   SearchOutlined,
 } from "@mui/icons-material";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { ToastContainer,toast } from "react-toastify";
 
 const ManageUsers = () => {
   const API_URL = import.meta.env.VITE_API_URL
-
+  const navigate = useNavigate();
   const theme = useTheme();
   const isXsDevices = useMediaQuery("(max-width:466px)");
   const colors = tokens(theme.palette.mode);
 
   const [data, setData] = useState([]);
-
+ const  [editingUserId,setEditingUserId] = useState("");
+ const [newStatus,setNewStatus] = useState("");
   const [searchValue,setSearchValue] = useState("")
   
   
@@ -88,6 +91,36 @@ const ManageUsers = () => {
     }));
     fetchData();
   };
+  const handleEditRole = (userId) => {
+    console.log("Updating user with ID:", userId);
+    setEditingUserId(userId);
+    const userToUpdate = data.find(user => user.user_id === userId);
+    if (userToUpdate) {
+      setNewStatus(userToUpdate.role.role_id);
+    } else {
+      console.error("User not found for ID:", userId);
+    }
+  };
+  
+  const handleConfirmEdit = async (userId, newRole) => {
+    try {
+      const response = await axios.put(`${API_URL}/api/v1/auth/users/${userId}`, {
+        role_id: newRole 
+      }, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      if (response.status === 200) {
+        toast.success("Cập nhật vai trò thành công");
+        fetchData(); 
+        setEditingUserId(null);
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật vai trò:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật vai trò");
+    }
+  };
 
   const columns = [
     { field: "user_id", headerName: "ID" },
@@ -107,7 +140,32 @@ const ManageUsers = () => {
       field: "role",
       headerName: "Role",
       flex: 1,
-   
+      renderCell: (params) => (
+        editingUserId === params.row.user_id ? (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <FormControl>
+  <Select
+    value={newStatus}
+    onChange={(e) => setNewStatus(e.target.value)}
+  >
+    <MenuItem value="3">Manager</MenuItem>
+    <MenuItem value="4">Staff</MenuItem>
+  </Select>
+</FormControl>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleConfirmEdit(params.row.user_id, newStatus)}
+            >
+              Xác nhận
+            </Button>
+          </div>
+        ) : (
+          <div>
+            {params.value}
+          </div>
+        )
+      ),
     },
     {
       field: "action",
@@ -117,22 +175,21 @@ const ManageUsers = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => navigate(`/web/booking/${params.row.booking_id}`)}
+            onClick={() =>  handleEditRole(params.row.user_id)}
           >
             Edit Role
           </Button>
-          
-       
         </div>
       ),
       flex: 0.5,
     },
+
   ];
 
   return (
     <Box m="20px">
       <Header title="Users" subtitle="List of Users" />
-      
+      <ToastContainer/>
       <Box
           display="flex"
           alignItems="center"
@@ -165,7 +222,7 @@ const ManageUsers = () => {
           variant="contained"
           color="primary"
           sx={{ ml: 'auto' }} 
-          onClick={() => navigate(`/web/`)} 
+          onClick={() => navigate('/web/userform')}
         >
           Create a new user
         </Button>

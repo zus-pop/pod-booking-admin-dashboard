@@ -8,6 +8,8 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { tokens } from "../../theme";
 import { useEffect, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const initialValues = {
@@ -34,9 +36,13 @@ const GenerateSlot = () => {
   const theme = useTheme();
   const [visibleSlots, setVisibleSlots] = useState(12);
   const colors = tokens(theme.palette.mode);
+  const [storePrices, setStorePrices] = useState([]);
+
   useEffect(() => {
     fetchData();
+    fetchStorePrices();
   }, []);
+
   const fetchData = async () => {
     try {
       const result = await axios.get(`${API_URL}/api/v1/slots`);
@@ -46,6 +52,16 @@ const GenerateSlot = () => {
       console.error("Error fetching data:", error.message);
     }
   };
+
+  const fetchStorePrices = async () => {
+    try {
+      const result = await axios.get(`${API_URL}/api/v1/store-prices`);
+      setStorePrices(result.data.storePrices);
+    } catch (error) {
+      console.error("Error fetching store prices:", error.message);
+    }
+  };
+
   const handleFormSubmit = async (values, actions) => {
     try {
       console.log("Submitting values:", { ...values, pod_id });
@@ -68,6 +84,19 @@ const GenerateSlot = () => {
     }
   };
 
+  const columns = [
+    { field: 'id', headerName: 'ID', flex: 1 },
+    { field: 'start_hour', headerName: 'Start Hour',  flex: 1},
+    { field: 'end_hour', headerName: 'End Hour', flex: 1 },
+    { field: 'price', headerName: 'Price',  flex: 1 },
+    { 
+      field: 'days_of_week', 
+      headerName: 'Days of Week', 
+      flex: 2,
+      valueGetter: (params) => params.value.join(', ')
+    },
+  ];
+
   return (
     <Box m="20px">
       <ToastContainer
@@ -82,10 +111,32 @@ const GenerateSlot = () => {
         pauseOnHover
         theme="light"
       />
-      <Header title="GENERATE SLOT" subtitle="Create a New Slot" />
+      <Header title="GENERATE SLOT" subtitle="" />
+      
+      {/* Store Prices DataGrid */}
+      <Box mb="20px">
+        <Typography variant="h4" gutterBottom>Store Prices</Typography>
+        <DataGrid
+          rows={storePrices}
+          columns={columns}
+          pageSize={5}
+          rowsPerPageOptions={[5]}
+          autoHeight
+          disableSelectionOnClick
+          sx={{
+            "& .MuiDataGrid-cell": {
+              fontSize: "15px", 
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: "15px", 
+            },
+          }}
+        />
+      </Box>
+
       <Box
         sx={{
-          mt: "100px",
+          mt: "20px",
           display: "grid",
           gridAutoFlow: "row",
           gridTemplateColumns: "repeat(4, 1fr)",

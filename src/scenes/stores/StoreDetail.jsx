@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Button, Card, CardContent } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Header } from "../../components";
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,15 +24,15 @@ const StoreDetail = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const fetchStoreDetail = async () => {
-      const response = await fetch(`${API_URL}/api/v1/stores/${id}`);
-      const data = await response.json();
-      setStoreDetail(data);
+      const result = await axios.get(`${API_URL}/api/v1/stores/${id}`);
+    
+      setStoreDetail(result.data);
     };
 
     const fetchPods = async () => {
-        const response = await fetch(`${API_URL}/api/v1/stores/${id}/pods`);
-        const data = await response.json();
-        setPods(data);
+        const result = await axios.get(`${API_URL}/api/v1/stores/${id}/pods`);
+
+        setPods(result.data.pods);
       };
     fetchStoreDetail();
     fetchPods();

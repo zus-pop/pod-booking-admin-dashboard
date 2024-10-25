@@ -1,10 +1,13 @@
-import { Box, useTheme,Typography, FormControl, InputLabel,Select,MenuItem,InputBase,IconButton,Button} from "@mui/material";
+import { Box, useTheme,Typography, FormControl, InputLabel,Select,MenuItem,InputBase,IconButton,Button,Menu} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
 import axios from "axios";
 import { SearchOutlined } from "@mui/icons-material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import UpdateIcon from "@mui/icons-material/Update";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -15,7 +18,7 @@ const Slots = () => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
 
-
+  const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
   
   
@@ -34,6 +37,52 @@ const Slots = () => {
       console.error('Error fetching data:', error.message);
     
     } 
+  };
+
+  
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedBookingId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleUpdate = () => {
+    if (selectedBookingId) {
+      console.log("Updating booking with ID:", selectedBookingId);
+      setEditStatusId(selectedBookingId);
+      const bookingToUpdate = data.find(
+        (booking) => booking.booking_id === selectedBookingId
+      );
+      if (bookingToUpdate) {
+        setNewStatus(bookingToUpdate.booking_status);
+      } else {
+        console.error("Booking not found for ID:", selectedBookingId);
+      }
+    }
+  };
+
+  const handleConfirmUpdate = async (id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/bookings/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ booking_status: newStatus }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update booking status");
+      }
+
+      fetchData();
+      setEditStatusId(null); // Đóng dropdown sau khi cập nhật
+    } catch (error) {
+      console.error("Error updating booking status:", error.message);
+    }
   };
 
 
@@ -65,23 +114,32 @@ const Slots = () => {
           },
     },
     {
-        field: "detail",
-        headerName: "Detail",
-        renderCell: (params) => (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => navigate(`/web/booking/${params.row.booking_id}`)}
-            >
-              Edit 
-            </Button>
-            
-         
-          </div>
-        ),
-        flex: 0.5,
-      },
+      field: "action",
+      headerName: "Action",
+      renderCell: (params) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          
+          <IconButton
+            onClick={(event) => handleClick(event, params.row.booking_id)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleUpdate}>
+              Update <UpdateIcon />
+            </MenuItem>
+            <MenuItem >
+              Delete <DeleteIcon />
+            </MenuItem>
+          </Menu>
+        </div>
+      ),
+      flex: 1,
+    },
   
 
   ];

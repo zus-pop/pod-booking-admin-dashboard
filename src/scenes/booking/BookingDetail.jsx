@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Typography, Button, Card, CardContent } from "@mui/material";
 import { styled } from "@mui/material/styles";
-
+import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const StyledCard = styled(Card)(() => ({
@@ -23,20 +23,20 @@ const BookingDetail = () => {
   const navigate = useNavigate();
   useEffect(() => {
     const fetchBookingDetail = async () => {
-      const response = await fetch(`${API_URL}/api/v1/bookings/${id}`);
-      const data = await response.json();
-      setBookingDetail(data);
+      const result = await axios.get(`${API_URL}/api/v1/bookings/${id}`);
+
+      setBookingDetail(result.data);
     };
 
     const fetchProducts = async () => {
-      const response = await fetch(`${API_URL}/api/v1/bookings/${id}/products`);
-      const data = await response.json();
-      setProducts(data);
+      const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/products`);
+
+      setProducts(result.data);
     };
     const fetchSlots = async () => {
-        const response = await fetch(`${API_URL}/api/v1/bookings/${id}/slots`);
-        const data = await response.json();
-        setSlots(data);
+        const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/slots`);
+
+        setSlots(result.data);
       };
     fetchBookingDetail();
     fetchProducts();

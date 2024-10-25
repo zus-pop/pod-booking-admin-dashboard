@@ -15,6 +15,7 @@ import StoreForm from "./scenes/form/StoreForm";
 import StoreDetail from "./scenes/stores/StoreDetail";
 import GenerateSlot from "./scenes/form/GenerateSlot";
 import Slots from "./scenes/slots/ManageSlots";
+import UserForm from "./scenes/form/UserForm";
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Route path="/web" element={<Welcome />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ManageUsers />} />
+          <Route path="userform" element={<UserForm />} />
           <Route path="store" element={<Stores />} />
           <Route path="store/:id" element={<StoreDetail/>} />
           <Route path="storeform" element={<StoreForm/>} />
