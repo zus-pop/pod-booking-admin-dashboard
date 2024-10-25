@@ -1,4 +1,4 @@
-import { Box, useTheme, Menu, MenuItem, Select } from "@mui/material";
+import { Box, useTheme, Menu, MenuItem, Select,Typography,} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -19,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { Alert } from "@mui/material";
 
 const Booking = () => {
   const theme = useTheme();
@@ -43,6 +44,19 @@ const Booking = () => {
     booking_status: "",
     booking_date: "",
   });
+  
+      
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+
+  const [pageSize, setPageSize] = useState(4);
+  const [paginationModel, setPaginationModel] = useState({
+    pageSize: pageSize,
+    page: pages,
+  });
+  const totalPages = Math.ceil(total / pageSize);
+
+  const [dateError, setDateError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -55,34 +69,35 @@ const Booking = () => {
         params: {
           booking_status: filters.booking_status,
           booking_date: filters.booking_date,
+          page: pages + 1,
+          limit: pageSize,
         },
       });
-      let formattedData;
-      if (Array.isArray(result.data)) {
-        formattedData = result.data.map((booking) => ({
+      const formattedData = result.data.bookings.map((booking) => ({
           booking_id: booking.booking_id,
           booking_date: booking.booking_date,
           booking_status: booking.booking_status,
         }));
-      } else if (result.data && typeof result.data === "object") {
-        formattedData = [
-          {
-            booking_id: result.booking_id,
-            booking_date: result.booking_date,
-            booking_status: result.booking_status,
-          },
-        ];
-      } else {
-        formattedData = [];
-      }
       setData(formattedData);
+      setTotal(result.data.total)
       console.log("Formatted data:", formattedData);
     } catch (error) {
       console.error("Error fetching data:", error.message);
+      if (error.response && error.response.status === 404) {
+        console.error("Không tìm thấy Store với tên đã cho.");
+        setData([]);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const handlePaginationModelChange = (newPaginationModel) => {
+    setPaginationModel(newPaginationModel);
+    setPages(newPaginationModel.page);
+    setPageSize(newPaginationModel.pageSize);
+  };
+  
 
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
@@ -134,18 +149,32 @@ const Booking = () => {
   //   handleClose();
   // };
 
+  const validateDate = (date) => {
+    if (date) {
+      const regex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!regex.test(date)) {
+        setDateError("Vui lòng nhập ngày theo định dạng YYYY-MM-DD");
+        return false;
+      }
+      setDateError("");
+      return true;
+    }
+    setDateError("");
+    return true;
+  };
+
   const handleSearch = () => {
-    const adjustedDate = selectedDate
-    ? new Date(selectedDate.getTime() - selectedDate.getTimezoneOffset() * 60000)
-        .toISOString()
-        .split('T')[0]
-    : "";
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      booking_status: searchByStatus,
-      booking_date: adjustedDate,
-    }));
-    fetchData();
+    if (validateDate(selectedDate)) {
+      const adjustedDate = selectedDate
+        ? new Date(selectedDate).toISOString().split('T')[0]
+        : "";
+      setFilters((prevFilters) => ({
+        ...prevFilters,
+        booking_status: searchByStatus, 
+        booking_date: adjustedDate,
+      }));
+      fetchData();
+    }
   };
 
   const columns = [
@@ -166,10 +195,10 @@ const Booking = () => {
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value)}
             >
-              <MenuItem value="ongoing">Ongoing</MenuItem>
-              <MenuItem value="complete">Complete</MenuItem>
-              <MenuItem value="canceled">Canceled</MenuItem>
-              <MenuItem value="pending">Pending</MenuItem>
+              <MenuItem value="Ongoing">Ongoing</MenuItem>
+              <MenuItem value="Complete">Complete</MenuItem>
+              <MenuItem value="Canceled">Canceled</MenuItem>
+              <MenuItem value="Pending">Pending</MenuItem>
             </Select>
             <Button
               variant="contained"
@@ -180,7 +209,7 @@ const Booking = () => {
             </Button>
           </div>
         ) : (
-          <div className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(params.value)}`}>
+          <div>
             {params.value}
           </div>
         ),
@@ -220,25 +249,7 @@ const Booking = () => {
     },
   ];
 
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'complete':
-      case 'completed':
-      case 'paid':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'canceled':
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'ongoing':
-        return 'bg-blue-100 text-blue-800';
-      case 'confirmed':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
+
 
   return (
     <Box m="20px">
@@ -267,15 +278,29 @@ const Booking = () => {
         </FormControl>
         <ReactDatePicker
           selected={selectedDate}
-          onChange={(date) => setSelectedDate(date)}
+          onChange={(date) => {
+            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            const dateString = localDate.toISOString().split('T')[0];
+            setSelectedDate(dateString);
+            validateDate(dateString);
+          }}
           dateFormat="yyyy-MM-dd"
-          placeholderText="Select Date"
+          placeholderText="Select Date YYYY-MM-DD"
           customInput={<InputBase />}
+          onChangeRaw={(e) => {
+            setSelectedDate(e.target.value);
+            validateDate(e.target.value);
+          }}
         />
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
       </Box>
+      {dateError && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {dateError}
+        </Alert>
+      )}
       <Box
         mt="40px"
         height="75vh"
@@ -306,18 +331,31 @@ const Booking = () => {
         <DataGrid
           rows={data}
           columns={columns}
-          getRowId={(row) => row.booking_id}
+          getRowId={(row) => row.booking_id}        
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}  
+          pageSizeOptions={[4, 6, 8]}
+          rowCount={total}
+          paginationMode="server"
+          checkboxSelection
+          loading={loading}
+          
+          autoHeight 
           sx={{
             "& .MuiDataGrid-cell": {
-              fontSize: "15px",
+              fontSize: "15px", 
             },
             "& .MuiDataGrid-columnHeaders": {
-              fontSize: "15px",
+              fontSize: "15px", 
             },
           }}
-          loading={loading}
-          checkboxSelection
         />
+        <Box mt="10px">
+     <Typography variant="body1">
+       Page {pages + 1 } of {totalPages}
+     </Typography>
+     </Box>
       </Box>
     </Box>
   );

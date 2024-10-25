@@ -122,7 +122,11 @@ const PODManage = () => {
       flex: 1.5,
       align: "left",
     },
-    { field: "pod_available", headerName: "Available", flex: 1 },
+    { field: "pod_available", headerName: "Available", flex: 1,
+      renderCell: (params) => {
+        return params.value ? "Yes" : "No ";
+      },
+     },
     { field: "generate_slot",
       headerName: "Generate", 
       renderCell: (params) => (
@@ -132,9 +136,8 @@ const PODManage = () => {
           color="primary"
           onClick={() => navigate(`/web/pod/${params.row.pod_id}`)}
           >
-            Generate Slot  
+            View Slots  
         </Button>
-      
       </div>
     ),
     flex: 1,

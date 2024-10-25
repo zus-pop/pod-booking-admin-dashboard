@@ -1,4 +1,4 @@
-import { Box, useTheme,Typography } from "@mui/material";
+import { Box, useTheme,Typography,Button } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -59,13 +59,17 @@ const ManageUsers = () => {
         user_id: user.user_id,
         user_name: user.user_name,
         email: user.email,
-        role: user.role.role_name, 
-      }));
+        role: user.role.role_name,  
+      })); // because can't set property of array to table  so need to format data
       setData(formattedData);
       setTotal(result.data.total);
       console.log("Formatted data:", formattedData);
     } catch (error) {
       console.error('Error fetching data:', error.message);
+      if (error.response && error.response.status === 404) {
+        console.error("Không tìm thấy Store với tên đã cho.");
+        setData([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -105,12 +109,30 @@ const ManageUsers = () => {
       flex: 1,
    
     },
-   
+    {
+      field: "action",
+      headerName: "Action",
+      renderCell: (params) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(`/web/booking/${params.row.booking_id}`)}
+          >
+            Edit Role
+          </Button>
+          
+       
+        </div>
+      ),
+      flex: 0.5,
+    },
   ];
 
   return (
     <Box m="20px">
       <Header title="Users" subtitle="List of Users" />
+      
       <Box
           display="flex"
           alignItems="center"
@@ -139,6 +161,14 @@ const ManageUsers = () => {
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ ml: 'auto' }} 
+          onClick={() => navigate(`/web/`)} 
+        >
+          Create a new user
+        </Button>
         </Box>
       <Box
         mt="40px"
