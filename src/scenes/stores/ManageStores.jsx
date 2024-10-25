@@ -1,4 +1,4 @@
-import { Box, useTheme,Menu, MenuItem,InputBase } from "@mui/material";
+import { Box, useTheme,Menu, MenuItem,InputBase, TextField } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -10,6 +10,7 @@ import { IconButton, Button, Typography, } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SearchOutlined } from "@mui/icons-material";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const Stores = () => {
   const theme = useTheme();
@@ -40,6 +41,11 @@ const Stores = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStoreId,setSelectedStoreId] =  useState(null);
+ 
+
+
+  const [editingStore, setEditingStore] = useState(null);
+const [editedValues, setEditedValues] = useState({});
 
   useEffect(() => {
     fetchData();
@@ -104,13 +110,30 @@ const Stores = () => {
     };
 
     const handleUpdate = () => {
-      console.log("the id updated is",selectedStoreId);
-    }
+      if (selectedStoreId) {
+        const storeToUpdate = data.find(
+          (store) => store.store_id === selectedStoreId
+        );
+        if (storeToUpdate) {
+          setEditingStore(storeToUpdate);
+          setEditedValues({
+            store_name: storeToUpdate.store_name,
+            address: storeToUpdate.address,
+            hotline: storeToUpdate.hotline,
+          });
+        } else {
+          console.error("Store not found for ID:", selectedStoreId);
+        }
+      }
+      handleClose();
+    };
 
-      const handleDelete = () => {
-    console.log("Delete booking with ID: ",selectedBookingId);
-    handleClose();
-  };
+    
+
+    const handleDelete = () => {
+      console.log("Delete booking with ID: ",selectedBookingId);
+      handleClose();
+    };
   
   const handlePaginationModelChange = (newPaginationModel) => {
     setPaginationModel(newPaginationModel);
@@ -172,7 +195,7 @@ const Stores = () => {
             <MenuItem onClick={handleUpdate}>
               Update <UpdateIcon />
             </MenuItem>
-            <MenuItem onClick={() => handleDelete(params.row.booking_id)}>
+            <MenuItem onClick={() => handleDelete(params.row.store_id)}>
               Delete <DeleteIcon />
             </MenuItem>
           </Menu>
@@ -272,7 +295,7 @@ const Stores = () => {
            paginationMode="server"
            checkboxSelection
            loading={loading}
-           autoHeight
+           autoHeight 
            sx={{
              "& .MuiDataGrid-cell": {
                fontSize: "15px", 
@@ -282,12 +305,14 @@ const Stores = () => {
              },
            }}
          />
-       </Box>
-       <Box mt="20px">
+            <Box mt="10px">
          <Typography variant="body1">
            Page {pages + 1} of {totalPages}
          </Typography>
        </Box>
+       </Box>
+    
+     
      </Box>
   );
 };

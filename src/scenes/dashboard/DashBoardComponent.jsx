@@ -20,6 +20,7 @@ import {
 import { tokens } from "../../theme";
 
 import { useState, useEffect } from 'react';
+import axios from "axios";
 
 function Dashboard() {
   const theme = useTheme();
@@ -34,13 +35,10 @@ function Dashboard() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/v1/payments`);
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const result = await response.json(); 
-      setData(result);
+      const result = await axios.get(`${API_URL}/api/v1/payments`);
+  
+
+      setData(result.data.payments);
     } catch (error) {
       console.error('Error fetching data:', error.message);
     }

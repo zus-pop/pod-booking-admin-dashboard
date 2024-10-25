@@ -98,11 +98,10 @@ const StoreForm = () => {
         }) => (
           <form onSubmit={handleSubmit}>
             <Box
-              display="flex"
-              flexDirection="column"
-              gap="30px"
-              gridTemplateColumns="repeat(2, minmax(1, 5fr))"
+          
+              display="flex" flexDirection="column" gap="30px"
             >
+           
               <TextField
                 fullWidth
                 variant="filled"
@@ -190,6 +189,7 @@ const StoreForm = () => {
                   theme="light"
                 />
               </Button>
+            
             </Box>
           </form>
         )}
