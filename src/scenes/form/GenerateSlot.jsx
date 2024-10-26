@@ -1,14 +1,36 @@
-import { Box, Button, TextField, useTheme, Typography } from "@mui/material";
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  IconButton,
+  Menu,
+  Select,
+  MenuItem,
+  Checkbox,
+  useTheme,
+  FormGroup,
+  FormControlLabel,
+} from "@mui/material";
 import { Header } from "../../components";
 import { Formik } from "formik";
 import * as yup from "yup";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { tokens } from "../../theme";
 import { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import UpdateIcon from "@mui/icons-material/Update";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UpdateStorePrice from "./UpdateStorePrice";
+
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -37,7 +59,15 @@ const GenerateSlot = () => {
   const [visibleSlots, setVisibleSlots] = useState(12);
   const colors = tokens(theme.palette.mode);
   const [storePrices, setStorePrices] = useState([]);
+  const navigate = useNavigate();
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStorePrice, setEditingStorePrice] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingStorePrice, setDeletingStorePrice] = useState(null);
   useEffect(() => {
     fetchData();
     fetchStorePrices();
@@ -47,7 +77,7 @@ const GenerateSlot = () => {
     try {
       const result = await axios.get(`${API_URL}/api/v1/slots`);
       setSlots(result.data);
-      console.log("Data:", formattedData);
+      console.log("Data:", result.data);
     } catch (error) {
       console.error("Error fetching data:", error.message);
     }
@@ -84,21 +114,141 @@ const GenerateSlot = () => {
     }
   };
 
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setEditingStorePrice(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleUpdate = () => {
+    const storePriceToUpdate = storePrices.find(slot => slot.id === editingStorePrice);
+    if (storePriceToUpdate) {
+      setEditingStorePrice(slotToUpdate);
+      setIsUpdateModalOpen(true);
+    }
+    handleClose();
+  };
+
+  const handleUpdateSubmit = async (values) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/v1/store-prices/${editingStorePrice}`,
+        values
+      );
+      if (response.status === 200) {
+        toast.success("Cập nhật giá cửa hàng thành công");
+        setIsUpdateModalOpen(false);
+        fetchData(); // Refresh data after update
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật giá cửa hàng:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật giá cửa hàng");
+    }
+  };
+
+  const handleDelete = () => {
+    setDeletingStorePrice(editingStorePrice);
+    setIsDeleteModalOpen(true);
+    handleClose();
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await axios.delete(`${API_URL}/api/v1/store-prices/${deletingStorePrice}`);
+      if (response.status === 200) {
+        toast.success("Xóa giá cửa hàng thành công");
+        fetchStorePrices(); // Cập nhật danh sách sau khi xóa
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa giá cửa hàng:", error);
+      toast.error("Có lỗi xảy ra khi xóa giá cửa hàng");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setDeletingStorePrice(null);
+    }
+  };
+
+
   const columns = [
-    { field: 'id', headerName: 'ID', flex: 1 },
-    { field: 'start_hour', headerName: 'Start Hour',  flex: 1},
-    { field: 'end_hour', headerName: 'End Hour', flex: 1 },
-    { field: 'price', headerName: 'Price',  flex: 1 },
-    { 
-      field: 'days_of_week', 
-      headerName: 'Days of Week', 
+    { field: "id", headerName: "ID", flex: 0.5 },
+    { field: "start_hour", headerName: "Start Hour", flex: 1 },
+    { field: "end_hour", headerName: "End Hour", flex: 1 },
+    { field: "price", headerName: "Price", flex: 1 },
+    {
+      field: "days_of_week",
+      headerName: "Days of Week",
       flex: 2,
-      valueGetter: (params) => params.value.join(', ')
+      valueGetter: (params) => {
+        const days = params.value;
+        const allDays = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+
+        if (days.length === 7 && allDays.every((day) => days.includes(day))) {
+          return "All days";
+        } else {
+          return days.join(", ");
+        }
+      },
+    },
+    {
+      field: "priority",
+      headerName: "Priority",
+      flex: 0.5,
+    },
+    {
+      field: "action",
+      headerName: "Action",
+      renderCell: (params) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={(event) => handleClick(event, params.row.id)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick = {() => handleUpdate()}>
+              Update <UpdateIcon />
+            </MenuItem>
+            <MenuItem onClick={handleDelete}>
+  Delete <DeleteIcon />
+</MenuItem>
+          </Menu>
+        </div>
+      ),
+      flex: 1,
     },
   ];
 
   return (
     <Box m="20px">
+      <UpdateStorePrice
+        open={isUpdateModalOpen}
+        handleClose={() => setIsUpdateModalOpen(false)}
+        initialValues={{
+          price: editingStorePrice? editingStorePrice.price : "",
+          start_hour: editingStorePrice? editingStorePrice.start_hour : "",
+          end_hour: editingStorePrice? editingStorePrice.end_hour : "",
+          days_of_week: editingStorePrice? editingStorePrice.days_of_week : [],
+          type_id: editingStorePrice? editingStorePrice.type_id : "",
+          store_id: editingStorePrice? editingStorePrice.store_id : "",
+          priority: editingStorePrice? editingStorePrice.priority : "",
+        }}
+        onSubmit={handleUpdateSubmit}
+      />
       <ToastContainer
         position="top-center"
         autoClose={5000}
@@ -112,23 +262,38 @@ const GenerateSlot = () => {
         theme="light"
       />
       <Header title="GENERATE SLOT" subtitle="" />
-      
+
       {/* Store Prices DataGrid */}
-      <Box mb="20px">
-        <Typography variant="h4" gutterBottom>Store Prices</Typography>
+      <Box mb="20px" marginBottom={5}>
+        <Box display="flex" alignItems="center" borderRadius="3px">
+          <Typography variant="h4" gutterBottom>
+            Store Prices
+          </Typography>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ ml: "auto", mb: "10px" }}
+            onClick={() => navigate("/web/storeprice-form")}
+          >
+            Create new price
+          </Button>
+        </Box>
         <DataGrid
           rows={storePrices}
           columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
+          initialState={{
+            ...storePrices.initialState,
+            pagination: { paginationModel: { pageSize: 5 } },
+          }}
+          pageSizeOptions={[5, 10, 25]}
           autoHeight
           disableSelectionOnClick
           sx={{
             "& .MuiDataGrid-cell": {
-              fontSize: "15px", 
+              fontSize: "15px",
             },
             "& .MuiDataGrid-columnHeaders": {
-              fontSize: "15px", 
+              fontSize: "15px",
             },
           }}
         />
@@ -270,6 +435,40 @@ const GenerateSlot = () => {
           </Box>
         ))}
       </Box>
+      <Modal
+        open={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        aria-labelledby="delete-modal-title"
+        aria-describedby="delete-modal-description"
+      >
+        <Box sx={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 400,
+          bgcolor: 'background.paper',
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+        }}>
+          <Typography id="delete-modal-title" variant="h6" component="h2">
+            Xác nhận xóa
+          </Typography>
+          <Typography id="delete-modal-description" sx={{ mt: 2 }}>
+            Bạn có chắc chắn muốn xóa giá cửa hàng này không?
+          </Typography>
+          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
+              Hủy
+            </Button>
+            <Button onClick={confirmDelete} variant="contained" color="error">
+              Xóa
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
     </Box>
   );
 };

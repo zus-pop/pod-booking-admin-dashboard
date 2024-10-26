@@ -16,6 +16,7 @@ import StoreDetail from "./scenes/stores/StoreDetail";
 import GenerateSlot from "./scenes/form/GenerateSlot";
 import Slots from "./scenes/slots/ManageSlots";
 import UserForm from "./scenes/form/UserForm";
+import CreateStorePriceForm from "./scenes/form/StorePriceForm";
 
 function App() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="pod" element={<PODManage />} />
           <Route path="pod/:pod_id" element={<Slots/>} />
           <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
+          <Route path="storeprice-form" element={<CreateStorePriceForm/>}/>
           <Route path="podform" element={<PodForm />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="faq" element={<FAQ />} />

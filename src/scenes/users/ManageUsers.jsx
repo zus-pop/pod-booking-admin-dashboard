@@ -176,6 +176,7 @@ const ManageUsers = () => {
             variant="contained"
             color="primary"
             onClick={() =>  handleEditRole(params.row.user_id)}
+            disabled={params.row.role !== "Manager" && params.row.role !== "Staff"}
           >
             Edit Role
           </Button>

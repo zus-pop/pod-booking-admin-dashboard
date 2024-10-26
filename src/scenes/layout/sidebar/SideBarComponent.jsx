@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { Avatar, Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, IconButton, Typography, useTheme,  Button} from "@mui/material";
 import { useContext, useState } from "react";
 import { tokens } from "../../../theme";
 import { Menu, MenuItem, Sidebar } from "react-pro-sidebar";
@@ -60,7 +60,7 @@ const SideBar = () => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate("/login", { replace: true });
+        navigate("/", { replace: true });
         return;
       }
       try {
