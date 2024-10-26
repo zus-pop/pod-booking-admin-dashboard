@@ -161,7 +161,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="ID Cửa hàng"
+                label="Store"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.store_id}
@@ -173,7 +173,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="ID Loại Pod"
+                label="Type POD"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.type_id}
