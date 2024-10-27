@@ -25,8 +25,7 @@ const initialValues = {
   start_hour: "",
   end_hour: "",
   days_of_week: [],
-  store_id: "",
-  type_id: "",
+  
   priority: "",
 };
 
@@ -37,11 +36,11 @@ const validationSchema = Yup.object({
   days_of_week: Yup.array()
     .min(1, "Chọn ít nhất một ngày")
     .required("Ngày trong tuần là bắt buộc"),
-  store_id: Yup.number().required("ID cửa hàng là bắt buộc"),
-  type_id: Yup.number().required("ID loại pod là bắt buộc"),
+
   priority: Yup.number()
     .required("Độ ưu tiên là bắt buộc")
-    .min(0, "Độ ưu tiên phải là số không âm"),
+    .min(1, "Độ ưu tiên phải là 1 -> 10")
+    .max(10, "Độ ưu tiên phải là 1 -> 10"),
 });
 
 const StorePriceForm = () => {
@@ -73,8 +72,8 @@ const StorePriceForm = () => {
   return (
     <Box m="20px">
       <Header
-        title="TẠO GIÁ CỬA HÀNG"
-        subtitle="Tạo một giá mới cho cửa hàng"
+        title="CREATE STORE PRICE"
+        subtitle="New prices for store slots"
       />
       <ToastContainer />
 
@@ -157,30 +156,7 @@ const StorePriceForm = () => {
               {touched.days_of_week && errors.days_of_week && (
                 <div style={{ color: "red" }}>{errors.days_of_week}</div>
               )}
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Store"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.store_id}
-                name="store_id"
-                error={touched.store_id && Boolean(errors.store_id)}
-                helperText={touched.store_id && errors.store_id}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Type POD"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.type_id}
-                name="type_id"
-                error={touched.type_id && Boolean(errors.type_id)}
-                helperText={touched.type_id && errors.type_id}
-              />
+            
               <TextField
                 fullWidth
                 variant="filled"
