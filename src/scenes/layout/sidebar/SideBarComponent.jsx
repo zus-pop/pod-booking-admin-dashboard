@@ -28,8 +28,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 const notify = () => {
   const toastId = toast.error(
-    <div>
-      Session Expired! Please login again
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div>Session Expired! Please login again</div>
       <Button 
         onClick={() => toast.dismiss(toastId)} 
         variant="contained" 

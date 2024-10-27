@@ -36,7 +36,7 @@ function App() {
           <Route path="pod" element={<PODManage />} />
           <Route path="pod/:pod_id" element={<Slots/>} />
           <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
-          <Route path="storeprice-form" element={<CreateStorePriceForm/>}/>
+          <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<CreateStorePriceForm/>}/>
           <Route path="podform" element={<PodForm />} />
           <Route path="calendar" element={<Calendar />} />
           <Route path="faq" element={<FAQ />} />

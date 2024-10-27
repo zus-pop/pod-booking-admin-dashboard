@@ -17,17 +17,12 @@ import { Header } from "../../components";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const initialValues = {
-  price: "",
-  start_hour: "",
-  end_hour: "",
-  days_of_week: [],
-  
-  priority: "",
-};
+
+
+
 
 const validationSchema = Yup.object({
   price: Yup.number().required("Giá là bắt buộc"),
@@ -39,17 +34,30 @@ const validationSchema = Yup.object({
 
   priority: Yup.number()
     .required("Độ ưu tiên là bắt buộc")
-    .min(1, "Độ ưu tiên phải là 1 -> 10")
+    .min(1, "Độ ưu tiên phải là 1 -> 10 ")
     .max(10, "Độ ưu tiên phải là 1 -> 10"),
 });
 
 const StorePriceForm = () => {
-  
+  const { typeId, id } = useParams();
+  const initialValues = {
+    price: "",
+    start_hour: "",
+    end_hour: "",
+    days_of_week: [],
+    store_id:  "",
+    type_id:  "",
+    priority: "",
+  };
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const response = await axios.post(
         `${API_URL}/api/v1/store-prices`,
-        values
+        {
+          ...values,
+          store_id: id,
+          type_id: typeId,
+        }
       );
       console.log("Submitting values:", values);
       if (response.status === 201) {
