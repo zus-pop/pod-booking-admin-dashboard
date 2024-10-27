@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { Avatar, Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, IconButton, Typography, useTheme,  Button} from "@mui/material";
 import { useContext, useState } from "react";
 import { tokens } from "../../../theme";
 import { Menu, MenuItem, Sidebar } from "react-pro-sidebar";
@@ -23,6 +23,29 @@ import Item from "./Item";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToggledContext } from "../../welcome/Welcome";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const notify = () => {
+  const toastId = toast.error(
+    <div>
+      Session Expired! Please login again
+      <Button 
+        onClick={() => toast.dismiss(toastId)} 
+        variant="contained" 
+        color="primary" 
+        style={{ marginTop: '10px' }}
+      >
+        OK
+      </Button>
+    </div>,
+    {
+      autoClose: false,
+      closeOnClick: false,
+      closeButton: false,
+    }
+  );
+};
 const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -37,7 +60,7 @@ const SideBar = () => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        navigate("/login", { replace: true });
+        navigate("/", { replace: true });
         return;
       }
       try {
@@ -62,6 +85,7 @@ const SideBar = () => {
           navigate("/", { replace: true });
         } else if (response.status === 403) {
           console.error("Token expired. Please login again.");
+          notify();
           localStorage.removeItem("token");
           navigate("/", { replace: true });
         } else {
@@ -272,6 +296,18 @@ const SideBar = () => {
           />
         </Menu>
       </Box>
+      <ToastContainer
+                  position="top-center"
+                  autoClose={false}
+                  hideProgressBar={false}
+                  newestOnTop={false}
+                  closeOnClick
+                  rtl={false}
+                  pauseOnFocusLoss
+                  draggable={false}
+                  pauseOnHover
+                  theme="light"
+                />
     </Sidebar>
   );
 };
