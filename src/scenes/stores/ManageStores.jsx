@@ -77,16 +77,6 @@ const Stores = () => {
           hotline: store.hotline,
           image: store.image,
         }));
-      } else if (result.data && typeof result.data === "object") {
-        formattedData = [
-          {
-            store_id: result.data.store_id,
-            store_name: result.data.store_name,
-            address: result.data.address,
-            hotline: result.data.hotline,
-            image: result.data.image,
-          },
-        ];
       } else {
         formattedData = [];
       }
@@ -186,6 +176,19 @@ const Stores = () => {
 
   const columns = [
     { field: "store_id", headerName: "ID", flex: 0.2 },
+    {
+      field: "image",
+      headerName: "Image",
+      flex: 1,
+      renderCell: (params) => (
+        <div><img
+          src={params.value}
+          alt={` ${params.row.pod_name}`}
+          style={{ width: '200px', height: '100px', objectFit: 'cover' }}
+        />
+         </div>
+      ),
+    },
     {
       field: "store_name",
       headerName: "Name",
@@ -365,6 +368,7 @@ const Stores = () => {
           rowCount={total}
           paginationMode="server"
           checkboxSelection
+          rowHeight={100}
           loading={loading}
           autoHeight
           sx={{

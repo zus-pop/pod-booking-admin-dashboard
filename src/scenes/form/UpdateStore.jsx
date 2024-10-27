@@ -8,6 +8,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
     store_name: yup.string().required("Tên cửa hàng là bắt buộc"),
     address: yup.string().required("Địa chỉ là bắt buộc"),
     hotline: yup.string().required("Số điện thoại là bắt buộc"),
+    image: yup.string().url("URL hình ảnh không hợp lệ"),
   });
   return (
     <Modal open={open} onClose={handleClose}>
@@ -32,6 +33,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
             store_name: store?.store_name || "",
             address: store?.address || "",
             hotline: store?.hotline || "",
+            image: store?.image || "",
           }}
           validationSchema={validationSchema}
           onSubmit={onSubmit}
@@ -70,6 +72,17 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 onBlur={handleBlur}
                 error={touched.hotline && Boolean(errors.hotline)}
                 helperText={touched.hotline && errors.hotline}
+              />
+              <TextField
+                fullWidth
+                margin="normal"
+                name="image"
+                label="URL Hình ảnh"
+                value={values.image}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={touched.image && Boolean(errors.image)}
+                helperText={touched.image && errors.image}
               />
               <Button
                 type="submit"
