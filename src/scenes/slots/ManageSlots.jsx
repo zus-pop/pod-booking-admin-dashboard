@@ -12,6 +12,8 @@ import {
   IconButton,
   Button,
   Menu,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
@@ -41,7 +43,7 @@ const Slots = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
   const updateSlotSchema = Yup.object().shape({
-    is_available: Yup.boolean,
+    is_available: Yup.boolean().required("Trạng thái khả dụng là bắt buộc"),
     price: Yup.number().required("Giá là bắt buộc"),
   });
   useEffect(() => {
@@ -86,7 +88,7 @@ const Slots = () => {
         `${API_URL}/api/v1/slots/${editingSlot.slot_id}`,
         {
           ...values,
-          pod_id: pod_id,
+
         }
       );
       console.log(response.data)
@@ -99,6 +101,23 @@ const Slots = () => {
       console.error("Lỗi khi cập nhật slot:", error);
       toast.error("Có lỗi xảy ra khi cập nhật slot");
     }
+  };
+
+   
+  const handleDelete = async () => {
+    if (editingSlot) {
+      try {
+        const response = await axios.delete(`${API_URL}/api/v1/slots/${editingSlot}`);
+        if (response.status === 201) {
+          toast.success("Xóa slot thành công");
+          fetchData();
+        }
+      } catch (error) {
+        console.error("Lỗi khi xóa slot:", error);
+        toast.error("Có lỗi xảy ra khi xóa slot");
+      }
+    }
+    handleClose();
   };
 
 
@@ -148,7 +167,7 @@ const Slots = () => {
             <MenuItem onClick={handleUpdate}>
               Update <UpdateIcon />
             </MenuItem>
-            <MenuItem>
+            <MenuItem onClick={handleDelete}>
               Delete <DeleteIcon />
             </MenuItem>
           </Menu>
@@ -215,15 +234,24 @@ const Slots = () => {
                     error={touched.price && errors.price}
                     helperText={touched.price && errors.price}
                   />
-                   <Field
-                    name="Available"
-                    as={TextField}
-                    label="Khả dụng"
-                    fullWidth
-                    margin="normal"
-                    error={touched.is_available && errors.is_available}
-                    helperText={touched.is_available && errors.is_available}
-                  />
+                    <FormControl fullWidth margin="normal">
+                    <InputLabel id="is-available-label">Khả dụng</InputLabel>
+                    <Field
+                      name="is_available"
+                      as={Select}
+                      labelId="is-available-label"
+                      label="Khả dụng"
+                      error={touched.is_available && errors.is_available}
+                    >
+                      <MenuItem value={true}>Yes</MenuItem>
+                      <MenuItem value={false}>No</MenuItem>
+                    </Field>
+                    {touched.is_available && errors.is_available && (
+                      <Typography color="error" variant="caption">
+                        {errors.is_available}
+                      </Typography>
+                    )}
+                           </FormControl>
                   <Button
                     type="submit"
                     variant="contained"

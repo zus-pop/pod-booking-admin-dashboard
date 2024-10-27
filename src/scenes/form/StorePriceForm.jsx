@@ -20,10 +20,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
-
-
-
-
 const validationSchema = Yup.object({
   price: Yup.number().required("Giá là bắt buộc"),
   start_hour: Yup.number().required("Giờ bắt đầu là bắt buộc").min(0).max(23),
@@ -31,7 +27,6 @@ const validationSchema = Yup.object({
   days_of_week: Yup.array()
     .min(1, "Chọn ít nhất một ngày")
     .required("Ngày trong tuần là bắt buộc"),
-
   priority: Yup.number()
     .required("Độ ưu tiên là bắt buộc")
     .min(1, "Độ ưu tiên phải là 1 -> 10 ")
@@ -45,30 +40,31 @@ const StorePriceForm = () => {
     start_hour: "",
     end_hour: "",
     days_of_week: [],
-    store_id:  "",
-    type_id:  "",
+    store_id: "",
+    type_id: "",
     priority: "",
   };
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/api/v1/store-prices`,
-        {
-          ...values,
-          store_id: id,
-          type_id: typeId,
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/v1/store-prices`, {
+        ...values,
+        store_id: id,
+        type_id: typeId,
+      });
       console.log("Submitting values:", values);
       if (response.status === 201) {
         toast.success("Tạo giá cửa hàng thành công");
         resetForm();
       }
-    }catch (error) {
+    } catch (error) {
       console.error("Lỗi khi tạo giá cửa hàng:", error);
       if (error.response) {
         console.error("Phản hồi lỗi:", error.response.data);
-        toast.error(`Lỗi: ${error.response.data.message || 'Có lỗi xảy ra khi tạo giá cửa hàng'}`);
+        toast.error(
+          `Lỗi: ${
+            error.response.data.message || "Có lỗi xảy ra khi tạo giá cửa hàng"
+          }`
+        );
       } else {
         toast.error("Có lỗi xảy ra khi tạo giá cửa hàng");
       }
@@ -97,6 +93,7 @@ const StorePriceForm = () => {
           handleChange,
           handleBlur,
           isSubmitting,
+          setFieldValue,
         }) => (
           <Form>
             <Box display="flex" flexDirection="column" gap="30px">
@@ -138,12 +135,38 @@ const StorePriceForm = () => {
               />
               <FormGroup>
                 <InputLabel>Chọn ngày trong tuần</InputLabel>
+                <FormControlLabel
+                  control={
+                    <Field
+                      as={Checkbox}
+                      name="select_all_days"
+                      checked={values.days_of_week.length === 7}
+                      onChange={(e) => {
+                        const allDays = [
+                          "Sunday",
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                        ];
+                        if (e.target.checked) {
+                          setFieldValue("days_of_week", allDays);
+                        } else {
+                          setFieldValue("days_of_week", []);
+                        }
+                      }}
+                    />
+                  }
+                  label="Tất cả các ngày"
+                />
                 {[
                   "Sunday",
                   "Monday",
                   "Tuesday",
                   "Wednesday",
-                  "Thursđay",
+                  "Thursday",
                   "Friday",
                   "Saturday",
                 ].map((day) => (
@@ -164,7 +187,7 @@ const StorePriceForm = () => {
               {touched.days_of_week && errors.days_of_week && (
                 <div style={{ color: "red" }}>{errors.days_of_week}</div>
               )}
-            
+
               <TextField
                 fullWidth
                 variant="filled"
