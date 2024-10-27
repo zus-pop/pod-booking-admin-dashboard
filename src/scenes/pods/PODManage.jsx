@@ -1,13 +1,19 @@
-   import { Box, InputLabel, useTheme, FormControl } from "@mui/material";
+   import { Box, InputLabel, useTheme, FormControl,Modal, Menu, IconButton, InputBase, Button, Typography,} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from "react";
-import { IconButton, InputBase, Button, Typography } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import UpdateIcon from "@mui/icons-material/Update";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { Select, MenuItem } from "@mui/material";
 import { SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import UpdatePOD from "../form/UpdatePOD";
+import { ToastContainer,toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const PODManage = () => {
@@ -37,6 +43,22 @@ const PODManage = () => {
     type_id: "",
     orderBy: "pod_id",
   });
+  
+const [anchorEl, setAnchorEl] = useState(null);
+const [selectedPodId, setSelectedPodId] = useState(null);
+const [editingPod, setEditingPod] = useState(null);
+const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+const handleClick = (event, id) => {
+  setAnchorEl(event.currentTarget);
+  setSelectedPodId(id);
+};
+
+const handleClose = () => {
+  setAnchorEl(null);
+};
+
 
   useEffect(() => {
     fetchData();
@@ -59,19 +81,11 @@ const PODManage = () => {
         formattedData = result.data.pods.map((pod) => ({
           pod_id: pod.pod_id,
           pod_name: pod.pod_name,
-          pod_type: pod.type.type_name,
+          pod_type: pod.type.type_name, //  note
           pod_available: pod.is_available,
+          image_url: pod.image,
         }));
-      } else if (result.data && typeof result.data === "object") {
-        formattedData = [
-          {
-            pod_id: result.data.pod_id,
-            pod_name: result.data.pod_name,
-            pod_type: result.data.type.type_name,
-            pod_available: result.data.is_available,
-          },
-        ];
-      } else {
+      }  else {
         formattedData = [];
       }
 
@@ -105,9 +119,77 @@ const PODManage = () => {
     setPages(0);
     fetchData();
   };
+  
+  
+const handleUpdate = () => {
+  if (selectedPodId) {
+    const podToUpdate = data.find(
+      (pod) => pod.pod_id === selectedPodId
+    );
+    if (podToUpdate) {
+      setEditingPod(podToUpdate);
+      setIsUpdateModalOpen(true);
+    } else {
+      console.error("POD not found for ID:", selectedPodId);
+    }
+  }
+  handleClose();
+};
+
+const handleUpdateSubmit = async (values) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/api/v1/pods/${selectedPodId}`,
+      values
+    );
+    if (response.status === 200) {
+      toast.success("Cập nhật POD thành công");
+      setIsUpdateModalOpen(false);
+      fetchData();
+    }
+  } catch (error) {
+    console.error("Lỗi khi cập nhật POD:", error);
+    toast.error("Có lỗi xảy ra khi cập nhật POD");
+  }
+};
+
+const handleDelete = () => {
+  setIsDeleteModalOpen(true);
+  handleClose();
+};
+
+const confirmDelete = async () => {
+  try {
+    const response = await axios.delete(
+      `${API_URL}/api/v1/pods/${selectedPodId}`
+    );
+    if (response.status === 200) {
+      toast.success("Xóa POD thành công");
+      fetchData();
+    }
+  } catch (error) {
+    console.error("Lỗi khi xóa POD:", error);
+    toast.error("Có lỗi xảy ra khi xóa POD");
+  } finally {
+    setIsDeleteModalOpen(false);
+  }
+};
 
   const columns = [
     { field: "pod_id", headerName: "POD_ID" },
+    {
+      field: "image_url",
+      headerName: "Image",
+      flex: 1,
+      renderCell: (params) => (
+        <div><img
+          src={params.value}
+          alt={` ${params.row.pod_name}`}
+          style={{ width: '200px', height: '100px', objectFit: 'cover' }}
+        />
+         </div>
+      ),
+    },
     {
       field: "pod_name",
       headerName: "Name",
@@ -127,26 +209,85 @@ const PODManage = () => {
         return params.value ? "Yes" : "No ";
       },
      },
-    { field: "generate_slot",
-      headerName: "Generate", 
+     {
+      field: "generate_slot",
+      headerName: "Actions", 
       renderCell: (params) => (
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => navigate(`/web/pod/${params.row.pod_id}`)}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate(`/web/pod/${params.row.pod_id}`)}
           >
             View Slots  
-        </Button>
-      </div>
-    ),
-    flex: 1,
-  },
+          </Button>
+          <IconButton
+            onClick={(event) => handleClick(event, params.row.pod_id)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleUpdate}>
+              Update <UpdateIcon />
+            </MenuItem>
+            <MenuItem onClick={handleDelete}>
+              Delete <DeleteIcon />
+            </MenuItem>
+          </Menu>
+        </div>
+      ),
+      flex: 1,
+    },
   ];
   return (
     <Box m="20px">
       <Header title="POD Management" subtitle="Managing the POD" />
-
+      <ToastContainer />
+    
+    <UpdatePOD
+      open={isUpdateModalOpen}
+      handleClose={() => setIsUpdateModalOpen(false)}
+      pod={editingPod}
+      onSubmit={handleUpdateSubmit}
+    />
+    
+    <Modal
+      open={isDeleteModalOpen}
+      onClose={() => setIsDeleteModalOpen(false)}
+      aria-labelledby="delete-modal-title"
+      aria-describedby="delete-modal-description"
+    >
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        borderRadius: 2,
+      }}>
+        <Typography id="delete-modal-title" variant="h6" component="h2">
+          Xác nhận xóa
+        </Typography>
+        <Typography id="delete-modal-description" sx={{ mt: 2 }}>
+          Bạn có chắc chắn muốn xóa POD này không?
+        </Typography>
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
+            Hủy
+          </Button>
+          <Button onClick={confirmDelete} variant="contained" color="error">
+            Xóa
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
       <Box display="flex" alignItems="center" borderRadius="3px">
         <FormControl sx={{ minWidth: 80, mr: 2 }}>
           <InputLabel id="type-select-label">Type</InputLabel>
@@ -237,7 +378,7 @@ const PODManage = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+          rowHeight={100}
           loading={loading}
           autoHeight
           sx={{

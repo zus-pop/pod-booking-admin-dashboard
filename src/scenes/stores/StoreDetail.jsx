@@ -1,6 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Box,FormControl,InputLabel,Select, Typography, Button, Card, CardContent,IconButton, Menu,MenuItem,Modal} from "@mui/material";
+import {
+  Box,
+  FormControl,
+  InputLabel,
+  Select,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  IconButton,
+  Menu,
+  MenuItem,
+  Modal,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Header } from "../../components";
 import axios from "axios";
@@ -25,7 +38,7 @@ const StyledCard = styled(Card)(() => ({
 const StoreDetail = () => {
   const { id } = useParams();
   const [storeDetail, setStoreDetail] = useState(null);
-  const [pods,setPods] = useState([]);
+  const [pods, setPods] = useState([]);
   const navigate = useNavigate();
   const [storePrices, setStorePrices] = useState([]);
 
@@ -39,32 +52,27 @@ const StoreDetail = () => {
   useEffect(() => {
     const fetchStoreDetail = async () => {
       const result = await axios.get(`${API_URL}/api/v1/stores/${id}`);
-    
+
       setStoreDetail(result.data);
     };
 
     const fetchPods = async () => {
-        const result = await axios.get(`${API_URL}/api/v1/stores/${id}/pods`);
+      const result = await axios.get(`${API_URL}/api/v1/stores/${id}/pods`);
 
-        setPods(result.data.pods);
-      };
-      
+      setPods(result.data.pods);
+    };
+
     fetchStoreDetail();
     fetchPods();
   }, [id]);
-   
+
   const fetchStorePrices = async (typeId) => {
     try {
-      const result = await axios.get(`${API_URL}/api/v1/store-prices`, {
-        params: {
-          store_id: id,
-          type_id: typeId
-        }
-      });
+      const result = await axios.get(
+        `${API_URL}/api/v1/stores/${id}/pod-type/${typeId}/prices`
+      );
       setStorePrices(result.data.storePrices);
-      console.log("Selected Type ID:", typeId);
-      console.log(result.data.storePrices);
-console.log("Fetching store prices with params:", { store_id: id, type_id: typeId });
+      console.log("Fetched store prices:", result.data.storePrices);
     } catch (error) {
       console.error("Error fetching store prices:", error.message);
     }
@@ -78,7 +86,7 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
   const handleClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleTypeIdChange = (event) => {
     const typeId = event.target.value;
     setSelectedTypeId(typeId);
@@ -90,7 +98,9 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
   };
 
   const handleUpdate = () => {
-    const storePriceToUpdate = storePrices.find(slot => slot.id === editingStorePrice);
+    const storePriceToUpdate = storePrices.find(
+      (slot) => slot.id === editingStorePrice
+    );
     if (storePriceToUpdate) {
       setEditingStorePrice(slotToUpdate);
       setIsUpdateModalOpen(true);
@@ -123,7 +133,9 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
 
   const confirmDelete = async () => {
     try {
-      const response = await axios.delete(`${API_URL}/api/v1/store-prices/${deletingStorePrice}`);
+      const response = await axios.delete(
+        `${API_URL}/api/v1/store-prices/${deletingStorePrice}`
+      );
       if (response.status === 201) {
         toast.success("Xóa giá cửa hàng thành công");
         fetchStorePrices(); // Cập nhật danh sách sau khi xóa
@@ -152,7 +164,13 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "type_id", headerName: "POD Type", flex: 1 ,  renderCell: (params) => getPodTypeName(params.value),},
+
+    {
+      field: "type_id",
+      headerName: "POD Type",
+      flex: 1,
+      renderCell: (params) => getPodTypeName(params.value),
+    },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
     { field: "price", headerName: "Price", flex: 1 },
@@ -189,9 +207,7 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
       headerName: "Action",
       renderCell: (params) => (
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton
-            onClick={(event) => handleClick(event, params.row.id)}
-          >
+          <IconButton onClick={(event) => handleClick(event, params.row.id)}>
             <MoreVertIcon />
           </IconButton>
           <Menu
@@ -199,168 +215,182 @@ console.log("Fetching store prices with params:", { store_id: id, type_id: typeI
             open={Boolean(anchorEl)}
             onClose={handleClose}
           >
-            <MenuItem onClick = {() => handleUpdate()}>
+            <MenuItem onClick={() => handleUpdate()}>
               Update <UpdateIcon />
             </MenuItem>
             <MenuItem onClick={handleDelete}>
-  Delete <DeleteIcon />
-</MenuItem>
+              Delete <DeleteIcon />
+            </MenuItem>
           </Menu>
         </div>
       ),
       flex: 1,
     },
   ];
-return (
-  <Box mt="20px" ml="20px" height="100vh">
-    <ToastContainer
-      position="top-center"
-      autoClose={5000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme="light"
-    />
-    <UpdateStorePrice
-      open={isUpdateModalOpen}
-      handleClose={() => setIsUpdateModalOpen(false)}
-      initialValues={{
-        price: editingStorePrice ? editingStorePrice.price : "",
-        start_hour: editingStorePrice ? editingStorePrice.start_hour : "",
-        end_hour: editingStorePrice ? editingStorePrice.end_hour : "",
-        days_of_week: editingStorePrice ? editingStorePrice.days_of_week : [],
-        type_id: editingStorePrice ? editingStorePrice.type_id : "",
-        store_id: editingStorePrice ? editingStorePrice.store_id : "",
-        priority: editingStorePrice ? editingStorePrice.priority : "",
-      }}
-      onSubmit={handleUpdateSubmit}
-    />
-    <Header title="Detail" subtitle="Detail of store" />
-    <Box mb="20px" marginBottom={5}>
-      <Box display="flex" alignItems="center" borderRadius="3px">
-        <Typography variant="h4" gutterBottom>
-          Store Prices
-        </Typography>
-        <FormControl sx={{ minWidth: 120, ml: 2 }}>
-          <InputLabel id="type-select-label">POD Type</InputLabel>
-          <Select
-            labelId="type-select-label"
-            id="type-select"
-            value={selectedTypeId}
-            label="POD Type"
-            onChange={handleTypeIdChange}
-          >
-            <MenuItem value="">
-              <em>None</em>
-            </MenuItem>
-            <MenuItem value={1}>Single POD</MenuItem>
-            <MenuItem value={2}>Double POD</MenuItem>
-            <MenuItem value={3}>Meeting Room</MenuItem>
-          </Select>
-        </FormControl>
-        {selectedTypeId && (   <Button
-          variant="contained"
-          color="primary"
-          sx={{ ml: "auto", mb: "10px" }}
-          onClick={() => navigate("/web/storeprice-form")}
+  return (
+    <Box mt="20px" ml="20px" height="100vh">
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <UpdateStorePrice
+        open={isUpdateModalOpen}
+        handleClose={() => setIsUpdateModalOpen(false)}
+        initialValues={{
+          price: editingStorePrice ? editingStorePrice.price : "",
+          start_hour: editingStorePrice ? editingStorePrice.start_hour : "",
+          end_hour: editingStorePrice ? editingStorePrice.end_hour : "",
+          days_of_week: editingStorePrice ? editingStorePrice.days_of_week : [],
+          type_id: editingStorePrice ? editingStorePrice.type_id : "",
+          store_id: editingStorePrice ? editingStorePrice.store_id : "",
+          priority: editingStorePrice ? editingStorePrice.priority : "",
+        }}
+        onSubmit={handleUpdateSubmit}
+      />
+      <Header title="Detail" subtitle="Detail of store" />
+      <Box mb="20px" marginBottom={5}>
+        <Box
+          display="flex"
+          alignItems="center"
+          borderRadius="3px"
+          marginBottom="20px"
         >
-          Create new price
-        </Button> )}
-      </Box>
-      {selectedTypeId && (
-        <DataGrid
-          rows={storePrices}
-          columns={columns}
-          initialState={{
-            ...storePrices.initialState,
-            pagination: { paginationModel: { pageSize: 5 } },
-          }}
-          pageSizeOptions={[5, 10, 25]}
-          autoHeight
-          disableSelectionOnClick
-          sx={{
-            "& .MuiDataGrid-cell": {
-              fontSize: "15px",
-            },
-            "& .MuiDataGrid-columnHeaders": {
-              fontSize: "15px",
-            },
-          }}
-        />
-      )}
+          <Typography variant="h4" gutterBottom>
+            Store Prices of {storeDetail ? storeDetail.store_name : ""}
+          </Typography>
+          <FormControl sx={{ minWidth: 120, ml: 2 }}>
+            <InputLabel id="type-select-label">POD Type</InputLabel>
+            <Select
+              labelId="type-select-label"
+              id="type-select"
+              value={selectedTypeId}
+              label="POD Type"
+              onChange={handleTypeIdChange}
+            >
+              <MenuItem value="">
+                <em>None</em>
+              </MenuItem>
+              <MenuItem value={1}>Single POD</MenuItem>
+              <MenuItem value={2}>Double POD</MenuItem>
+              <MenuItem value={3}>Meeting Room</MenuItem>
+            </Select>
+          </FormControl>
+          {selectedTypeId && (
+            <Button
+              variant="contained"
+              color="primary"
+              sx={{ ml: "auto", mb: "10px" }}
+              onClick={() =>
+                navigate(`/web/stores/${id}/pod-type/${selectedTypeId}/storeprice-form`)
+              }
+            >
+              Create new price
+            </Button>
+          )}
+        </Box>
+        {selectedTypeId && (
+          <DataGrid
+            rows={storePrices}
+            columns={columns}
+            initialState={{
+              ...storePrices.initialState,
+              pagination: { paginationModel: { pageSize: 5 } },
+            }}
+            pageSizeOptions={[5, 10, 25]}
+            autoHeight
+            disableSelectionOnClick
+            sx={{
+              "& .MuiDataGrid-cell": {
+                fontSize: "15px",
+              },
+              "& .MuiDataGrid-columnHeaders": {
+                fontSize: "15px",
+              },
+            }}
+          />
+        )}
       </Box>
       {storeDetail && (
-        <Box  display="flex"
-        justifyContent="center" textAlign="center"> {/* Thêm Box để căn giữa nội dung */}
-         
+        <Box display="flex" justifyContent="center" textAlign="center">
+          {" "}
+          {/* Thêm Box để căn giữa nội dung */}
           <StyledCard>
             <CardContent sx={{ mt: 1 }}>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
                 Booking ID: {storeDetail.store_id}
               </Typography>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
                 Name: {storeDetail.store_name}
               </Typography>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
                 Address: {storeDetail.address}
               </Typography>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
                 Hotline: {storeDetail.hotline}
               </Typography>
-              <Typography variant="h5" mt={2} sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h5" mt={2} sx={{ fontSize: "1.5rem" }}>
                 PODS:
               </Typography>
               {pods.map((pod) => (
                 <Box key={pod.pod_id} mb={1}>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
+                  <Typography sx={{ fontSize: "1.5rem" }}>
                     Name: {pod.pod_name}
                   </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
+                  <Typography sx={{ fontSize: "1.5rem" }}>
                     Type: {pod.type.type_name}
                   </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Available: {pod.is_available? 'Yes':"No"}
+                  <Typography sx={{ fontSize: "1.5rem" }}>
+                    Available: {pod.is_available ? "Yes" : "No"}
                   </Typography>
                 </Box>
               ))}
-              
-              <Button variant="contained"
-               onClick={() => navigate('/web/store')}
-               color="primary" sx={{  fontSize: '1.25rem' }}>
+
+              <Button
+                variant="contained"
+                onClick={() => navigate("/web/store")}
+                color="primary"
+                sx={{ fontSize: "1.25rem" }}
+              >
                 Go Back
               </Button>
             </CardContent>
           </StyledCard>
         </Box>
       )}
-       <Modal
+      <Modal
         open={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         aria-labelledby="delete-modal-title"
         aria-describedby="delete-modal-description"
       >
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
-        }}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
           <Typography id="delete-modal-title" variant="h6" component="h2">
             Xác nhận xóa
           </Typography>
           <Typography id="delete-modal-description" sx={{ mt: 2 }}>
             Bạn có chắc chắn muốn xóa giá cửa hàng này không?
           </Typography>
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
               Hủy
             </Button>
