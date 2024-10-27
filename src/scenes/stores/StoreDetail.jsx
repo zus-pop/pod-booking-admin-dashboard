@@ -71,10 +71,31 @@ const StoreDetail = () => {
       const result = await axios.get(
         `${API_URL}/api/v1/stores/${id}/pod-type/${typeId}/prices`
       );
-      setStorePrices(result.data.storePrices);
-      console.log("Fetched store prices:", result.data.storePrices);
+      let formattedData;
+      if (Array.isArray(result.data.storePrices)) {
+        formattedData = result.data.storePrices.map((storePrice) => ({
+          id: storePrice.id,
+          start_hour: storePrice.start_hour,
+          end_hour: storePrice.end_hour, //  note
+          price: storePrice.price,
+          days_of_week: storePrice.days_of_week,
+          type_name: storePrice.type.type_name,
+          type: storePrice.type.type_id,
+          priority: storePrice.priority,
+        }));
+      }  else {
+        formattedData = [];
+      }
+      setStorePrices(formattedData);
+      console.log("Fetched store prices:", formattedData);
+      
     } catch (error) {
-      console.error("Error fetching store prices:", error.message);
+      if (error.response && error.response.status === 404) {
+        setStorePrices([]);
+        console.log("Không tìm thấy giá cửa hàng, đặt mảng rỗng");
+      } else {
+        console.error("Lỗi khi lấy giá cửa hàng:", error.message);
+      }
     }
   };
 
@@ -166,7 +187,7 @@ const StoreDetail = () => {
     { field: "id", headerName: "ID", flex: 0.5 },
 
     {
-      field: "type_id",
+      field: "type_name",
       headerName: "POD Type",
       flex: 1,
       renderCell: (params) => getPodTypeName(params.value),

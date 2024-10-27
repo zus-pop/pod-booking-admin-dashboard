@@ -2,13 +2,29 @@ import React from "react";
 import { Modal, Box, Typography, TextField, Button } from "@mui/material";
 import { Formik, Form } from "formik";
 import * as yup from "yup";
+import { useState } from "react";
+import { CloudUpload } from "@mui/icons-material";
+import { styled } from "@mui/material/styles";
 
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
+  const [filePreview, setFilePreview] = useState(store?.image || null);
+  
   const validationSchema = yup.object({
     store_name: yup.string().required("Tên cửa hàng là bắt buộc"),
     address: yup.string().required("Địa chỉ là bắt buộc"),
     hotline: yup.string().required("Số điện thoại là bắt buộc"),
-    image: yup.string().url("URL hình ảnh không hợp lệ"),
+    image: yup.mixed().nullable(),
   });
   return (
     <Modal open={open} onClose={handleClose}>
@@ -18,7 +34,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          width: 400,
+          width: 600,
           bgcolor: "background.paper",
           boxShadow: 24,
           p: 4,
@@ -33,10 +49,19 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
             store_name: store?.store_name || "",
             address: store?.address || "",
             hotline: store?.hotline || "",
-            image: store?.image || "",
+            image: null,
           }}
           validationSchema={validationSchema}
-          onSubmit={onSubmit}
+          onSubmit={(values, { setSubmitting }) => {
+            const formData = new FormData();
+            formData.append("store_name", values.store_name);
+            formData.append("address", values.address);
+            formData.append("hotline", values.hotline);
+            if (values.image) {
+              formData.append("image", values.image);
+            }
+            onSubmit(formData, setSubmitting);
+          }}
         >
           {({ errors, touched, values, handleChange, handleBlur }) => (
             <Form>
@@ -73,17 +98,69 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 error={touched.hotline && Boolean(errors.hotline)}
                 helperText={touched.hotline && errors.hotline}
               />
-              <TextField
-                fullWidth
-                margin="normal"
-                name="image"
-                label="URL Hình ảnh"
-                value={values.image}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={touched.image && Boolean(errors.image)}
-                helperText={touched.image && errors.image}
-              />
+              <Box display="flex" flexDirection="column" alignItems="center" mt={2}>
+                <Button
+                  variant="contained"
+                  component="label"
+                  startIcon={<CloudUpload />}
+                  sx={{ p: 2, width: "100%" }}
+                >
+                  Upload Image
+                  <VisuallyHiddenInput
+                    type="file"
+                    onChange={(event) => {
+                      const selectedFile = event.currentTarget.files[0];
+                      setFilePreview(URL.createObjectURL(selectedFile));
+                      setFieldValue("image", selectedFile);
+                    }}
+                    onBlur={handleBlur}
+                    name="image"
+                    accept="image/*"
+                  />
+                </Button>
+                {filePreview && (
+                   <Box
+                   sx={{
+                     width: "100%",
+                     height: 200,
+                     display: "flex",
+                     justifyContent: "center",
+                     alignItems: "center",
+                     overflow: "hidden",
+                     borderRadius: 2,
+                     border: "1px solid #ccc",
+                   }}
+                 >
+                   <img
+                     src={filePreview}
+                     alt="image preview"
+                     style={{
+                       maxWidth: "100%",
+                       maxHeight: "100%",
+                       objectFit: "contain",
+                     }}
+                     
+                   />
+                   <Button
+                      variant="contained"
+                      color="error"
+                      size="small"
+                      onClick={() => {
+                        setFilePreview(null);
+                        setFieldValue("image", null);
+                      }}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                      }}
+                    >
+                      Remove
+                    </Button>
+                 </Box>
+                )}
+              </Box>
+              {touched.image && errors.image && <div>{errors.image}</div>}
               <Button
                 type="submit"
                 variant="contained"

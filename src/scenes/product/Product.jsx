@@ -1,10 +1,31 @@
-import { Box, useTheme,Typography, FormControl, InputLabel,Select,MenuItem,InputBase,IconButton} from "@mui/material";
+import {
+  Box,
+  useTheme,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Menu,
+  IconButton,
+  InputBase,
+  Modal,
+  Button,
+} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { SearchOutlined } from "@mui/icons-material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import UpdateIcon from "@mui/icons-material/Update";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import UpdateProduct from "../form/UpdateProduct";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product = () => {
@@ -12,50 +33,55 @@ const Product = () => {
   const colors = tokens(theme.palette.mode);
 
   const [data, setData] = useState([]);
-  const [total,setTotal] = useState(0);
-  const [pages,setPages] = useState(0);
-  const [pageSize,setPageSize] = useState(4);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+  const [pageSize, setPageSize] = useState(4);
   const [loading, setLoading] = useState(false);
-  
+
   const [paginationModel, setPaginationModel] = useState({
     pageSize: pageSize,
     page: pages,
   });
   const totalPages = Math.ceil(total / pageSize);
   const [filters, setFilters] = useState({
-   product_name: "",
-   category: "",
-
+    product_name: "",
+    category: "",
   });
-  const [searchCategoryId,setSearchCategoryId]=useState("");
-  const [searchNameValue,setSearchNameValue]=useState("");
+  const [searchCategoryId, setSearchCategoryId] = useState("");
+  const [searchNameValue, setSearchNameValue] = useState("");
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
-  }, [pages,pageSize,filters]); 
+  }, [pages, pageSize, filters]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const result = await axios.get(`${API_URL}/api/v1/products`, {
         params: {
           limit: pageSize,
           page: pages + 1,
           product_name: filters.product_name,
           category_id: filters.category,
-        }
+        },
       });
 
       setData(result.data.products);
-      setTotal(result.data.total)
+      setTotal(result.data.total);
     } catch (error) {
-      console.error('Error fetching data:', error.message);
+      console.error("Error fetching data:", error.message);
       if (error.response && error.response.status === 404) {
         console.error("Không tìm thấy POD với tên đã cho.");
         setData([]);
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -65,7 +91,6 @@ const Product = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-  
   const handleSearch = () => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -74,6 +99,67 @@ const Product = () => {
     }));
     setPages(0);
     fetchData();
+  };
+
+  const handleClick = (event, id) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedProductId(id);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleUpdate = () => {
+    if (selectedProductId) {
+      const productToUpdate = data.find(
+        (product) => product.product_id === selectedProductId
+      );
+      if (productToUpdate) {
+        setEditingProduct(productToUpdate);
+        setIsUpdateModalOpen(true);
+      }
+    }
+    handleClose();
+  };
+
+  const handleUpdateSubmit = async (values) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/v1/products/${selectedProductId}`,
+        values
+      );
+      if (response.status === 200) {
+        toast.success("Cập nhật sản phẩm thành công");
+        setIsUpdateModalOpen(false);
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật sản phẩm:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật sản phẩm");
+    }
+  };
+
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+    handleClose();
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/v1/products/${selectedProductId}`
+      );
+      if (response.status === 200) {
+        toast.success("Xóa sản phẩm thành công");
+        fetchData();
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa sản phẩm:", error);
+      toast.error("Có lỗi xảy ra khi xóa sản phẩm");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
   };
 
   const columns = [
@@ -89,23 +175,57 @@ const Product = () => {
       headerName: "Category",
       flex: 1,
       renderCell: (params) => {
-        return params.value === 1 ? "Food" : params.value === 2 ? "Drink" : params.value;
+        return params.value === 1
+          ? "Food"
+          : params.value === 2
+          ? "Drink"
+          : params.value;
       },
     },
+    { field: "description", headerName: "Description", flex: 1 },
     {
       field: "price",
       headerName: "Price",
       flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(params.value);
+      },
     },
-
+    { field: "stock", headerName: "Stock", flex: 1 },
+    {
+      field: "action",
+      headerName: "Action",
+      flex: 1,
+      renderCell: (params) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <IconButton
+            onClick={(event) => handleClick(event, params.row.product_id)}
+          >
+            <MoreVertIcon />
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={handleUpdate}>
+              Update <UpdateIcon />
+            </MenuItem>
+            <MenuItem onClick={handleDelete}>
+              Delete <DeleteIcon />
+            </MenuItem>
+          </Menu>
+        </div>
+      ),
+    },
   ];
   return (
     <Box m="20px">
-      <Header
-        title="Products"
-        subtitle="List of products"
-      />
-       <Box display="flex" alignItems="center" borderRadius="3px">
+      <Header title="Products" subtitle="List of products" />
+      <Box display="flex" alignItems="center" borderRadius="3px">
         <FormControl sx={{ minWidth: 100, mr: 2 }}>
           <InputLabel id="type-select-label">Category</InputLabel>
           <Select
@@ -141,7 +261,7 @@ const Product = () => {
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
-        </Box>
+      </Box>
       <Box
         mt="40px"
         height="75vh"
@@ -178,35 +298,79 @@ const Product = () => {
           },
         }}
       >
+        <ToastContainer />
+        <UpdateProduct
+          open={isUpdateModalOpen}
+          handleClose={() => setIsUpdateModalOpen(false)}
+          product={editingProduct}
+          onSubmit={handleUpdateSubmit}
+        />
+        <Modal
+          open={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          aria-labelledby="delete-modal-title"
+          aria-describedby="delete-modal-description"
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 400,
+              bgcolor: "background.paper",
+              boxShadow: 24,
+              p: 4,
+              borderRadius: 2,
+            }}
+          >
+            <Typography id="delete-modal-title" variant="h6" component="h2">
+              Xác nhận xóa
+            </Typography>
+            <Typography id="delete-modal-description" sx={{ mt: 2 }}>
+              Bạn có chắc chắn muốn xóa sản phẩm này không?
+            </Typography>
+            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                onClick={() => setIsDeleteModalOpen(false)}
+                sx={{ mr: 2 }}
+              >
+                Hủy
+              </Button>
+              <Button onClick={confirmDelete} variant="contained" color="error">
+                Xóa
+              </Button>
+            </Box>
+          </Box>
+        </Modal>
         <DataGrid
-           rows={data}
-           columns={columns}
-           getRowId={(row) => row.product_id}
-           pagination
-           paginationModel={paginationModel}
-           onPaginationModelChange={handlePaginationModelChange}
-           pageSizeOptions={[4, 6, 8]}
-           rowCount={total}
-           paginationMode="server"
-           checkboxSelection
-           loading={loading}
-           autoHeight
-           sx={{
-             "& .MuiDataGrid-cell": {
-               fontSize: "15px", 
-             },
-             "& .MuiDataGrid-columnHeaders": {
-               fontSize: "15px", 
-             },
-           }}
-         />
-          <Box mt="20px">
-         <Typography variant="body1">
-           Page {pages + 1} of {totalPages}
-         </Typography>
-       </Box>
-       </Box>
-      
+          rows={data}
+          columns={columns}
+          getRowId={(row) => row.product_id}
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}
+          pageSizeOptions={[4, 6, 8]}
+          rowCount={total}
+          paginationMode="server"
+          checkboxSelection
+          loading={loading}
+          autoHeight
+          sx={{
+            "& .MuiDataGrid-cell": {
+              fontSize: "15px",
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: "15px",
+            },
+          }}
+        />
+        <Box mt="20px">
+          <Typography variant="body1">
+            Page {pages + 1} of {totalPages}
+          </Typography>
+        </Box>
+      </Box>
     </Box>
   );
 };

@@ -51,7 +51,9 @@ const PodForm = () => {
     const [stores, setStores] = useState([]);
     const [types, setTypes] = useState([]);
     const [utilities, setUtilities] = useState([]);
-
+    const clearFilePreview = () => {
+        setFilePreview(null);
+      };
     useEffect(() => {
         const fetchStore = async () => {
             try {
@@ -119,6 +121,7 @@ const PodForm = () => {
             if (response.ok) {
                 console.log("POD created successfully");
                 actions.resetForm();
+                clearFilePreview();
             } else {
                 console.error("Failed to create new POD");
             }

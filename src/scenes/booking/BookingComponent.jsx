@@ -60,7 +60,7 @@ const Booking = () => {
 
   useEffect(() => {
     fetchData();
-  }, [filters]);
+  }, [pages,pageSize,filters]);
 
   const fetchData = async (id = "") => {
     try {

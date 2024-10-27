@@ -50,7 +50,10 @@ const VisuallyHiddenInput = styled("input")({
 });
 const StoreForm = () => {
   const [filePreview, setFilePreview] = useState(null);
-
+  const fileInputRef = React.useRef(null);
+  const clearFilePreview = () => {
+    setFilePreview(null);
+  };
   const handleFormSubmit = async (values, actions) => {
     const formData = new FormData();
     formData.append("store_name", values.store_name);
@@ -70,6 +73,7 @@ const StoreForm = () => {
         console.log("Store created successfully");
         notify();
         actions.resetForm();
+        clearFilePreview();
       } else {
         failnotify();
         console.error("Failed to create new store");
