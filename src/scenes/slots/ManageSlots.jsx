@@ -43,7 +43,7 @@ const Slots = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
   const updateSlotSchema = Yup.object().shape({
-    is_available: Yup.boolean().required("Trạng thái khả dụng là bắt buộc"),
+   
     price: Yup.number().required("Giá là bắt buộc"),
   });
   useEffect(() => {
@@ -214,7 +214,7 @@ const Slots = () => {
             </Typography>
             <Formik
               initialValues={{
-                is_available: editingSlot.is_available,
+      
                 price: editingSlot.price,
               }}
               validationSchema={updateSlotSchema}
@@ -234,24 +234,7 @@ const Slots = () => {
                     error={touched.price && errors.price}
                     helperText={touched.price && errors.price}
                   />
-                    <FormControl fullWidth margin="normal">
-                    <InputLabel id="is-available-label">Khả dụng</InputLabel>
-                    <Field
-                      name="is_available"
-                      as={Select}
-                      labelId="is-available-label"
-                      label="Khả dụng"
-                      error={touched.is_available && errors.is_available}
-                    >
-                      <MenuItem value={true}>Yes</MenuItem>
-                      <MenuItem value={false}>No</MenuItem>
-                    </Field>
-                    {touched.is_available && errors.is_available && (
-                      <Typography color="error" variant="caption">
-                        {errors.is_available}
-                      </Typography>
-                    )}
-                           </FormControl>
+                    
                   <Button
                     type="submit"
                     variant="contained"

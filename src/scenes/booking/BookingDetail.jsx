@@ -5,21 +5,34 @@ import { styled } from "@mui/material/styles";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const StyledCard = styled(Card)(() => ({
-  backgroundColor: "#4cceac",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-  borderRadius: "12px",
-  margin: "0",
-  height: "560px",
-  width: "550px",
+const StatBox = styled(Box)(({ theme }) => ({
+  backgroundColor: "#1F2A40",
+  borderRadius: "8px",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   textAlign: "center",
+  height: "200px",
+  width: "250px",
+  margin: "10px",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+}));
+
+const ContentWrapper = styled(Box)(({ theme }) => ({
+  backgroundColor: "434957",
+  borderRadius: "12px",
+  padding: "20px",
+  margin: "20px 0",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
 }));
 
 const BookingDetail = () => {
   const { id } = useParams();
   const [bookingDetail, setBookingDetail] = useState(null);
   const [products, setProducts] = useState([]);
-  const [slots,setSlots] = useState([]);
+  const [slots, setSlots] = useState([]);
   const navigate = useNavigate();
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -29,88 +42,157 @@ const BookingDetail = () => {
     };
 
     const fetchProducts = async () => {
-      const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/products`);
+      const result = await axios.get(
+        `${API_URL}/api/v1/bookings/${id}/products`
+      );
 
       setProducts(result.data);
     };
     const fetchSlots = async () => {
-        const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/slots`);
+      const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/slots`);
 
-        setSlots(result.data);
-      };
+      setSlots(result.data);
+    };
     fetchBookingDetail();
     fetchProducts();
     fetchSlots();
   }, [id]);
-
   return (
-    <Box
-      mt="90px"
-      height="100vh"
-      display="flex"
-      justifyContent="center"
-      
-    >
-      {bookingDetail && (
-        <Box textAlign="center"> {/* Thêm Box để căn giữa nội dung */}
-          <Typography variant="h2" gutterBottom>
-            Detail of Booking 
-          </Typography>
-          <StyledCard>
-            <CardContent sx={{ mt: 1 }}>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+    <Box mt="20px" height="100vh">
+      <Typography variant="h2" textAlign="center" gutterBottom>
+        Detail of Booking
+      </Typography>
+
+      <Box mx="20px">
+        {bookingDetail && (
+          <>
+            <Box mb={4}>
+              <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                Booking Information
+              </Typography>
+              <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                 Booking ID: {bookingDetail.booking_id}
               </Typography>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                 Date: {bookingDetail.booking_date}
               </Typography>
-              <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>
+              <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                 Status: {bookingDetail.booking_status}
               </Typography>
-              <Typography variant="h5" mt={2} sx={{ fontSize: '1.5rem' }}>
-                Products:
+            </Box>
+
+            <ContentWrapper>
+              <Typography variant="h4" sx={{ color: "#fff", mb: 3 }}>
+                Products
               </Typography>
-              {products.map((product) => (
-                <Box key={product.product_id} mb={1}>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Name: {product.product_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Price: {product.price}
-                  </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Quantity: {product.quantity}
-                  </Typography>
-                </Box>
-              ))}
-               <Typography variant="h5" mt={2} sx={{ fontSize: '1.5rem' }}>
-                Slots:
+              <Box
+                display="flex"
+                flexWrap="wrap"
+                gap={2}
+                justifyContent="flex-start"
+                minHeight="180px"
+              >
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <StatBox key={product.product_id}>
+                      <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                        {product.product_name}
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                        Price: ${product.price}
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: "#fff" }}>
+                        Quantity: {product.quantity}
+                      </Typography>
+                    </StatBox>
+                  ))
+                ) : (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    width="100%"
+                  >
+                    <Typography
+                      variant="h5"
+                      sx={{ color: "#fff", opacity: 0.7 }}
+                    >
+                      No products found
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </ContentWrapper>
+            <ContentWrapper>
+              <Typography variant="h4" sx={{ color: "#fff", mb: 3 }}>
+                Slots
               </Typography>
-              {slots.map((slot) => (
-                <Box key={slot.slot_id} mb={1}>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Start time: {slot.start_time}
-                  </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    End time: {slot.end_time}
-                  </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }}>
-                    Price: {slot.price}
-                  </Typography>
-                  <Typography sx={{ fontSize: '1.5rem' }} >
-                    Available: {slot.is_available? 'Yes' : 'No'}
-                  </Typography>
-                </Box>
-              ))}
-              <Button variant="contained"
-               onClick={() => navigate('/web/booking')}
-               color="primary" sx={{  fontSize: '1.25rem' }}>
-                Go Back
+              <Box
+                display="flex"
+                flexWrap="wrap"
+                gap={2}
+                justifyContent="flex-start"
+                minHeight="180px"
+              >
+                {slots.length > 0 ? (
+                  slots.map((slot) => (
+                    <StatBox key={slot.slot_id}>
+                      <Typography variant="h6" sx={{ color: "#4cceac", mb: 1 }}>
+                        Time: {slot.start_time} - {slot.end_time}
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                        Price: ${slot.price}
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: slot.is_available ? "#4cceac" : "#ff0000",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {slot.is_available ? "Available" : "Occupied"}
+                      </Typography>
+                    </StatBox>
+                  ))
+                ) : (
+                  <Box
+                    display="flex"
+                    justifyContent="center"
+                    alignItems="center"
+                    width="100%"
+                  >
+                    <Typography
+                      variant="h5"
+                      sx={{ color: "#fff", opacity: 0.7 }}
+                    >
+                      No slots found
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </ContentWrapper>
+
+            <Box display="flex" justifyContent="center" mt={4}>
+              <Button
+                variant="contained"
+                onClick={() => navigate("/web/booking")}
+                sx={{
+                  backgroundColor: "#4cceac",
+                  color: "#000",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  padding: "10px 20px",
+                  "&:hover": {
+                    backgroundColor: "#3da58a",
+                  },
+                }}
+              >
+                Back to Bookings
               </Button>
-            </CardContent>
-          </StyledCard>
-        </Box>
-      )}
+            </Box>
+          </>
+        )}
+      </Box>
     </Box>
   );
 };

@@ -25,14 +25,19 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { toast, ToastContainer } from "react-toastify";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const StyledCard = styled(Card)(() => ({
-  backgroundColor: "#4cceac",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-  borderRadius: "12px",
-  margin: "0",
-  height: "560px",
-  width: "550px",
+const StatBox = styled(Box)(({ theme }) => ({
+  backgroundColor: "#1F2A40",
+  borderRadius: "8px",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   textAlign: "center",
+  height: "200px",
+  width: "250px",
+  margin: "10px",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
 }));
 
 const StoreDetail = () => {
@@ -71,10 +76,31 @@ const StoreDetail = () => {
       const result = await axios.get(
         `${API_URL}/api/v1/stores/${id}/pod-type/${typeId}/prices`
       );
-      setStorePrices(result.data.storePrices);
-      console.log("Fetched store prices:", result.data.storePrices);
+      let formattedData;
+      if (Array.isArray(result.data.storePrices)) {
+        formattedData = result.data.storePrices.map((storePrice) => ({
+          id: storePrice.id,
+          start_hour: storePrice.start_hour,
+          end_hour: storePrice.end_hour, //  note
+          price: storePrice.price,
+          days_of_week: storePrice.days_of_week,
+          type_name: storePrice.type.type_name,
+          type: storePrice.type.type_id,
+          priority: storePrice.priority,
+        }));
+      }  else {
+        formattedData = [];
+      }
+      setStorePrices(formattedData);
+      console.log("Fetched store prices:", formattedData);
+      
     } catch (error) {
-      console.error("Error fetching store prices:", error.message);
+      if (error.response && error.response.status === 404) {
+        setStorePrices([]);
+        console.log("Không tìm thấy giá cửa hàng, đặt mảng rỗng");
+      } else {
+        console.error("Lỗi khi lấy giá cửa hàng:", error.message);
+      }
     }
   };
 
@@ -166,7 +192,7 @@ const StoreDetail = () => {
     { field: "id", headerName: "ID", flex: 0.5 },
 
     {
-      field: "type_id",
+      field: "type_name",
       headerName: "POD Type",
       flex: 1,
       renderCell: (params) => getPodTypeName(params.value),
@@ -319,50 +345,40 @@ const StoreDetail = () => {
         )}
       </Box>
       {storeDetail && (
-        <Box display="flex" justifyContent="center" textAlign="center">
-          {" "}
-          {/* Thêm Box để căn giữa nội dung */}
-          <StyledCard>
-            <CardContent sx={{ mt: 1 }}>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Booking ID: {storeDetail.store_id}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Name: {storeDetail.store_name}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Address: {storeDetail.address}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Hotline: {storeDetail.hotline}
-              </Typography>
-              <Typography variant="h5" mt={2} sx={{ fontSize: "1.5rem" }}>
-                PODS:
-              </Typography>
-              {pods.map((pod) => (
-                <Box key={pod.pod_id} mb={1}>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Name: {pod.pod_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Type: {pod.type.type_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Available: {pod.is_available ? "Yes" : "No"}
-                  </Typography>
-                </Box>
-              ))}
+        <Box>
+          <Typography variant="h4" sx={{ mb: 3, mt: 4 }}>
+            PODs Overview of {storeDetail ? storeDetail.store_name : ""}
+          </Typography>
+          
+          <Box 
+            display="flex" 
+            flexWrap="wrap"
+            gap={2}
+            justifyContent="flex-start"
+          >
+            {pods.map((pod) => (
+              <StatBox key={pod.pod_id}>
+                <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                  {pod.pod_name}
+                </Typography>
+                
+                <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                  Type: {pod.type.type_name}
+                </Typography>
+                
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: pod.is_available ? "#4cceac" : "#ff0000",
+                    fontWeight: "bold" 
+                  }}
+                >
+                  Status: {pod.is_available ? "Available" : "Occupied"}
+                </Typography>
+              </StatBox>
+            ))}
+          </Box>
 
-              <Button
-                variant="contained"
-                onClick={() => navigate("/web/store")}
-                color="primary"
-                sx={{ fontSize: "1.25rem" }}
-              >
-                Go Back
-              </Button>
-            </CardContent>
-          </StyledCard>
         </Box>
       )}
       <Modal

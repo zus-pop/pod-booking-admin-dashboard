@@ -1,8 +1,7 @@
-import React, { createContext, useState } from "react";
-import { Box, CssBaseline, ThemeProvider, Typography } from "@mui/material";
+import React, { createContext, useState, useEffect } from "react";
+import { Box, CssBaseline, ThemeProvider, Typography, Fade } from "@mui/material";
 import { ColorModeContext, useMode } from "../../theme";
-
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import SideBar from "../layout/sidebar/SideBarComponent";
 import Navbar from "../layout/navbar/NavBarComponent";
 
@@ -11,8 +10,29 @@ export const ToggledContext = createContext(null);
 export default function Welcome() {
     const [theme, colorMode] = useMode();
     const [toggled, setToggled] = useState(false);
+    const [fadeOut, setFadeOut] = useState(false);
     const values = { toggled, setToggled };
     const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (location.pathname === "/web") {
+            // Bắt đầu hiệu ứng fade out sau 4 giây
+            const fadeTimer = setTimeout(() => {
+                setFadeOut(true);
+            }, 2000);
+
+            // Chuyển trang sau 5 giây
+            const navigationTimer = setTimeout(() => {
+                navigate('/web/dashboard');
+            }, 3000);
+
+            return () => {
+                clearTimeout(fadeTimer);
+                clearTimeout(navigationTimer);
+            };
+        }
+    }, [location.pathname, navigate]);
 
     return (
         <ColorModeContext.Provider value={colorMode}>
@@ -45,20 +65,23 @@ export default function Welcome() {
                                 }}
                             >
                                 {location.pathname === "/web" && (
-                                    <Typography
-                                        variant="h4"
-                                        sx={{
-                                            fontSize: "80px",
-                                            fontWeight: "bold",
-                                            height: "100%",
-                                            display: "flex",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            color: theme.palette.text.primary,
-                                        }}
-                                    >
-                                        Welcome to Dashboard
-                                    </Typography>
+                                    <Fade in={!fadeOut} timeout={1000}>
+                                        <Typography
+                                            variant="h4"
+                                            sx={{
+                                                fontSize: "80px",
+                                                fontWeight: "bold",
+                                                height: "100%",
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                color: theme.palette.text.primary,
+                                                transition: "opacity 1s ease-out",
+                                            }}
+                                        >
+                                            Welcome to Dashboard
+                                        </Typography>
+                                    </Fade>
                                 )}
                                 <Outlet />
                             </Box>

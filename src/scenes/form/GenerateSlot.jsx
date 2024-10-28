@@ -57,8 +57,6 @@ const GenerateSlot = () => {
   const [storePrices, setStorePrices] = useState([]);
   const navigate = useNavigate();
 
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
  
   useEffect(() => {
     fetchData();
@@ -78,7 +76,23 @@ const GenerateSlot = () => {
   const fetchStorePrices = async () => {
     try {
       const result = await axios.get(`${API_URL}/api/v1/store-prices`);
-      setStorePrices(result.data.storePrices);
+      let formattedData;
+      if (Array.isArray(result.data.storePrices)) {
+        formattedData = result.data.storePrices.map((storePrice) => ({
+          id: storePrice.id,
+          start_hour: storePrice.start_hour,
+          end_hour: storePrice.end_hour, 
+          price: storePrice.price,
+          days_of_week: storePrice.days_of_week,
+          type_name: storePrice.type?.type_name || "Unknown",
+        type: storePrice.type?.type_id,
+          priority: storePrice.priority,
+        }));
+      }  else {
+        formattedData = [];
+      }
+      setStorePrices(formattedData);
+      console.log(formattedData)
     } catch (error) {
       console.error("Error fetching store prices:", error.message);
     }
@@ -121,7 +135,7 @@ const GenerateSlot = () => {
   };
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "type_id", headerName: "POD Type", flex: 1 ,  renderCell: (params) => getPodTypeName(params.value),},
+    { field: "type_name", headerName: "POD Type", flex: 1 },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
     { field: "price", headerName: "Price", flex: 1 },
