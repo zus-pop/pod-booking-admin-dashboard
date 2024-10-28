@@ -14,8 +14,10 @@ import {
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer,toast } from "react-toastify";
+import { useRole } from "../../RoleContext";
 
 const ManageUsers = () => {
+  const { userRole } = useRole();
   const API_URL = import.meta.env.VITE_API_URL
   const navigate = useNavigate();
   const theme = useTheme();
@@ -75,6 +77,26 @@ const ManageUsers = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      case "Manager":
+        return true;
+      case "Admin":
+        return false;
+      default:
+        return true;
+    }
+  };
+  const isCreateDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      default:
+        return false;
     }
   };
   const handlePaginationModelChange = (newPaginationModel) => {
@@ -176,7 +198,8 @@ const ManageUsers = () => {
             variant="contained"
             color="primary"
             onClick={() =>  handleEditRole(params.row.user_id)}
-            disabled={params.row.role !== "Manager" && params.row.role !== "Staff"}
+            disabled={params.row.role !== "Manager" && params.row.role !== "Staff" || isActionDisabled()}
+          
           >
             Edit Role
           </Button>
@@ -224,6 +247,7 @@ const ManageUsers = () => {
           color="primary"
           sx={{ ml: 'auto' }} 
           onClick={() => navigate('/web/userform')}
+          disabled={isCreateDisabled()}
         >
           Create a new user
         </Button>

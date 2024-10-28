@@ -5,6 +5,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import SideBar from "../layout/sidebar/SideBarComponent";
 import Navbar from "../layout/navbar/NavBarComponent";
 
+import { RoleProvider } from "../../RoleContext";
 export const ToggledContext = createContext(null);
 
 export default function Welcome() {
@@ -37,6 +38,7 @@ export default function Welcome() {
     return (
         <ColorModeContext.Provider value={colorMode}>
             <ThemeProvider theme={theme}>
+            <RoleProvider>
                 <CssBaseline />
                 <ToggledContext.Provider value={values}>
                     <Box
@@ -88,6 +90,7 @@ export default function Welcome() {
                         </Box>
                     </Box>
                 </ToggledContext.Provider>
+              </RoleProvider>
             </ThemeProvider>
         </ColorModeContext.Provider>
     );

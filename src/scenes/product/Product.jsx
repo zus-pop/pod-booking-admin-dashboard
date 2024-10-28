@@ -25,10 +25,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UpdateProduct from "../form/UpdateProduct";
+import { useRole } from "../../RoleContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Product = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
 
@@ -84,7 +86,27 @@ const Product = () => {
       setLoading(false);
     }
   };
-
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      case "Manager":
+        return false;
+      case "Admin":
+        return false;
+      default:
+        return true;
+    }
+  };
+  const isDeleteDisabled = () => {
+    switch (userRole) {
+      case "Manager":
+        return true;
+     
+      default:
+        return false;
+    }
+  };
   const handlePaginationModelChange = (newPaginationModel) => {
     setPaginationModel(newPaginationModel);
     setPages(newPaginationModel.page);
@@ -203,6 +225,7 @@ const Product = () => {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={(event) => handleClick(event, params.row.product_id)}
+            disabled={isActionDisabled()}
           >
             <MoreVertIcon />
           </IconButton>
@@ -214,7 +237,7 @@ const Product = () => {
             <MenuItem onClick={handleUpdate}>
               Update <UpdateIcon />
             </MenuItem>
-            <MenuItem onClick={handleDelete}>
+            <MenuItem onClick={handleDelete}      disabled={isDeleteDisabled()}>
               Delete <DeleteIcon />
             </MenuItem>
           </Menu>
@@ -325,20 +348,20 @@ const Product = () => {
             }}
           >
             <Typography id="delete-modal-title" variant="h6" component="h2">
-              Xác nhận xóa
+              Confirm Action
             </Typography>
             <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-              Bạn có chắc chắn muốn xóa sản phẩm này không?
+              Are your sure to delete this product ?
             </Typography>
             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 onClick={() => setIsDeleteModalOpen(false)}
                 sx={{ mr: 2 }}
               >
-                Hủy
+              Cancel
               </Button>
               <Button onClick={confirmDelete} variant="contained" color="error">
-                Xóa
+                Delete
               </Button>
             </Box>
           </Box>

@@ -26,11 +26,13 @@ import UpdateIcon from "@mui/icons-material/Update";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate, useParams } from "react-router-dom";
 import { Formik, Form, Field } from "formik";
-import { ToastContainer,toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import * as Yup from "yup";
+import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Slots = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const { pod_id } = useParams();
   const colors = tokens(theme.palette.mode);
@@ -39,11 +41,10 @@ const Slots = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
   const updateSlotSchema = Yup.object().shape({
-   
     price: Yup.number().required("Giá là bắt buộc"),
   });
   useEffect(() => {
@@ -68,12 +69,20 @@ const Slots = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      default:
+        return true;
+    }
+  };
+
 
   const handleUpdate = () => {
     if (editingSlot) {
-      const slotToUpdate = data.find(
-        (slot) => slot.slot_id === editingSlot
-      );
+      const slotToUpdate = data.find((slot) => slot.slot_id === editingSlot);
       if (slotToUpdate) {
         setEditingSlot(slotToUpdate);
         setIsModalOpen(true);
@@ -88,10 +97,9 @@ const Slots = () => {
         `${API_URL}/api/v1/slots/${editingSlot.slot_id}`,
         {
           ...values,
-
         }
       );
-      console.log(response.data)
+      console.log(response.data);
       if (response.status === 200) {
         toast.success("Cập nhật slot thành công");
         fetchData();
@@ -103,11 +111,17 @@ const Slots = () => {
     }
   };
 
-   
-  const handleDelete = async () => {
+  const handleDelete = () => {
+    setIsDeleteModalOpen(true);
+    handleClose();
+  };
+
+  const confirmDelete = async () => {
     if (editingSlot) {
       try {
-        const response = await axios.delete(`${API_URL}/api/v1/slots/${editingSlot}`);
+        const response = await axios.delete(
+          `${API_URL}/api/v1/slots/${editingSlot}`
+        );
         if (response.status === 201) {
           toast.success("Xóa slot thành công");
           fetchData();
@@ -117,10 +131,8 @@ const Slots = () => {
         toast.error("Có lỗi xảy ra khi xóa slot");
       }
     }
-    handleClose();
+    setIsDeleteModalOpen(false);
   };
-
-
 
   const columns = [
     { field: "slot_id", headerName: "ID", flex: 0.5 },
@@ -156,6 +168,7 @@ const Slots = () => {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={(event) => handleClick(event, params.row.slot_id)}
+            disabled={isActionDisabled()}
           >
             <MoreVertIcon />
           </IconButton>
@@ -179,7 +192,7 @@ const Slots = () => {
   return (
     <Box m="20px">
       <Header title="Slots" subtitle="List of slots of POD " />
-      <ToastContainer/>
+      <ToastContainer />
       <Box
         display="flex"
         alignItems="center"
@@ -191,6 +204,7 @@ const Slots = () => {
           color="primary"
           sx={{ ml: "auto" }}
           onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
+          disabled={isActionDisabled()}
         >
           Generate Slot
         </Button>
@@ -214,7 +228,6 @@ const Slots = () => {
             </Typography>
             <Formik
               initialValues={{
-      
                 price: editingSlot.price,
               }}
               validationSchema={updateSlotSchema}
@@ -222,9 +235,6 @@ const Slots = () => {
             >
               {({ errors, touched }) => (
                 <Form>
-                 
-                
-           
                   <Field
                     name="price"
                     as={TextField}
@@ -234,7 +244,7 @@ const Slots = () => {
                     error={touched.price && errors.price}
                     helperText={touched.price && errors.price}
                   />
-                    
+
                   <Button
                     type="submit"
                     variant="contained"
@@ -249,6 +259,41 @@ const Slots = () => {
           </Box>
         </Modal>
       )}
+      <Modal
+        open={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        aria-labelledby="delete-modal-title"
+        aria-describedby="delete-modal-description"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography id="delete-modal-title" variant="h6" component="h2">
+            Xác nhận xóa
+          </Typography>
+          <Typography id="delete-modal-description" sx={{ mt: 2 }}>
+            Bạn có chắc chắn muốn xóa slot này không?
+          </Typography>
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+            <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
+              Hủy
+            </Button>
+            <Button onClick={confirmDelete} variant="contained" color="error">
+              Xóa
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
       <Box
         mt="40px"
         height="75vh"

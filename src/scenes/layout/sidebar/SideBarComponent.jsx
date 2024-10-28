@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { ToggledContext } from "../../welcome/Welcome";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useRole } from "../../../RoleContext";
 
 const notify = () => {
   const toastId = toast.error(
@@ -48,6 +49,7 @@ const notify = () => {
 };
 const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
+  const { setUserRole } = useRole();
   const [collapsed, setCollapsed] = useState(false);
   const { toggled, setToggled } = useContext(ToggledContext);
   const theme = useTheme();
@@ -77,6 +79,7 @@ const SideBar = () => {
   
         if (response.ok) {
           const data = await response.json();
+          setUserRole(data.role.role_name);
           setUserName(data.user_name);
           setRole(data.role.role_name);
         } else if (response.status === 401) {
@@ -263,28 +266,7 @@ const SideBar = () => {
             icon={<InventoryOutlined />}
           />
         </Menu>
-        <Typography
-          variant="h6"
-          color={colors.gray[100]}
-          sx={{ m: "15px 0 5px 20px" }}
-        >
-          {!collapsed ? "Pages" : " "}
-        </Typography>
-        <Menu
-          menuItemStyles={{
-            button: {
-              ":hover": {
-                color: "#868dfb",
-                background: "transparent",
-                transition: ".4s ease",
-              },
-            },
-          }}
-        >
-         
-     
-       
-        </Menu>
+  
       </Box>
       <ToastContainer
                   position="top-center"

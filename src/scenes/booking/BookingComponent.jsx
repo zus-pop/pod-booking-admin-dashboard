@@ -20,8 +20,10 @@ import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
-
+import { Modal } from "@mui/material";
+import { useRole } from "../../RoleContext";
 const Booking = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isXsDevices = useMediaQuery("(max-width:466px)");
@@ -45,7 +47,9 @@ const Booking = () => {
     booking_date: "",
   });
   
-      
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState("");
+
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
 
@@ -55,7 +59,13 @@ const Booking = () => {
     page: pages,
   });
   const totalPages = Math.ceil(total / pageSize);
-
+  const STATUS_FLOW = {
+    Pending: ['Confirmed', 'Canceled'],
+    Confirmed: ['Ongoing', 'Canceled'],
+    Ongoing: ['Complete'],
+    Complete: ['Complete'],
+    Canceled: ['Canceled']
+  };
   const [dateError, setDateError] = useState("");
 
   useEffect(() => {
@@ -107,6 +117,24 @@ const Booking = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+const handleEditStatus = (bookingId, newStatus) => {
+  setSelectedBookingId(bookingId);
+  setConfirmStatus(newStatus);
+  setIsConfirmModalOpen(true);
+}; 
+
+const isActionDisabled = () => {
+  switch (userRole) {
+    case "Staff":
+      return true;
+    case "Manager":
+      return false;
+    case "Admin":
+      return false;
+    default:
+      return true;
+  }
+};
 
   const handleUpdate = () => {
     if (selectedBookingId) {
@@ -125,6 +153,16 @@ const Booking = () => {
 
   const handleConfirmUpdate = async (id) => {
     try {
+      const currentBooking = data.find(booking => booking.booking_id === id);
+      if (!currentBooking) {
+        throw new Error("Không tìm thấy booking");
+      }
+
+      if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
+        toast.error(`Không thể chuyển từ ${currentBooking.booking_status} sang ${newStatus}`);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/v1/bookings/${id}`, {
         method: "PUT",
         headers: {
@@ -132,7 +170,7 @@ const Booking = () => {
         },
         body: JSON.stringify({ booking_status: newStatus }),
       });
-
+    
       if (!response.ok) {
         throw new Error("Failed to update booking status");
       }
@@ -143,11 +181,10 @@ const Booking = () => {
       console.error("Error updating booking status:", error.message);
     }
   };
-
-  // const handleDelete = () => {
-  //   console.log("Delete booking with ID: ",selectedBookingId);
-  //   handleClose();
-  // };
+  const isValidStatusTransition = (currentStatus, newStatus) => {
+    const allowedTransitions = STATUS_FLOW[currentStatus] || [];
+    return allowedTransitions.includes(newStatus);
+  };
 
   const validateDate = (date) => {
     if (date) {
@@ -191,23 +228,31 @@ const Booking = () => {
       renderCell: (params) =>
         editStatusId === params.row.booking_id ? (
           <div>
-            <Select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value)}
-            >
-              <MenuItem value="Ongoing">Ongoing</MenuItem>
-              <MenuItem value="Complete">Complete</MenuItem>
-              <MenuItem value="Canceled">Canceled</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-            </Select>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleConfirmUpdate(params.row.booking_id)}
-            >
-              Confirm
-            </Button>
-          </div>
+          <Select
+            value={newStatus}
+            onChange={(e) => {
+              const nextStatus = e.target.value;
+              if (isValidStatusTransition(params.row.booking_status, nextStatus)) {
+                setNewStatus(nextStatus);
+              } else {
+                toast.error(`Không thể chuyển từ ${params.row.booking_status} sang ${nextStatus}`);
+              }
+            }}
+          >
+            {STATUS_FLOW[params.row.booking_status]?.map(status => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </Select>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleEditStatus(params.row.booking_id, newStatus)}
+          >
+            Choose
+          </Button>
+        </div>
         ) : (
           <div>
             {params.value}
@@ -228,6 +273,8 @@ const Booking = () => {
           </Button>
           <IconButton
             onClick={(event) => handleClick(event, params.row.booking_id)}
+           
+        
           >
             <MoreVertIcon />
           </IconButton>
@@ -357,6 +404,51 @@ const Booking = () => {
      </Typography>
      </Box>
       </Box>
+      <Modal
+  open={isConfirmModalOpen}
+  onClose={() => setIsConfirmModalOpen(false)}
+  aria-labelledby="confirm-modal-title"
+  aria-describedby="confirm-modal-description"
+>
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%", 
+      transform: "translate(-50%, -50%)",
+      width: 400,
+      bgcolor: "background.paper",
+      boxShadow: 24,
+      p: 4,
+      borderRadius: 2,
+    }}
+  >
+    <Typography id="confirm-modal-title" variant="h6" component="h2">
+      Confirm Update Status
+    </Typography>
+    <Typography id="confirm-modal-description" sx={{ mt: 2 }}>
+     Are you sure about updating to this status: {confirmStatus} ?
+    </Typography>
+    <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+      <Button 
+        onClick={() => setIsConfirmModalOpen(false)} 
+        sx={{ mr: 2 }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          handleConfirmUpdate(selectedBookingId, confirmStatus);
+          setIsConfirmModalOpen(false);
+        }}
+        variant="contained"
+        color="primary"
+      >
+        Confirm
+      </Button>
+    </Box>
+  </Box>
+</Modal>
     </Box>
   );
 };

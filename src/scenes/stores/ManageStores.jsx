@@ -20,8 +20,10 @@ import { SearchOutlined } from "@mui/icons-material";
 import axios from "axios";
 import { toast } from "react-toastify";
 import UpdateStore from "../form/UpdateStore";
+import { useRole } from "../../RoleContext";
 
 const Stores = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const navigate = useNavigate();
@@ -158,6 +160,29 @@ const Stores = () => {
       setIsDeleteModalOpen(false);
     }
   };
+  
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      case "Manager":
+        return false;
+      case "Admin":
+        return false;
+      default:
+        return true;
+    }
+  };
+  const isActDisabled = () => {
+    switch (userRole) {
+      case "Manager":
+        return true;
+        case "Staff":
+          return true;
+      default:
+        return false;
+    }
+  };
 
   const handlePaginationModelChange = (newPaginationModel) => {
     setPaginationModel(newPaginationModel);
@@ -220,7 +245,10 @@ const Stores = () => {
             View Detail
           </Button>
           <IconButton
-            onClick={(event) => handleClick(event, params.row.store_id)}
+            onClick={(event) => handleClick(event, params.row.store_id)
+            
+            }
+            disabled={isActionDisabled()}
           >
             <MoreVertIcon />
           </IconButton>
@@ -232,7 +260,7 @@ const Stores = () => {
             <MenuItem onClick={handleUpdate}>
               Update <UpdateIcon />
             </MenuItem>
-            <MenuItem onClick={handleDelete}>
+            <MenuItem onClick={handleDelete}   disabled={isActDisabled ()}>
               Delete <DeleteIcon />
             </MenuItem>
           </Menu>
@@ -317,6 +345,7 @@ const Stores = () => {
           color="primary"
           sx={{ ml: "auto" }}
           onClick={() => navigate("/web/storeform")}
+          disabled={isActDisabled()}
         >
           Create New Store
         </Button>

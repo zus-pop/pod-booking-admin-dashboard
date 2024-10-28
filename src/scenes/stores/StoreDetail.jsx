@@ -23,6 +23,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UpdateIcon from "@mui/icons-material/Update";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { toast, ToastContainer } from "react-toastify";
+import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const StatBox = styled(Box)(({ theme }) => ({
@@ -41,6 +42,7 @@ const StatBox = styled(Box)(({ theme }) => ({
 }));
 
 const StoreDetail = () => {
+  const { userRole } = useRole();
   const { id } = useParams();
   const [storeDetail, setStoreDetail] = useState(null);
   const [pods, setPods] = useState([]);
@@ -128,7 +130,7 @@ const StoreDetail = () => {
       (slot) => slot.id === editingStorePrice
     );
     if (storePriceToUpdate) {
-      setEditingStorePrice(slotToUpdate);
+      setEditingStorePrice(storePriceToUpdate);
       setIsUpdateModalOpen(true);
     }
     handleClose();
@@ -164,7 +166,7 @@ const StoreDetail = () => {
       );
       if (response.status === 201) {
         toast.success("Xóa giá cửa hàng thành công");
-        fetchStorePrices(); // Cập nhật danh sách sau khi xóa
+        fetchStorePrices(selectedTypeId);
       }
     } catch (error) {
       console.error("Lỗi khi xóa giá cửa hàng:", error);
@@ -175,16 +177,17 @@ const StoreDetail = () => {
     }
   };
 
-  const getPodTypeName = (typeId) => {
-    switch (typeId) {
-      case 1:
-        return "Single POD";
-      case 2:
-        return "Double POD";
-      case 3:
-        return "Meeting Room";
+    
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      case "Manager":
+        return true;
+      case "Admin":
+        return false;
       default:
-        return "Unknown";
+        return true;
     }
   };
 
@@ -195,7 +198,7 @@ const StoreDetail = () => {
       field: "type_name",
       headerName: "POD Type",
       flex: 1,
-      renderCell: (params) => getPodTypeName(params.value),
+  
     },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
@@ -233,7 +236,7 @@ const StoreDetail = () => {
       headerName: "Action",
       renderCell: (params) => (
         <div style={{ display: "flex", alignItems: "center" }}>
-          <IconButton onClick={(event) => handleClick(event, params.row.id)}>
+          <IconButton onClick={(event) => handleClick(event, params.row.id)} disabled={isActionDisabled()}>
             <MoreVertIcon />
           </IconButton>
           <Menu
@@ -317,6 +320,7 @@ const StoreDetail = () => {
               onClick={() =>
                 navigate(`/web/stores/${id}/pod-type/${selectedTypeId}/storeprice-form`)
               }
+              disabled={isActionDisabled()}
             >
               Create new price
             </Button>
