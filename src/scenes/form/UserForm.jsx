@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const initialValues = {
@@ -35,6 +35,7 @@ const userSchema = yup.object().shape({
 });
 
 const UserForm = () => {
+  const { userRole } = useRole();
   const [roles, setRoles] = useState([]);
 
   useEffect(() => {
@@ -136,7 +137,17 @@ const UserForm = () => {
                   error={touched.role_id && Boolean(errors.role_id)}
                 >
                   {roles
-                    .filter((role) => role.role_name !== "Admin")
+                    .filter((role) => {
+                      if (userRole === "Admin") {
+                        return (
+                          role.role_name === "Manager" ||
+                          role.role_name === "Staff"
+                        );
+                      } else if (userRole === "Manager") {
+                        return role.role_name === "Staff";
+                      }
+                      return false;
+                    })
                     .map((role) => (
                       <MenuItem key={role.role_id} value={role.role_id}>
                         {role.role_name}
