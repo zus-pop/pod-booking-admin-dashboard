@@ -20,7 +20,7 @@ import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
-
+import { Modal } from "@mui/material";
 const Booking = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -45,7 +45,9 @@ const Booking = () => {
     booking_date: "",
   });
   
-      
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [confirmStatus, setConfirmStatus] = useState("");
+
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
 
@@ -113,6 +115,11 @@ const Booking = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+const handleEditStatus = (bookingId, newStatus) => {
+  setSelectedBookingId(bookingId);
+  setConfirmStatus(newStatus);
+  setIsConfirmModalOpen(true);
+}; 
 
   const handleUpdate = () => {
     if (selectedBookingId) {
@@ -135,7 +142,7 @@ const Booking = () => {
       if (!currentBooking) {
         throw new Error("Không tìm thấy booking");
       }
-      
+
       if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
         toast.error(`Không thể chuyển từ ${currentBooking.booking_status} sang ${newStatus}`);
         return;
@@ -226,9 +233,9 @@ const Booking = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => handleConfirmUpdate(params.row.booking_id)}
+            onClick={() => handleEditStatus(params.row.booking_id, newStatus)}
           >
-            Confirm
+            Choose
           </Button>
         </div>
         ) : (
@@ -380,6 +387,51 @@ const Booking = () => {
      </Typography>
      </Box>
       </Box>
+      <Modal
+  open={isConfirmModalOpen}
+  onClose={() => setIsConfirmModalOpen(false)}
+  aria-labelledby="confirm-modal-title"
+  aria-describedby="confirm-modal-description"
+>
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%", 
+      transform: "translate(-50%, -50%)",
+      width: 400,
+      bgcolor: "background.paper",
+      boxShadow: 24,
+      p: 4,
+      borderRadius: 2,
+    }}
+  >
+    <Typography id="confirm-modal-title" variant="h6" component="h2">
+      Confirm Update Status
+    </Typography>
+    <Typography id="confirm-modal-description" sx={{ mt: 2 }}>
+     Are you sure about updating to this status: {confirmStatus} ?
+    </Typography>
+    <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+      <Button 
+        onClick={() => setIsConfirmModalOpen(false)} 
+        sx={{ mr: 2 }}
+      >
+        Cancel
+      </Button>
+      <Button
+        onClick={() => {
+          handleConfirmUpdate(selectedBookingId, confirmStatus);
+          setIsConfirmModalOpen(false);
+        }}
+        variant="contained"
+        color="primary"
+      >
+        Confirm
+      </Button>
+    </Box>
+  </Box>
+</Modal>
     </Box>
   );
 };

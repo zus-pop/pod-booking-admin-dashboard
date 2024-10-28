@@ -325,20 +325,20 @@ const Product = () => {
             }}
           >
             <Typography id="delete-modal-title" variant="h6" component="h2">
-              Xác nhận xóa
+              Confirm Action
             </Typography>
             <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-              Bạn có chắc chắn muốn xóa sản phẩm này không?
+              Are your sure to delete this product ?
             </Typography>
             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
               <Button
                 onClick={() => setIsDeleteModalOpen(false)}
                 sx={{ mr: 2 }}
               >
-                Hủy
+              Cancel
               </Button>
               <Button onClick={confirmDelete} variant="contained" color="error">
-                Xóa
+                Delete
               </Button>
             </Box>
           </Box>
