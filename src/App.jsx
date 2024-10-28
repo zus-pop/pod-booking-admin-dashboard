@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./scenes/login/Login";
-import { Dashboard, FAQ, Calendar } from "./scenes";
+import { Dashboard, } from "./scenes";
 import ManageUsers from "./scenes/users/ManageUsers";
 import PODManage from "./scenes/pods/PODManage";
 import Stores from "./scenes/stores/ManageStores";
@@ -38,8 +38,7 @@ function App() {
           <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
           <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<CreateStorePriceForm/>}/>
           <Route path="podform" element={<PodForm />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="faq" element={<FAQ />} />
+     
         </Route>
       </Routes>
   );

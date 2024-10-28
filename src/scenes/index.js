@@ -5,8 +5,7 @@ import Team from "./pods/PODManage";
 import Invoices from "./users/ManageUsers";
 import Contacts from "./stores/ManageStores";
 import Form from "./form/PodForm";
-import Calendar from "./calendar/CalenderComponent";
-import FAQ from "./faq/FAQComponent";
+
 
 export {
   Navbar,
@@ -16,6 +15,5 @@ export {
   Invoices,
   Contacts,
   Form,
-  Calendar,
-  FAQ,
+
 };

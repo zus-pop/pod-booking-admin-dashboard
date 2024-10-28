@@ -210,7 +210,7 @@ const SideBar = () => {
         </Menu>
         <Typography
           variant="h6"
-          color={colors.gray[300]}
+          color={colors.gray[100]}
           sx={{ m: "15px 0 5px 20px" }}
         >
           {!collapsed ? "Data" : " "}
@@ -265,7 +265,7 @@ const SideBar = () => {
         </Menu>
         <Typography
           variant="h6"
-          color={colors.gray[300]}
+          color={colors.gray[100]}
           sx={{ m: "15px 0 5px 20px" }}
         >
           {!collapsed ? "Pages" : " "}
@@ -282,18 +282,8 @@ const SideBar = () => {
           }}
         >
          
-          <Item
-            title="Calendar"
-            path="/web/calendar"
-            colors={colors}
-            icon={<CalendarTodayOutlined />}
-          />
-          <Item
-            title="FAQ Page"
-            path="/web/faq"
-            colors={colors}
-            icon={<HelpOutlineOutlined />}
-          />
+     
+       
         </Menu>
       </Box>
       <ToastContainer

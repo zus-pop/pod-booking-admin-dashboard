@@ -23,6 +23,7 @@ const PODManage = () => {
   const navigate = useNavigate();
 
   const [data, setData] = useState([]);
+  const [podUtilities, setPodUtilities] = useState([]);
 
   const [searchNameValue, setSearchNameValue] = useState("");
   const [searchTypeId, setSearchTypeId] = useState("");
@@ -64,6 +65,15 @@ const handleClose = () => {
     fetchData();
   }, [pages, pageSize,filters]);
 
+  const fetchPodUtilities = async (podId) => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/pods/${podId}/utilities`);
+      return response.data;
+    } catch (error) {
+      console.error(`Lỗi khi lấy utilities cho POD ${podId}:`, error);
+      return [];
+    }
+  };
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -78,12 +88,20 @@ const handleClose = () => {
       });
       let formattedData;
       if (Array.isArray(result.data.pods)) {
-        formattedData = result.data.pods.map((pod) => ({
+        formattedData = await Promise.all(result.data.pods.map(async (pod) => {
+          const utilities = await fetchPodUtilities(pod.pod_id);
+          return {
           pod_id: pod.pod_id,
           pod_name: pod.pod_name,
-          pod_type: pod.type.type_name, //  note
+          pod_type: pod.type.type_name,
           pod_available: pod.is_available,
-          image_url: pod.image,
+          image: pod.image,
+          type_id: pod.type.type_id,
+          store_id: pod.store.store_id,
+          store_name: pod.store.store_name,
+          description: pod.description,
+          utilities: utilities
+        }
         }));
       }  else {
         formattedData = [];
@@ -178,14 +196,14 @@ const confirmDelete = async () => {
   const columns = [
     { field: "pod_id", headerName: "POD_ID" },
     {
-      field: "image_url",
+      field: "image",
       headerName: "Image",
       flex: 1,
       renderCell: (params) => (
         <div><img
           src={params.value}
           alt={` ${params.row.pod_name}`}
-          style={{ width: '200px', height: '100px', objectFit: 'cover' }}
+          style={{ width: '200px', height: '120px', objectFit: 'cover' }}
         />
          </div>
       ),
@@ -203,6 +221,20 @@ const confirmDelete = async () => {
       headerAlign: "left",
       flex: 1.5,
       align: "left",
+    },
+    {
+      field: "utilities",
+      headerName: "Utilities",
+      flex: 1.5,
+      renderCell: (params) => (
+        <div>
+          {params.value.map((utility) => (
+            <div key={utility.utility_id}>
+              {utility.utility_name}
+            </div>
+          ))}
+        </div>
+      ),
     },
     { field: "pod_available", headerName: "Available", flex: 1,
       renderCell: (params) => {
@@ -378,7 +410,7 @@ const confirmDelete = async () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          rowHeight={100}
+          rowHeight={120}
           loading={loading}
           autoHeight
           sx={{

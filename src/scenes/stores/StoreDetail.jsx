@@ -25,14 +25,19 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { toast, ToastContainer } from "react-toastify";
 const API_URL = import.meta.env.VITE_API_URL;
 
-const StyledCard = styled(Card)(() => ({
-  backgroundColor: "#4cceac",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-  borderRadius: "12px",
-  margin: "0",
-  height: "560px",
-  width: "550px",
+const StatBox = styled(Box)(({ theme }) => ({
+  backgroundColor: "#1F2A40",
+  borderRadius: "8px",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
   textAlign: "center",
+  height: "200px",
+  width: "250px",
+  margin: "10px",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
 }));
 
 const StoreDetail = () => {
@@ -340,50 +345,40 @@ const StoreDetail = () => {
         )}
       </Box>
       {storeDetail && (
-        <Box display="flex" justifyContent="center" textAlign="center">
-          {" "}
-          {/* Thêm Box để căn giữa nội dung */}
-          <StyledCard>
-            <CardContent sx={{ mt: 1 }}>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Booking ID: {storeDetail.store_id}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Name: {storeDetail.store_name}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Address: {storeDetail.address}
-              </Typography>
-              <Typography variant="h6" sx={{ fontSize: "1.5rem" }}>
-                Hotline: {storeDetail.hotline}
-              </Typography>
-              <Typography variant="h5" mt={2} sx={{ fontSize: "1.5rem" }}>
-                PODS:
-              </Typography>
-              {pods.map((pod) => (
-                <Box key={pod.pod_id} mb={1}>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Name: {pod.pod_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Type: {pod.type.type_name}
-                  </Typography>
-                  <Typography sx={{ fontSize: "1.5rem" }}>
-                    Available: {pod.is_available ? "Yes" : "No"}
-                  </Typography>
-                </Box>
-              ))}
+        <Box>
+          <Typography variant="h4" sx={{ mb: 3, mt: 4 }}>
+            PODs Overview of {storeDetail ? storeDetail.store_name : ""}
+          </Typography>
+          
+          <Box 
+            display="flex" 
+            flexWrap="wrap"
+            gap={2}
+            justifyContent="flex-start"
+          >
+            {pods.map((pod) => (
+              <StatBox key={pod.pod_id}>
+                <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                  {pod.pod_name}
+                </Typography>
+                
+                <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                  Type: {pod.type.type_name}
+                </Typography>
+                
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    color: pod.is_available ? "#4cceac" : "#ff0000",
+                    fontWeight: "bold" 
+                  }}
+                >
+                  Status: {pod.is_available ? "Available" : "Occupied"}
+                </Typography>
+              </StatBox>
+            ))}
+          </Box>
 
-              <Button
-                variant="contained"
-                onClick={() => navigate("/web/store")}
-                color="primary"
-                sx={{ fontSize: "1.25rem" }}
-              >
-                Go Back
-              </Button>
-            </CardContent>
-          </StyledCard>
         </Box>
       )}
       <Modal

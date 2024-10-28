@@ -67,7 +67,7 @@ function Dashboard() {
         {/* Statistic Items */}
         <Box
           gridColumn="span 3"
-          bgcolor={colors.primary[400]}
+          backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
