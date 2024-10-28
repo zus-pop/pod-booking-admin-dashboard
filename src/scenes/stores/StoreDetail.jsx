@@ -195,7 +195,7 @@ const StoreDetail = () => {
       field: "type_name",
       headerName: "POD Type",
       flex: 1,
-      renderCell: (params) => getPodTypeName(params.value),
+  
     },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },

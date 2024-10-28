@@ -17,9 +17,13 @@ import GenerateSlot from "./scenes/form/GenerateSlot";
 import Slots from "./scenes/slots/ManageSlots";
 import UserForm from "./scenes/form/UserForm";
 import CreateStorePriceForm from "./scenes/form/StorePriceForm";
+import ProtectedRoute from './ProtectedRoute';
 
+import Unauthorized from './scenes/unauthorized/Unauthorized';
+import PrivateRoute from "./PrivateRoute";
 function App() {
   return (
+
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/web" element={<Welcome />}>
@@ -29,6 +33,7 @@ function App() {
           <Route path="store" element={<Stores />} />
           <Route path="store/:id" element={<StoreDetail/>} />
           <Route path="storeform" element={<StoreForm/>} />
+          <Route path="unauthorized" element={<Unauthorized />} />
           <Route path="booking" element={<Booking />} />
           <Route path="booking/:id" element={<BookingDetail />} />
           <Route path="payment" element={<Payment />} />
@@ -37,10 +42,18 @@ function App() {
           <Route path="pod/:pod_id" element={<Slots/>} />
           <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
           <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<CreateStorePriceForm/>}/>
-          <Route path="podform" element={<PodForm />} />
+          <Route 
+          path="podform"  
+          element={
+            <ProtectedRoute>
+              <PodForm />
+            </ProtectedRoute>
+          } 
+          />
      
         </Route>
       </Routes>
+        
   );
 }
 

@@ -55,7 +55,13 @@ const Booking = () => {
     page: pages,
   });
   const totalPages = Math.ceil(total / pageSize);
-
+  const STATUS_FLOW = {
+    Pending: ['Confirmed', 'Canceled'],
+    Confirmed: ['Ongoing', 'Canceled'],
+    Ongoing: ['Complete'],
+    Complete: ['Complete'],
+    Canceled: ['Canceled']
+  };
   const [dateError, setDateError] = useState("");
 
   useEffect(() => {
@@ -125,6 +131,16 @@ const Booking = () => {
 
   const handleConfirmUpdate = async (id) => {
     try {
+      const currentBooking = data.find(booking => booking.booking_id === id);
+      if (!currentBooking) {
+        throw new Error("Không tìm thấy booking");
+      }
+      
+      if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
+        toast.error(`Không thể chuyển từ ${currentBooking.booking_status} sang ${newStatus}`);
+        return;
+      }
+
       const response = await fetch(`${API_URL}/api/v1/bookings/${id}`, {
         method: "PUT",
         headers: {
@@ -132,7 +148,7 @@ const Booking = () => {
         },
         body: JSON.stringify({ booking_status: newStatus }),
       });
-
+    
       if (!response.ok) {
         throw new Error("Failed to update booking status");
       }
@@ -143,11 +159,10 @@ const Booking = () => {
       console.error("Error updating booking status:", error.message);
     }
   };
-
-  // const handleDelete = () => {
-  //   console.log("Delete booking with ID: ",selectedBookingId);
-  //   handleClose();
-  // };
+  const isValidStatusTransition = (currentStatus, newStatus) => {
+    const allowedTransitions = STATUS_FLOW[currentStatus] || [];
+    return allowedTransitions.includes(newStatus);
+  };
 
   const validateDate = (date) => {
     if (date) {
@@ -191,23 +206,31 @@ const Booking = () => {
       renderCell: (params) =>
         editStatusId === params.row.booking_id ? (
           <div>
-            <Select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value)}
-            >
-              <MenuItem value="Ongoing">Ongoing</MenuItem>
-              <MenuItem value="Complete">Complete</MenuItem>
-              <MenuItem value="Canceled">Canceled</MenuItem>
-              <MenuItem value="Pending">Pending</MenuItem>
-            </Select>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleConfirmUpdate(params.row.booking_id)}
-            >
-              Confirm
-            </Button>
-          </div>
+          <Select
+            value={newStatus}
+            onChange={(e) => {
+              const nextStatus = e.target.value;
+              if (isValidStatusTransition(params.row.booking_status, nextStatus)) {
+                setNewStatus(nextStatus);
+              } else {
+                toast.error(`Không thể chuyển từ ${params.row.booking_status} sang ${nextStatus}`);
+              }
+            }}
+          >
+            {STATUS_FLOW[params.row.booking_status]?.map(status => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </Select>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleConfirmUpdate(params.row.booking_id)}
+          >
+            Confirm
+          </Button>
+        </div>
         ) : (
           <div>
             {params.value}
