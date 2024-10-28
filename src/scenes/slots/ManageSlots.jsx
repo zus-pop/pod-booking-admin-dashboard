@@ -28,9 +28,11 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Formik, Form, Field } from "formik";
 import { ToastContainer, toast } from "react-toastify";
 import * as Yup from "yup";
+import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Slots = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const { pod_id } = useParams();
   const colors = tokens(theme.palette.mode);
@@ -67,6 +69,16 @@ const Slots = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  
+  const isActionDisabled = () => {
+    switch (userRole) {
+      case "Staff":
+        return true;
+      default:
+        return true;
+    }
+  };
+
 
   const handleUpdate = () => {
     if (editingSlot) {
@@ -156,6 +168,7 @@ const Slots = () => {
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
             onClick={(event) => handleClick(event, params.row.slot_id)}
+            disabled={isActionDisabled()}
           >
             <MoreVertIcon />
           </IconButton>
@@ -191,6 +204,7 @@ const Slots = () => {
           color="primary"
           sx={{ ml: "auto" }}
           onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
+          disabled={isActionDisabled()}
         >
           Generate Slot
         </Button>

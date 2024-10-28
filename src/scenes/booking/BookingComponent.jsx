@@ -21,7 +21,9 @@ import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
 import { Modal } from "@mui/material";
+import { useRole } from "../../RoleContext";
 const Booking = () => {
+  const { userRole } = useRole();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const isXsDevices = useMediaQuery("(max-width:466px)");
@@ -120,6 +122,19 @@ const handleEditStatus = (bookingId, newStatus) => {
   setConfirmStatus(newStatus);
   setIsConfirmModalOpen(true);
 }; 
+
+const isActionDisabled = () => {
+  switch (userRole) {
+    case "Staff":
+      return true;
+    case "Manager":
+      return false;
+    case "Admin":
+      return false;
+    default:
+      return true;
+  }
+};
 
   const handleUpdate = () => {
     if (selectedBookingId) {
@@ -258,6 +273,8 @@ const handleEditStatus = (bookingId, newStatus) => {
           </Button>
           <IconButton
             onClick={(event) => handleClick(event, params.row.booking_id)}
+           
+        
           >
             <MoreVertIcon />
           </IconButton>

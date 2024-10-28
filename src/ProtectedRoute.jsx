@@ -6,7 +6,7 @@ import { useRole } from './RoleContext';
 const ProtectedRoute = ({ children }) => {
   const { userRole } = useRole();
 
-  if (userRole !== "Admin" || userRole !== "Manager"  ) {
+  if (userRole !== "Admin" && userRole !== "Manager"  ) {
     return <Navigate to="/web/unauthorized" replace />;
   }
 

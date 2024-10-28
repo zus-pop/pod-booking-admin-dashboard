@@ -29,10 +29,10 @@ function App() {
         <Route path="/web" element={<Welcome />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ManageUsers />} />
-          <Route path="userform" element={<UserForm />} />
+          <Route path="userform" element={<ProtectedRoute><UserForm /></ProtectedRoute>} />
           <Route path="store" element={<Stores />} />
           <Route path="store/:id" element={<StoreDetail/>} />
-          <Route path="storeform" element={<StoreForm/>} />
+          <Route path="storeform" element={<PrivateRoute><StoreForm/></PrivateRoute>} />
           <Route path="unauthorized" element={<Unauthorized />} />
           <Route path="booking" element={<Booking />} />
           <Route path="booking/:id" element={<BookingDetail />} />
@@ -41,7 +41,7 @@ function App() {
           <Route path="pod" element={<PODManage />} />
           <Route path="pod/:pod_id" element={<Slots/>} />
           <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
-          <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<CreateStorePriceForm/>}/>
+          <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<PrivateRoute><CreateStorePriceForm/></PrivateRoute>}/>
           <Route 
           path="podform"  
           element={
