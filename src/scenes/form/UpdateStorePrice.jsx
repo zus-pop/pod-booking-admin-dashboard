@@ -5,17 +5,18 @@ import * as Yup from 'yup';
 
 const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
   const validationSchema = Yup.object({
-    price: Yup.number().required("Giá là bắt buộc"),
-    start_hour: Yup.number().required("Giờ bắt đầu là bắt buộc").min(0).max(23),
-    end_hour: Yup.number().required("Giờ kết thúc là bắt buộc").min(0).max(23),
+    price: Yup.number().required("Price is required"),
+    start_hour: Yup.number().required("Start hour is required").min(0).max(23),
+    end_hour: Yup.number().required("End hour is required").min(0).max(23),
     days_of_week: Yup.array()
-      .min(1, "Chọn ít nhất một ngày")
-      .required("Ngày trong tuần là bắt buộc"),
-    type_id: Yup.number().required("ID loại pod là bắt buộc"),
-    store_id: Yup.number().required("ID cửa hàng là bắt buộc"),
+      .min(1, "Select at least one day")
+      .required("Days of week are required"),
+    type_id: Yup.number().required("ID Loại Pod is required"),
+    store_id: Yup.number().required("ID Cửa hàng is required"),
     priority: Yup.number()
-      .required("Độ ưu tiên là bắt buộc")
-      .min(0, "Độ ưu tiên phải là số không âm"),
+      .required("Priority is required")
+      .min(1, "Priority must be between 1 and 10")
+      .max(10, "Priority must be between 1 and 10"),
   });
 
   return (
@@ -31,7 +32,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
         p: 4,
       }}>
         <Typography variant="h6" component="h2" gutterBottom>
-          Cập nhật giá cửa hàng
+          Update Store Price
         </Typography>
         <Formik
           initialValues={initialValues}
@@ -43,7 +44,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
               <TextField
                 fullWidth
                 name="price"
-                label="Giá"
+                label="Price"
                 type="number"
                 margin="normal"
                 error={touched.price && Boolean(errors.price)}
@@ -52,7 +53,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
               <TextField
                 fullWidth
                 name="start_hour"
-                label="Giờ bắt đầu"
+                label="Start Hour"
                 type="number"
                 margin="normal"
                 error={touched.start_hour && Boolean(errors.start_hour)}
@@ -61,14 +62,14 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
               <TextField
                 fullWidth
                 name="end_hour"
-                label="Giờ kết thúc"
+                label="End Hour"
                 type="number"
                 margin="normal"
                 error={touched.end_hour && Boolean(errors.end_hour)}
                 helperText={touched.end_hour && errors.end_hour}
               />
               <FormGroup>
-                <InputLabel>Chọn ngày trong tuần</InputLabel>
+                <InputLabel>Select Days of Week</InputLabel>
                 {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
                   <FormControlLabel
                     key={day}
@@ -105,14 +106,14 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
               <TextField
                 fullWidth
                 name="priority"
-                label="Độ ưu tiên"
+                label="Priority"
                 type="number"
                 margin="normal"
                 error={touched.priority && Boolean(errors.priority)}
                 helperText={touched.priority && errors.priority}
               />
               <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
-                Cập nhật
+                Update
               </Button>
             </Form>
           )}

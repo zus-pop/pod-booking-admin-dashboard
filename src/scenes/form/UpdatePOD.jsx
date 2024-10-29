@@ -61,7 +61,7 @@ const UpdatePOD = ({ open, handleClose, pod, onSubmit }) => {
       const response = await axios.get(`${API_URL}/api/v1/pod-types`);
       setPodTypes(response.data);
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách loại POD:", error);
+      console.error("Error:", error);
     }
   };
 
@@ -71,7 +71,7 @@ const UpdatePOD = ({ open, handleClose, pod, onSubmit }) => {
       const total = response.data.total;
       return total;
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách cửa hàng:", error);
+      console.error("Error:", error);
     }
   };
   const fetchAllStore = async (total) => {

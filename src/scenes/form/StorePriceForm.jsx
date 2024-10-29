@@ -21,16 +21,16 @@ import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const validationSchema = Yup.object({
-  price: Yup.number().required("Giá là bắt buộc"),
-  start_hour: Yup.number().required("Giờ bắt đầu là bắt buộc").min(0).max(23),
-  end_hour: Yup.number().required("Giờ kết thúc là bắt buộc").min(0).max(23),
+  price: Yup.number().required("Price is required"),
+  start_hour: Yup.number().required("Start hour is required").min(0).max(23),
+  end_hour: Yup.number().required("End hour is required").min(0).max(23),
   days_of_week: Yup.array()
-    .min(1, "Chọn ít nhất một ngày")
-    .required("Ngày trong tuần là bắt buộc"),
+    .min(1, "Select at least one day")
+    .required("Days of week are required"),
   priority: Yup.number()
-    .required("Độ ưu tiên là bắt buộc")
-    .min(1, "Độ ưu tiên phải là 1 -> 10 ")
-    .max(10, "Độ ưu tiên phải là 1 -> 10"),
+    .required("Priority is required")
+    .min(1, "Priority must be between 1 and 10")
+    .max(10, "Priority must be between 1 and 10"),
 });
 
 const StorePriceForm = () => {
@@ -53,20 +53,20 @@ const StorePriceForm = () => {
       });
       console.log("Submitting values:", values);
       if (response.status === 201) {
-        toast.success("Tạo giá cửa hàng thành công");
+        toast.success("Store price created successfully");
         resetForm();
       }
     } catch (error) {
-      console.error("Lỗi khi tạo giá cửa hàng:", error);
+      console.error("Error creating store price:", error);
       if (error.response) {
-        console.error("Phản hồi lỗi:", error.response.data);
+        console.error("Error response:", error.response.data);
         toast.error(
-          `Lỗi: ${
-            error.response.data.message || "Có lỗi xảy ra khi tạo giá cửa hàng"
+          `Error: ${
+            error.response.data.message || "An error occurred while creating store price"
           }`
         );
       } else {
-        toast.error("Có lỗi xảy ra khi tạo giá cửa hàng");
+        toast.error("An error occurred while creating store price");
       }
     } finally {
       setSubmitting(false);
@@ -101,7 +101,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="Giá"
+                label="Price"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.price}
@@ -113,7 +113,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="Giờ bắt đầu"
+                label="Start Hour"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.start_hour}
@@ -125,7 +125,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="Giờ kết thúc"
+                label="End Hour"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.end_hour}
@@ -134,7 +134,7 @@ const StorePriceForm = () => {
                 helperText={touched.end_hour && errors.end_hour}
               />
               <FormGroup>
-                <InputLabel>Chọn ngày trong tuần</InputLabel>
+                <InputLabel>Select Days of Week</InputLabel>
                 <FormControlLabel
                   control={
                     <Field
@@ -159,7 +159,7 @@ const StorePriceForm = () => {
                       }}
                     />
                   }
-                  label="Tất cả các ngày"
+                  label="All Days"
                 />
                 {[
                   "Sunday",
@@ -192,7 +192,7 @@ const StorePriceForm = () => {
                 fullWidth
                 variant="filled"
                 type="number"
-                label="Độ ưu tiên"
+                label="Priority"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.priority}
@@ -208,7 +208,7 @@ const StorePriceForm = () => {
                 variant="contained"
                 disabled={isSubmitting}
               >
-                Tạo giá cửa hàng mới
+                Create New Store Price
               </Button>
             </Box>
           </Form>

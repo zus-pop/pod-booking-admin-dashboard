@@ -79,7 +79,7 @@ const Product = () => {
     } catch (error) {
       console.error("Error fetching data:", error.message);
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy POD với tên đã cho.");
+        console.error("POD with the given name not found.");
         setData([]);
       }
     } finally {
@@ -152,13 +152,13 @@ const Product = () => {
         values
       );
       if (response.status === 200) {
-        toast.success("Cập nhật sản phẩm thành công");
+        toast.success("Product updated successfully");
         setIsUpdateModalOpen(false);
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật sản phẩm:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật sản phẩm");
+      console.error("Error updating product:", error);
+      toast.error("An error occurred while updating the product");
     }
   };
 
@@ -173,12 +173,12 @@ const Product = () => {
         `${API_URL}/api/v1/products/${selectedProductId}`
       );
       if (response.status === 200) {
-        toast.success("Xóa sản phẩm thành công");
+        toast.success("Product deleted successfully");
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
-      toast.error("Có lỗi xảy ra khi xóa sản phẩm");
+      console.error("Error deleting product:", error);
+      toast.error("An error occurred while deleting the product");
     } finally {
       setIsDeleteModalOpen(false);
     }
@@ -351,7 +351,7 @@ const Product = () => {
               Confirm Action
             </Typography>
             <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-              Are your sure to delete this product ?
+              Are you sure to delete this product?
             </Typography>
             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
               <Button

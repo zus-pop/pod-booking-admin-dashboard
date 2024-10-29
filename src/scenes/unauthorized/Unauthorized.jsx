@@ -13,10 +13,10 @@ const Unauthorized = () => {
       height="100vh"
     >
       <Typography variant="h3" gutterBottom>
-        Không có quyền truy cập
+        Unauthorized Access
       </Typography>
       <Typography variant="body1" gutterBottom>
-        Bạn không có quyền truy cập trang này
+        You don't have permission to access this page
       </Typography>
       <Button
         variant="contained"
@@ -24,7 +24,7 @@ const Unauthorized = () => {
         onClick={() => navigate("/web/dashboard")}
         sx={{ mt: 2 }}
       >
-        Quay về trang chủ
+        Back to Home
       </Button>
     </Box>
   );

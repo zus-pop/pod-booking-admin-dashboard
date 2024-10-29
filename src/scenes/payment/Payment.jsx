@@ -57,7 +57,7 @@ const Payment = () => {
     } catch (error) {
       console.error('Error fetching data:', error.message);
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy Store với tên đã cho.");
+        console.error("Store not found with the given name.");
         setData([]);
       }
     } finally {
@@ -74,7 +74,7 @@ const Payment = () => {
     if (date) {
       const regex = /^\d{4}-\d{2}-\d{2}$/;
       if (!regex.test(date)) {
-        setDateError("Vui lòng nhập ngày theo định dạng YYYY-MM-DD");
+        setDateError("Please enter date in YYYY-MM-DD format");
         return false;
       }
       setDateError("");
