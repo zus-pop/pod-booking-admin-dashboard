@@ -6,7 +6,23 @@ export const RoleProvider = ({ children }) => {
   const [userRole, setUserRole] = useState(() => {
     return localStorage.getItem('userRole') || '';
   });
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'userRole' || e.key === 'token') {
+        if (!e.newValue) {
+          setUserRole('');
+          window.location.href = '/';
+        }
+      }
+    };
 
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
   useEffect(() => {
     localStorage.setItem('userRole', userRole);
   }, [userRole]);
