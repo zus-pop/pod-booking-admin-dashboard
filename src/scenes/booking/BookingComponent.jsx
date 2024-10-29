@@ -60,9 +60,9 @@ const Booking = () => {
   });
   const totalPages = Math.ceil(total / pageSize);
   const STATUS_FLOW = {
-    Pending: ['Confirmed', 'Canceled'],
-    Confirmed: ['Ongoing', 'Canceled'],
-    Ongoing: ['Complete'],
+    Pending: ['Pending','Confirmed', 'Canceled'],
+    Confirmed: ['Confirmed','Ongoing', 'Canceled'],
+    Ongoing: ['Ongoing','Complete'],
     Complete: ['Complete'],
     Canceled: ['Canceled']
   };
@@ -117,7 +117,7 @@ const Booking = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-const handleEditStatus = (bookingId, newStatus) => {
+const handleEditStatus = (bookingId, newStatus) => {  
   setSelectedBookingId(bookingId);
   setConfirmStatus(newStatus);
   setIsConfirmModalOpen(true);
@@ -145,6 +145,7 @@ const isActionDisabled = () => {
       );
       if (bookingToUpdate) {
         setNewStatus(bookingToUpdate.booking_status);
+        
       } else {
         console.error("Booking not found for ID:", selectedBookingId);
       }

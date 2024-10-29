@@ -198,37 +198,6 @@ function Dashboard() {
         ))}
       </Box>
 
-      {/* Revenue Details */}
-      <Box
-        mt="15px"
-        gridColumn={isXlDevices ? "span 4" : "span 3"}
-        gridRow="span 2"
-        backgroundColor={colors.primary[400]}
-        p="30px"
-      >
-        <Typography variant="h5" fontWeight="600">
-          Campaign
-        </Typography>
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          mt="25px"
-        >
-          <ProgressCircle size="125" />
-          <Typography
-            textAlign="center"
-            variant="h5"
-            color={colors.greenAccent[500]}
-            sx={{ mt: "15px" }}
-          >
-            $48,352 revenue generated
-          </Typography>
-          <Typography textAlign="center">
-            Includes extra misc expenditures and costs
-          </Typography>
-        </Box>
-      </Box>
     </Box>
   );
 }

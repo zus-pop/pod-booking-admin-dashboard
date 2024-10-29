@@ -22,7 +22,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(product?.image || null);
   
   const validationSchema = yup.object({
-    product_name: yup.string().required("Product name is required"),
+    product_name: yup.string().matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt").required("Product name is required"),
     description: yup.string().required("Description is required"),
     price: yup.number().required("Price is required"),
     stock: yup.number().required("Stock is required"),

@@ -1,35 +1,38 @@
-import { Box, useTheme,Typography,Button,FormControl,Select,MenuItem } from "@mui/material";
+import {
+  Box,
+  useTheme,
+  Typography,
+  Button,
+  FormControl,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
-import { useState, useEffect } from 'react';
-import {
-  IconButton,
-  InputBase,
-  useMediaQuery,
-} from "@mui/material";
-import {
-  SearchOutlined,
-} from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import { IconButton, InputBase, useMediaQuery } from "@mui/material";
+import { SearchOutlined } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer,toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import { useRole } from "../../RoleContext";
 
 const ManageUsers = () => {
   const { userRole } = useRole();
-  const API_URL = import.meta.env.VITE_API_URL
+  const API_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const theme = useTheme();
   const isXsDevices = useMediaQuery("(max-width:466px)");
   const colors = tokens(theme.palette.mode);
 
   const [data, setData] = useState([]);
- const  [editingUserId,setEditingUserId] = useState("");
- const [newStatus,setNewStatus] = useState("");
-  const [searchValue,setSearchValue] = useState("")
-  
-  
+  const [roles, setRoles] = useState([]);
+
+  const [editingUserId, setEditingUserId] = useState("");
+  const [newStatus, setNewStatus] = useState("");
+  const [searchValue, setSearchValue] = useState("");
+
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
 
@@ -45,32 +48,45 @@ const ManageUsers = () => {
     search: "",
   });
 
-
   useEffect(() => {
     fetchData();
-  }, [pages, pageSize,filters]); 
+    fetchRoles();
+  }, [pages, pageSize, filters]);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/roles`);
+      const filteredRoles = response.data.filter(
+        (role) => role.role_id !== 1 && role.role_id !== 2
+      );
+      setRoles(filteredRoles);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
-       setLoading(true);
+      setLoading(true);
       const result = await axios.get(`${API_URL}/api/v1/auth/users`, {
         params: {
           search: filters.search,
           limit: pageSize,
           page: pages + 1,
-        }
-      })
-      const formattedData = result.data.users.map(user => ({
+        },
+      });
+      const formattedData = result.data.users.map((user) => ({
         user_id: user.user_id,
         user_name: user.user_name,
         email: user.email,
-        role: user.role.role_name,  
+        role: user.role.role_name,
+        role_id: user.role.role_id,
       })); // because can't set property of array to table  so need to format data
       setData(formattedData);
       setTotal(result.data.total);
       console.log("Formatted data:", formattedData);
     } catch (error) {
-      console.error('Error fetching data:', error.message);
+      console.error("Error fetching data:", error.message);
       if (error.response && error.response.status === 404) {
         console.error("Store not found with the given name.");
         setData([]);
@@ -105,7 +121,6 @@ const ManageUsers = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-
   const handleSearch = () => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -116,26 +131,30 @@ const ManageUsers = () => {
   const handleEditRole = (userId) => {
     console.log("Updating user with ID:", userId);
     setEditingUserId(userId);
-    const userToUpdate = data.find(user => user.user_id === userId);
+    const userToUpdate = data.find((user) => user.user_id === userId);
     if (userToUpdate) {
-      setNewStatus(userToUpdate.role.role_id);
+      setNewStatus(userToUpdate.role_id);
     } else {
       console.error("User not found for ID:", userId);
     }
   };
-  
+
   const handleConfirmEdit = async (userId, newRole) => {
     try {
-      const response = await axios.put(`${API_URL}/api/v1/auth/users/${userId}`, {
-        role_id: newRole 
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+      const response = await axios.put(
+        `${API_URL}/api/v1/auth/users/${userId}`,
+        {
+          role_id: newRole,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-      });
+      );
       if (response.status === 200) {
         toast.success("Role updated successfully");
-        fetchData(); 
+        fetchData();
         setEditingUserId(null);
       }
     } catch (error) {
@@ -157,23 +176,26 @@ const ManageUsers = () => {
       field: "email",
       headerName: "Email",
       flex: 1,
-    },  
-    { 
+    },
+    {
       field: "role",
       headerName: "Role",
       flex: 1,
-      renderCell: (params) => (
+      renderCell: (params) =>
         editingUserId === params.row.user_id ? (
           <div style={{ display: "flex", alignItems: "center" }}>
             <FormControl>
-  <Select
-    value={newStatus}
-    onChange={(e) => setNewStatus(e.target.value)}
-  >
-    <MenuItem value="3">Manager</MenuItem>
-    <MenuItem value="4">Staff</MenuItem>
-  </Select>
-</FormControl>
+              <Select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+              >
+                {roles.map((role) => (
+                  <MenuItem key={role.role_id} value={role.role_id}>
+                    {role.role_name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <Button
               variant="contained"
               color="primary"
@@ -183,11 +205,8 @@ const ManageUsers = () => {
             </Button>
           </div>
         ) : (
-          <div>
-            {params.value}
-          </div>
-        )
-      ),
+          <div>{params.value}</div>
+        ),
     },
     {
       field: "action",
@@ -197,9 +216,11 @@ const ManageUsers = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() =>  handleEditRole(params.row.user_id)}
-            disabled={params.row.role !== "Manager" && params.row.role !== "Staff" || isActionDisabled()}
-          
+            onClick={() => handleEditRole(params.row.user_id)}
+            disabled={
+              (params.row.role !== "Manager" && params.row.role !== "Staff") ||
+              isActionDisabled()
+            }
           >
             Edit Role
           </Button>
@@ -207,21 +228,19 @@ const ManageUsers = () => {
       ),
       flex: 0.5,
     },
-
   ];
 
   return (
     <Box m="20px">
       <Header title="Users" subtitle="List of Users" />
-      <ToastContainer/>
+      <ToastContainer />
       <Box
-          display="flex"
-          alignItems="center"
-         
-          borderRadius="3px"
-          sx={{ display: `${isXsDevices ? "none" : "flex"}` }}
-        >
-          <InputBase
+        display="flex"
+        alignItems="center"
+        borderRadius="3px"
+        sx={{ display: `${isXsDevices ? "none" : "flex"}` }}
+      >
+        <InputBase
           placeholder=" Search By Name or Gmail"
           sx={{
             ml: 2,
@@ -245,13 +264,13 @@ const ManageUsers = () => {
         <Button
           variant="contained"
           color="primary"
-          sx={{ ml: 'auto' }} 
-          onClick={() => navigate('/web/userform')}
+          sx={{ ml: "auto" }}
+          onClick={() => navigate("/web/userform")}
           disabled={isCreateDisabled()}
         >
           Create a new user
         </Button>
-        </Box>
+      </Box>
       <Box
         mt="40px"
         height="75vh"
@@ -286,34 +305,34 @@ const ManageUsers = () => {
         }}
       >
         <DataGrid
-           rows={data}
-           columns={columns}
-           getRowId={(row) => row.user_id}        
-           pagination
-           paginationModel={paginationModel}
-           onPaginationModelChange={handlePaginationModelChange}  
-           pageSizeOptions={[4, 6, 8]}
-           rowCount={total}
-           paginationMode="server"
-           checkboxSelection
-           loading={loading}
-           autoHeight 
-           sx={{
-             "& .MuiDataGrid-cell": {
-               fontSize: "15px", 
-             },
-             "& .MuiDataGrid-columnHeaders": {
-               fontSize: "15px", 
-             },
-           }}
-         />
-         <Box mt="10px">
-      <Typography variant="body1">
-        Page {pages + 1 } of {totalPages}
-      </Typography>
+          rows={data}
+          columns={columns}
+          getRowId={(row) => row.user_id}
+          pagination
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationModelChange}
+          pageSizeOptions={[4, 6, 8]}
+          rowCount={total}
+          paginationMode="server"
+          checkboxSelection
+          loading={loading}
+          autoHeight
+          sx={{
+            "& .MuiDataGrid-cell": {
+              fontSize: "15px",
+            },
+            "& .MuiDataGrid-columnHeaders": {
+              fontSize: "15px",
+            },
+          }}
+        />
+        <Box mt="10px">
+          <Typography variant="body1">
+            Page {pages + 1} of {totalPages}
+          </Typography>
+        </Box>
+      </Box>
     </Box>
-    </Box>
-     </Box>
   );
 };
 
