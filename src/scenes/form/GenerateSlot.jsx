@@ -67,10 +67,16 @@ const GenerateSlot = () => {
   const { pod_id } = useParams();
   const [slots, setSlots] = useState([]);
   const theme = useTheme();
-  const [visibleSlots, setVisibleSlots] = useState(12);
   const colors = tokens(theme.palette.mode);
   const [storePrices, setStorePrices] = useState([]);
   const navigate = useNavigate();
+  
+  const [currentPage, setCurrentPage] = useState(1);
+const slotsPerPage = 12;
+
+  const indexOfLastSlot = currentPage * slotsPerPage;
+  const indexOfFirstSlot = indexOfLastSlot - slotsPerPage;
+  const currentSlots = slots.slice(indexOfFirstSlot, indexOfLastSlot);
 
   useEffect(() => {
     fetchData();
@@ -79,7 +85,11 @@ const GenerateSlot = () => {
 
   const fetchData = async () => {
     try {
-      const result = await axios.get(`${API_URL}/api/v1/slots`);
+      const result = await axios.get(`${API_URL}/api/v1/slots`, {
+        params: {
+          pod_id: pod_id,
+        },
+      });
       setSlots(result.data);
       console.log("Data:", result.data);
     } catch (error) {
@@ -143,19 +153,31 @@ const GenerateSlot = () => {
     }
   };
 
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) =>
+      Math.min(prev + 1, Math.ceil(slots.length / slotsPerPage))
+    );
+  };
+
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "type_name", headerName: "POD Type", flex: 1 },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
-    { field: "price", headerName: "Price", flex: 1 ,
+    {
+      field: "price",
+      headerName: "Price",
+      flex: 1,
       valueFormatter: (params) => {
-        return new Intl.NumberFormat('vi-VN', {
-                  style: 'currency',
-                  currency: 'VND',
-         
-        }).format(params.value)
-      }
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(params.value);
+      },
     },
     {
       field: "days_of_week",
@@ -204,7 +226,7 @@ const GenerateSlot = () => {
       <Header title="GENERATE SLOT" subtitle="" />
 
       {/* Store Prices DataGrid */}
-      <Box mb="20px" marginBottom={5}>
+      <Box mb="10px" marginBottom={5}>
         <Box display="flex" alignItems="center" borderRadius="3px">
           <Typography variant="h4" gutterBottom>
             Store Prices
@@ -233,11 +255,11 @@ const GenerateSlot = () => {
 
       <Box
         sx={{
-          mt: "20px",
+          mt: "5px",
           display: "grid",
           gridAutoFlow: "row",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gridTemplateRows: "repeat(7, 100px)",
+          gridTemplateRows: "repeat(4, 120px)",
           gap: 2,
         }}
         gap="30px"
@@ -245,7 +267,7 @@ const GenerateSlot = () => {
         <Box
           alignItems="center"
           justifyContent="center"
-          sx={{ gridColumn: "1", gridRow: "1 / 8" }}
+          sx={{ gridColumn: "1", gridRow: "1 / 5" }}
         >
           <Formik
             onSubmit={handleFormSubmit}
@@ -363,7 +385,7 @@ const GenerateSlot = () => {
                     >
                       {Array.from({ length: 24 }, (_, i) => (
                         <MenuItem
-                          key={i} 
+                          key={i}
                           value={i}
                           disabled={i <= values.startHour}
                           sx={{ py: 1 }}
@@ -418,7 +440,7 @@ const GenerateSlot = () => {
           </Formik>
         </Box>
 
-        {slots.slice(0, visibleSlots).map((slot, index) => (
+        {currentSlots.map((slot, index) => (
           <Box
             key={index}
             bgcolor={colors.primary[400]}
@@ -432,8 +454,45 @@ const GenerateSlot = () => {
             <Typography variant="h5">Slot {slot.slot_id}</Typography>
             <Typography>Start time: {slot.start_time}</Typography>
             <Typography>End time: {slot.end_time}</Typography>
+            <Typography>
+              Price:{" "}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(slot.price)}
+            </Typography>
           </Box>
         ))}
+        <Box
+          sx={{
+            gridColumn: "2 / 5",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 2,
+            mt: 2,
+          }}
+        >
+          <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            variant="contained"
+            color="secondary"
+          >
+            &lt;
+          </Button>
+          <Typography>
+            Trang {currentPage} / {Math.ceil(slots.length / slotsPerPage)}
+          </Typography>
+          <Button
+            onClick={handleNextPage}
+            disabled={currentPage === Math.ceil(slots.length / slotsPerPage)}
+            variant="contained"
+            color="secondary"
+          >
+            &gt;
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
