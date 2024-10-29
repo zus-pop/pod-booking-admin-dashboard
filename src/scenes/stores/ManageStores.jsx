@@ -88,7 +88,7 @@ const Stores = () => {
       console.log("Formatted data:", formattedData);
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy Store với tên đã cho.");
+        console.error("Store not found with the given name.");
         setData([]);
       } else {
         console.error("Error fetching data:", error.message);
@@ -129,13 +129,13 @@ const Stores = () => {
         values
       );
       if (response.status === 200) {
-        toast.success("Cập nhật cửa hàng thành công");
+        toast.success("Store updated successfully");
         setIsUpdateModalOpen(false);
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật cửa hàng:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật cửa hàng");
+      console.error("Error updating store:", error);
+      toast.error("An error occurred while updating the store");
     }
   };
 
@@ -150,12 +150,12 @@ const Stores = () => {
         `${API_URL}/api/v1/stores/${selectedStoreId}`
       );
       if (response.status === 200) {
-        toast.success("Xóa cửa hàng thành công");
+        toast.success("Store deleted successfully");
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi xóa cửa hàng:", error);
-      toast.error("Có lỗi xảy ra khi xóa cửa hàng");
+      console.error("Error deleting store:", error);
+      toast.error("An error occurred while deleting store");
     } finally {
       setIsDeleteModalOpen(false);
     }
@@ -297,17 +297,17 @@ const Stores = () => {
           }}
         >
           <Typography id="delete-modal-title" variant="h6" component="h2">
-            Xác nhận xóa
+            Confirm Delete
           </Typography>
           <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-            Bạn có chắc chắn muốn xóa cửa hàng này không?
+            Are you sure you want to delete this store?
           </Typography>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
-              Hủy
+              Cancel
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
-              Xóa
+              Delete
             </Button>
           </Box>
         </Box>

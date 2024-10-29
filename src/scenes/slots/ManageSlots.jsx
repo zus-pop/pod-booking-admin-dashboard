@@ -45,7 +45,7 @@ const Slots = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSlot, setEditingSlot] = useState(null);
   const updateSlotSchema = Yup.object().shape({
-    price: Yup.number().required("Giá là bắt buộc"),
+    price: Yup.number().required("Price is required"),
   });
   useEffect(() => {
     fetchData();
@@ -53,8 +53,13 @@ const Slots = () => {
 
   const fetchData = async () => {
     try {
-      const result = await axios.get(`${API_URL}/api/v1/slots`);
-
+      const result = await axios.get(`${API_URL}/api/v1/slots`, {
+        params: {
+          pod_id: pod_id,
+        }
+      });
+      console.log("Pod ID:", pod_id);
+      console.log(result.data)
       setData(result.data);
     } catch (error) {
       console.error("Error fetching data:", error.message);
@@ -75,7 +80,7 @@ const Slots = () => {
       case "Staff":
         return true;
       default:
-        return true;
+        return false;
     }
   };
 
@@ -101,13 +106,13 @@ const Slots = () => {
       );
       console.log(response.data);
       if (response.status === 200) {
-        toast.success("Cập nhật slot thành công");
+        toast.success("Slot updated successfully");
         fetchData();
         setIsModalOpen(false);
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật slot:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật slot");
+      console.error("Error updating slot:", error);
+      toast.error("An error occurred while updating the slot");
     }
   };
 
@@ -123,12 +128,12 @@ const Slots = () => {
           `${API_URL}/api/v1/slots/${editingSlot}`
         );
         if (response.status === 201) {
-          toast.success("Xóa slot thành công");
+          toast.success("Slot deleted successfully");
           fetchData();
         }
       } catch (error) {
-        console.error("Lỗi khi xóa slot:", error);
-        toast.error("Có lỗi xảy ra khi xóa slot");
+        console.error("Error deleting slot:", error);
+        toast.error("An error occurred while deleting the slot");
       }
     }
     setIsDeleteModalOpen(false);
@@ -152,6 +157,13 @@ const Slots = () => {
       field: "price",
       headerName: "Price",
       flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
     },
     {
       field: "is_available",
@@ -224,7 +236,7 @@ const Slots = () => {
             }}
           >
             <Typography variant="h6" component="h2">
-              Cập nhật Slot
+              Update Slot
             </Typography>
             <Formik
               initialValues={{
@@ -238,7 +250,7 @@ const Slots = () => {
                   <Field
                     name="price"
                     as={TextField}
-                    label="Giá"
+                    label="Price"
                     fullWidth
                     margin="normal"
                     error={touched.price && errors.price}
@@ -251,7 +263,7 @@ const Slots = () => {
                     color="primary"
                     fullWidth
                   >
-                    Cập nhật
+                    Update
                   </Button>
                 </Form>
               )}
@@ -279,17 +291,17 @@ const Slots = () => {
           }}
         >
           <Typography id="delete-modal-title" variant="h6" component="h2">
-            Xác nhận xóa
+            Confirm Delete
           </Typography>
           <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-            Bạn có chắc chắn muốn xóa slot này không?
+            Are you sure you want to delete this slot?
           </Typography>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
-              Hủy
+              Cancel
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
-              Xóa
+              Delete
             </Button>
           </Box>
         </Box>

@@ -98,7 +98,7 @@ const PODManage = () => {
       );
       return response.data;
     } catch (error) {
-      console.error(`Lỗi khi lấy utilities cho POD ${podId}:`, error);
+      console.error(`Error when get POD ${podId}:`, error);
       return [];
     }
   };
@@ -142,7 +142,7 @@ const PODManage = () => {
       console.log("Formatted data:", formattedData);
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy POD với tên đã cho.");
+        console.error("POD with given name not found.");
         setData([]);
       } else {
         console.error("Error fetching data:", error.message);
@@ -188,13 +188,13 @@ const PODManage = () => {
         values
       );
       if (response.status === 200) {
-        toast.success("Cập nhật POD thành công");
+        toast.success("POD updated successfully");
         setIsUpdateModalOpen(false);
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật POD:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật POD");
+      console.error("Error updating POD:", error);
+      toast.error("An error occurred while updating POD");
     }
   };
 
@@ -209,12 +209,12 @@ const PODManage = () => {
         `${API_URL}/api/v1/pods/${selectedPodId}`
       );
       if (response.status === 200) {
-        toast.success("Xóa POD thành công");
+        toast.success("POD deleted successfully");
         fetchData();
       }
     } catch (error) {
-      console.error("Lỗi khi xóa POD:", error);
-      toast.error("Có lỗi xảy ra khi xóa POD");
+      console.error("Error deleting POD:", error);
+      toast.error("An error occurred while deleting POD");
     } finally {
       setIsDeleteModalOpen(false);
     }
@@ -370,17 +370,17 @@ const PODManage = () => {
           }}
         >
           <Typography id="delete-modal-title" variant="h6" component="h2">
-            Xác nhận xóa
+            Confirm Delete
           </Typography>
           <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-            Bạn có chắc chắn muốn xóa POD này không?
+            Are you sure you want to delete this POD?
           </Typography>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
-              Hủy
+              Cancel
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
-              Xóa
+              Delete
             </Button>
           </Box>
         </Box>

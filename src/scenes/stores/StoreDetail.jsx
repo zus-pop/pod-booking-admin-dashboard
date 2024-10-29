@@ -99,9 +99,9 @@ const StoreDetail = () => {
     } catch (error) {
       if (error.response && error.response.status === 404) {
         setStorePrices([]);
-        console.log("Không tìm thấy giá cửa hàng, đặt mảng rỗng");
+        console.log("No store prices found, setting empty array");
       } else {
-        console.error("Lỗi khi lấy giá cửa hàng:", error.message);
+        console.error("Error fetching store prices:", error.message);
       }
     }
   };
@@ -143,13 +143,13 @@ const StoreDetail = () => {
         values
       );
       if (response.status === 200) {
-        toast.success("Cập nhật giá cửa hàng thành công");
+        toast.success("Store price updated successfully");
         setIsUpdateModalOpen(false);
         fetchData(); // Refresh data after update
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật giá cửa hàng:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật giá cửa hàng");
+      console.error("Error updating store price:", error);
+      toast.error("An error occurred while updating store price");
     }
   };
 
@@ -165,12 +165,12 @@ const StoreDetail = () => {
         `${API_URL}/api/v1/store-prices/${deletingStorePrice}`
       );
       if (response.status === 201) {
-        toast.success("Xóa giá cửa hàng thành công");
+        toast.success("Store price deleted successfully");
         fetchStorePrices(selectedTypeId);
       }
     } catch (error) {
-      console.error("Lỗi khi xóa giá cửa hàng:", error);
-      toast.error("Có lỗi xảy ra khi xóa giá cửa hàng");
+      console.error("Error deleting store price:", error);
+      toast.error("An error occurred while deleting store price");
     } finally {
       setIsDeleteModalOpen(false);
       setDeletingStorePrice(null);
@@ -202,7 +202,15 @@ const StoreDetail = () => {
     },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
-    { field: "price", headerName: "Price", flex: 1 },
+    { field: "price", headerName: "Price", flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
+     },
     {
       field: "days_of_week",
       headerName: "Days of Week",
@@ -405,17 +413,17 @@ const StoreDetail = () => {
           }}
         >
           <Typography id="delete-modal-title" variant="h6" component="h2">
-            Xác nhận xóa
+            Confirm Delete
           </Typography>
           <Typography id="delete-modal-description" sx={{ mt: 2 }}>
-            Bạn có chắc chắn muốn xóa giá cửa hàng này không?
+            Are you sure you want to delete this store price?
           </Typography>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button onClick={() => setIsDeleteModalOpen(false)} sx={{ mr: 2 }}>
-              Hủy
+              Cancel
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
-              Xóa
+              Delete
             </Button>
           </Box>
         </Box>

@@ -22,11 +22,11 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(product?.image || null);
   
   const validationSchema = yup.object({
-    product_name: yup.string().required("Tên sản phẩm là bắt buộc"),
-    description: yup.string().required("Mô tả là bắt buộc"),
-    price: yup.number().required("Giá là bắt buộc"),
-    stock: yup.number().required("Số lượng là bắt buộc"),
-    category_id: yup.number().required("Danh mục là bắt buộc"),
+    product_name: yup.string().required("Product name is required"),
+    description: yup.string().required("Description is required"),
+    price: yup.number().required("Price is required"),
+    stock: yup.number().required("Stock is required"),
+    category_id: yup.number().required("Category is required"),
     image: yup.mixed().nullable(),
   });
 
@@ -46,7 +46,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
         }}
       >
         <Typography variant="h6" component="h2" gutterBottom>
-          Cập nhật sản phẩm
+          Update Product
         </Typography>
         <Formik
           initialValues={{
@@ -77,7 +77,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="product_name"
-                label="Tên sản phẩm"
+                label="Product Name"
                 value={values.product_name}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -88,7 +88,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="description"
-                label="Mô tả"
+                label="Description"
                 value={values.description}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -99,7 +99,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="price"
-                label="Giá"
+                label="Price"
                 type="number"
                 value={values.price}
                 onChange={handleChange}
@@ -111,7 +111,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="stock"
-                label="Số lượng"
+                label="Stock"
                 type="number"
                 value={values.stock}
                 onChange={handleChange}
@@ -120,7 +120,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 helperText={touched.stock && errors.stock}
               />
               <FormControl fullWidth margin="normal">
-                <InputLabel>Danh mục</InputLabel>
+                <InputLabel>Category</InputLabel>
                 <Select
                   name="category_id"
                   value={values.category_id}
@@ -165,7 +165,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 fullWidth
                 sx={{ mt: 2 }}
               >
-                Cập nhật
+                Update
               </Button>
             </Form>
           )}

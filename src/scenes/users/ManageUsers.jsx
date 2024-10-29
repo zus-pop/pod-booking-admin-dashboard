@@ -72,7 +72,7 @@ const ManageUsers = () => {
     } catch (error) {
       console.error('Error fetching data:', error.message);
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy Store với tên đã cho.");
+        console.error("Store not found with the given name.");
         setData([]);
       }
     } finally {
@@ -134,13 +134,13 @@ const ManageUsers = () => {
         }
       });
       if (response.status === 200) {
-        toast.success("Cập nhật vai trò thành công");
+        toast.success("Role updated successfully");
         fetchData(); 
         setEditingUserId(null);
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật vai trò:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật vai trò");
+      console.error("Error updating role:", error);
+      toast.error("An error occurred while updating role");
     }
   };
 
@@ -179,7 +179,7 @@ const ManageUsers = () => {
               color="primary"
               onClick={() => handleConfirmEdit(params.row.user_id, newStatus)}
             >
-              Xác nhận
+              Confirm
             </Button>
           </div>
         ) : (

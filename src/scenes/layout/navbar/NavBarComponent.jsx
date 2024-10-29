@@ -42,9 +42,10 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Xóa token
-    navigate("/"); // Điều hướng đến trang đăng nhập
-    handleClose(); // Đóng menu
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    navigate("/", { replace: true });
+    handleClose();
   };
 
   return (

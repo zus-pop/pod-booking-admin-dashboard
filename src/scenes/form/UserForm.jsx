@@ -14,7 +14,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const initialValues = {
@@ -25,16 +25,20 @@ const initialValues = {
 };
 
 const userSchema = yup.object().shape({
-  user_name: yup.string().required("Tên người dùng là bắt buộc"),
-  email: yup.string().email("Email không hợp lệ").required("Email là bắt buộc"),
+  user_name: yup
+  .string()
+  .matches(/^[a-zA-Z0-9_ ]*$/, "Username không được chứa ký tự đặc biệt")
+  .required("Username is required"),
+  email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
     .string()
-    .required("Mật khẩu là bắt buộc")
-    .min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-  role_id: yup.number().required("Vai trò là bắt buộc"),
+    .required("Password is required")
+    .min(6, "Password must be at least 6 characters"),
+  role_id: yup.number().required("Role is required"),
 });
 
 const UserForm = () => {
+  const { userRole } = useRole();
   const [roles, setRoles] = useState([]);
 
   useEffect(() => {
@@ -43,7 +47,7 @@ const UserForm = () => {
         const response = await axios.get(`${API_URL}/api/v1/roles`);
         setRoles(response.data);
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách vai trò:", error);
+        console.error("Error:", error);
       }
     };
     fetchRoles();
@@ -51,27 +55,28 @@ const UserForm = () => {
 
   const handleFormSubmit = async (values, actions) => {
     try {
+
       const response = await axios.post(
         `${API_URL}/api/v1/auth/register`,
         values
       );
       if (response.status === 201) {
-        toast.success("Tạo người dùng thành công");
+        toast.success("User created successfully");
         actions.resetForm();
       }
     } catch (error) {
-      console.error("Lỗi:", error.response);
+      console.error("Error:", error.response);
       if (error.response && error.response.data) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Có lỗi xảy ra khi tạo người dùng");
+        toast.error("An error occurred while creating user");
       }
     }
   };
 
   return (
     <Box m="20px">
-      <Header title="TẠO NGƯỜI DÙNG" subtitle="Tạo một người dùng mới" />
+      <Header title="CREATE USER" subtitle="Create a new user" />
       <ToastContainer />
 
       <Formik
@@ -92,7 +97,8 @@ const UserForm = () => {
               <TextField
                 fullWidth
                 variant="filled"
-                label="Tên người dùng"
+                label="Username"
+         
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.user_name}
@@ -114,7 +120,7 @@ const UserForm = () => {
               <TextField
                 fullWidth
                 variant="filled"
-                label="Mật khẩu"
+                label="Password"
                 type="password"
                 onBlur={handleBlur}
                 onChange={handleChange}
@@ -124,19 +130,29 @@ const UserForm = () => {
                 helperText={touched.password && errors.password}
               />
               <FormControl fullWidth>
-                <InputLabel id="role-select-label">Vai trò</InputLabel>
+                <InputLabel id="role-select-label">Role</InputLabel>
                 <Select
                   labelId="role-select-label"
                   id="role_id"
                   value={values.role_id}
-                  label="Vai trò"
+                  label="Role"
                   onChange={handleChange}
                   onBlur={handleBlur}
                   name="role_id"
                   error={touched.role_id && Boolean(errors.role_id)}
                 >
                   {roles
-                    .filter((role) => role.role_name !== "Admin")
+                    .filter((role) => {
+                      if (userRole === "Admin") {
+                        return (
+                          role.role_name === "Manager" ||
+                          role.role_name === "Staff"
+                        );
+                      } else if (userRole === "Manager") {
+                        return role.role_name === "Staff";
+                      }
+                      return false;
+                    })
                     .map((role) => (
                       <MenuItem key={role.role_id} value={role.role_id}>
                         {role.role_name}
@@ -147,7 +163,7 @@ const UserForm = () => {
             </Box>
             <Box display="flex" justifyContent="center" mt="20px">
               <Button type="submit" color="secondary" variant="contained">
-                Tạo người dùng mới
+                Create New User
               </Button>
             </Box>
           </form>

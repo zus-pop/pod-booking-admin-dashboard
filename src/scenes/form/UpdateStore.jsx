@@ -19,11 +19,11 @@ const VisuallyHiddenInput = styled("input")({
 });
 const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(store?.image || null);
-  
+  const phoneRegExp = /^0\d{9,10}$/;
   const validationSchema = yup.object({
-    store_name: yup.string().required("Tên cửa hàng là bắt buộc"),
-    address: yup.string().required("Địa chỉ là bắt buộc"),
-    hotline: yup.string().required("Số điện thoại là bắt buộc"),
+    store_name: yup.string().required("Store name is required"),
+    address: yup.string().required("Address is required"),
+    hotline: yup.string().required().matches(phoneRegExp, "Phone number is not valid"),
     image: yup.mixed().nullable(),
   });
   return (
@@ -42,7 +42,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
         }}
       >
         <Typography variant="h6" component="h2" gutterBottom>
-          Cập nhật cửa hàng
+          Update Store
         </Typography>
         <Formik
           initialValues={{
@@ -69,7 +69,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="store_name"
-                label="Tên cửa hàng"
+                label="Store Name"
                 value={values.store_name}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -80,7 +80,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="address"
-                label="Địa chỉ"
+                label="Address"
                 value={values.address}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -91,7 +91,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 fullWidth
                 margin="normal"
                 name="hotline"
-                label="Số điện thoại"
+                label="Phone Number"
                 value={values.hotline}
                 onChange={handleChange}
                 onBlur={handleBlur}
@@ -168,7 +168,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                 fullWidth
                 sx={{ mt: 2 }}
               >
-                Cập nhật
+                Update
               </Button>
             </Form>
           )}

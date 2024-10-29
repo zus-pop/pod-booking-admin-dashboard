@@ -25,14 +25,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { tokens } from "../../theme";
 import { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-
-
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const initialValues = {
-  startDate: "",
-  endDate: "",
+  startDate: null,
+  endDate: null,
   startHour: "",
   endHour: "",
   durationMinutes: "",
@@ -40,10 +40,25 @@ const initialValues = {
 };
 
 const slotSchema = yup.object().shape({
-  startDate: yup.string().required("Start date is required"),
-  endDate: yup.string().required("End date is required"),
-  startHour: yup.number().required("Start hour is required"),
-  endHour: yup.number().required("End hour is required"),
+  startDate: yup.date().required("Start date is required"),
+  endDate: yup
+    .date()
+    .required("End date is required")
+    .min(yup.ref("startDate"), "End date must be later than start date"),
+  startHour: yup
+    .number()
+    .required("Start hour is required")
+    .min(0, "Start hour must be between 0-23")
+    .max(23, "Start hour must be between 0-23"),
+  endHour: yup
+    .number()
+    .required("End hour is required")
+    .min(0, "End hour must be between 0-23")
+    .max(23, "End hour must be between 0-23")
+    .test("is-greater", "End hour must be after start hour", function (value) {
+      const { startHour } = this.parent;
+      return !startHour || !value || value > startHour;
+    }),
   durationMinutes: yup.number().required("Duration is required"),
   price: yup.number().required("Price is required"),
 });
@@ -52,12 +67,17 @@ const GenerateSlot = () => {
   const { pod_id } = useParams();
   const [slots, setSlots] = useState([]);
   const theme = useTheme();
-  const [visibleSlots, setVisibleSlots] = useState(12);
   const colors = tokens(theme.palette.mode);
   const [storePrices, setStorePrices] = useState([]);
   const navigate = useNavigate();
+  
+  const [currentPage, setCurrentPage] = useState(1);
+const slotsPerPage = 12;
 
- 
+  const indexOfLastSlot = currentPage * slotsPerPage;
+  const indexOfFirstSlot = indexOfLastSlot - slotsPerPage;
+  const currentSlots = slots.slice(indexOfFirstSlot, indexOfLastSlot);
+
   useEffect(() => {
     fetchData();
     fetchStorePrices();
@@ -65,7 +85,11 @@ const GenerateSlot = () => {
 
   const fetchData = async () => {
     try {
-      const result = await axios.get(`${API_URL}/api/v1/slots`);
+      const result = await axios.get(`${API_URL}/api/v1/slots`, {
+        params: {
+          pod_id: pod_id,
+        },
+      });
       setSlots(result.data);
       console.log("Data:", result.data);
     } catch (error) {
@@ -78,11 +102,11 @@ const GenerateSlot = () => {
       const podResponse = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`);
       const typeId = podResponse.data.type.type_id;
       const storeId = podResponse.data.store.store_id;
-  
+
       const result = await axios.get(
         `${API_URL}/api/v1/stores/${storeId}/pod-type/${typeId}/prices`
       );
-      
+
       let formattedData;
       if (Array.isArray(result.data.storePrices)) {
         formattedData = result.data.storePrices.map((storePrice) => ({
@@ -111,6 +135,8 @@ const GenerateSlot = () => {
       console.log("Submitting values:", { values });
       const response = await axios.post(`${API_URL}/api/v1/slots`, {
         ...values,
+        startDate: values.startDate.toISOString().split("T")[0],
+        endDate: values.endDate.toISOString().split("T")[0],
         pod_id,
       });
       console.log(response.status);
@@ -127,25 +153,32 @@ const GenerateSlot = () => {
     }
   };
 
-
-  const getPodTypeName = (typeId) => {
-    switch (typeId) {
-      case 1:
-        return "Single POD";
-      case 2:
-        return "Double POD";
-      case 3:
-        return "Meeting Room";
-      default:
-        return "Unknown";
-    }
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) =>
+      Math.min(prev + 1, Math.ceil(slots.length / slotsPerPage))
+    );
+  };
+
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
     { field: "type_name", headerName: "POD Type", flex: 1 },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
-    { field: "price", headerName: "Price", flex: 1 },
+    {
+      field: "price",
+      headerName: "Price",
+      flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(params.value);
+      },
+    },
     {
       field: "days_of_week",
       headerName: "Days of Week",
@@ -174,12 +207,10 @@ const GenerateSlot = () => {
       headerName: "Priority",
       flex: 0.5,
     },
-   
   ];
 
   return (
     <Box m="20px">
-     
       <ToastContainer
         position="top-center"
         autoClose={5000}
@@ -195,12 +226,11 @@ const GenerateSlot = () => {
       <Header title="GENERATE SLOT" subtitle="" />
 
       {/* Store Prices DataGrid */}
-      <Box mb="20px" marginBottom={5}>
+      <Box mb="10px" marginBottom={5}>
         <Box display="flex" alignItems="center" borderRadius="3px">
           <Typography variant="h4" gutterBottom>
             Store Prices
           </Typography>
-         
         </Box>
         <DataGrid
           rows={storePrices}
@@ -225,11 +255,11 @@ const GenerateSlot = () => {
 
       <Box
         sx={{
-          mt: "20px",
+          mt: "5px",
           display: "grid",
           gridAutoFlow: "row",
           gridTemplateColumns: "repeat(4, 1fr)",
-          gridTemplateRows: "repeat(7, 100px)",
+          gridTemplateRows: "repeat(4, 120px)",
           gap: 2,
         }}
         gap="30px"
@@ -237,7 +267,7 @@ const GenerateSlot = () => {
         <Box
           alignItems="center"
           justifyContent="center"
-          sx={{ gridColumn: "1", gridRow: "1 / 8" }}
+          sx={{ gridColumn: "1", gridRow: "1 / 5" }}
         >
           <Formik
             onSubmit={handleFormSubmit}
@@ -251,57 +281,125 @@ const GenerateSlot = () => {
               handleBlur,
               handleChange,
               handleSubmit,
+              setFieldValue,
             }) => (
               <form onSubmit={handleSubmit}>
                 <Box>
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Start Date"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    value={values.startDate}
-                    name="startDate"
-                    error={touched.startDate && Boolean(errors.startDate)}
-                    helperText={touched.startDate && errors.startDate}
-                    sx={{ marginBottom: "10px" }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="End Date"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    value={values.endDate}
-                    name="endDate"
-                    error={touched.endDate && Boolean(errors.endDate)}
-                    helperText={touched.endDate && errors.endDate}
-                    sx={{ marginBottom: "10px" }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="Start Hour"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    value={values.startHour}
-                    name="startHour"
-                    error={touched.startHour && Boolean(errors.startHour)}
-                    helperText={touched.startHour && errors.startHour}
-                    sx={{ marginBottom: "10px" }}
-                  />
-                  <TextField
-                    fullWidth
-                    variant="filled"
-                    label="End Hour"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    value={values.endHour}
-                    name="endHour"
-                    error={touched.endHour && Boolean(errors.endHour)}
-                    helperText={touched.endHour && errors.endHour}
-                    sx={{ marginBottom: "10px" }}
-                  />
+                  <FormControl fullWidth sx={{ marginBottom: "10px" }}>
+                    <ReactDatePicker
+                      selected={values.startDate}
+                      onChange={(date) => setFieldValue("startDate", date)}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Select start date"
+                      customInput={
+                        <TextField
+                          fullWidth
+                          variant="filled"
+                          label="Start Date"
+                          error={touched.startDate && Boolean(errors.startDate)}
+                          helperText={touched.startDate && errors.startDate}
+                          inputProps={{
+                            readOnly: true,
+                          }}
+                        />
+                      }
+                      minDate={new Date()}
+                    />
+                  </FormControl>
+
+                  <FormControl fullWidth sx={{ marginBottom: "10px" }}>
+                    <ReactDatePicker
+                      selected={values.endDate}
+                      onChange={(date) => setFieldValue("endDate", date)}
+                      dateFormat="yyyy-MM-dd"
+                      placeholderText="Select end date"
+                      customInput={
+                        <TextField
+                          fullWidth
+                          variant="filled"
+                          label="End Date"
+                          error={touched.endDate && Boolean(errors.endDate)}
+                          helperText={touched.endDate && errors.endDate}
+                          inputProps={{
+                            readOnly: true,
+                          }}
+                        />
+                      }
+                      minDate={values.startDate || new Date()}
+                    />
+                  </FormControl>
+                  <FormControl fullWidth sx={{ marginBottom: "10px" }}>
+                    <InputLabel>Start Hour</InputLabel>
+                    <Select
+                      fullWidth
+                      variant="filled"
+                      label="Start Hour"
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      value={values.startHour}
+                      name="startHour"
+                      error={touched.startHour && Boolean(errors.startHour)}
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+
+                            marginTop: "8px",
+                          },
+                        },
+                      }}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <MenuItem key={i} value={i} sx={{ py: 1 }}>
+                          {i.toString().padStart(2, "0")}:00
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {touched.startHour && errors.startHour && (
+                      <Typography color="error" variant="caption">
+                        {errors.startHour}
+                      </Typography>
+                    )}
+                  </FormControl>
+
+                  <FormControl fullWidth sx={{ marginBottom: "10px" }}>
+                    <InputLabel>End Hour</InputLabel>
+                    <Select
+                      fullWidth
+                      variant="filled"
+                      label="End Hour"
+                      onBlur={handleBlur}
+                      onChange={handleChange}
+                      value={values.endHour}
+                      name="endHour"
+                      error={touched.endHour && Boolean(errors.endHour)}
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 200,
+
+                            marginTop: "8px",
+                          },
+                        },
+                      }}
+                    >
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <MenuItem
+                          key={i}
+                          value={i}
+                          disabled={i <= values.startHour}
+                          sx={{ py: 1 }}
+                        >
+                          {i.toString().padStart(2, "0")}:00
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {touched.endHour && errors.endHour && (
+                      <Typography color="error" variant="caption">
+                        {errors.endHour}
+                      </Typography>
+                    )}
+                  </FormControl>
                   <TextField
                     fullWidth
                     variant="filled"
@@ -342,7 +440,7 @@ const GenerateSlot = () => {
           </Formik>
         </Box>
 
-        {slots.slice(0, visibleSlots).map((slot, index) => (
+        {currentSlots.map((slot, index) => (
           <Box
             key={index}
             bgcolor={colors.primary[400]}
@@ -356,11 +454,46 @@ const GenerateSlot = () => {
             <Typography variant="h5">Slot {slot.slot_id}</Typography>
             <Typography>Start time: {slot.start_time}</Typography>
             <Typography>End time: {slot.end_time}</Typography>
+            <Typography>
+              Price:{" "}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(slot.price)}
+            </Typography>
           </Box>
         ))}
+        <Box
+          sx={{
+            gridColumn: "2 / 5",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 2,
+            mt: 2,
+          }}
+        >
+          <Button
+            onClick={handlePrevPage}
+            disabled={currentPage === 1}
+            variant="contained"
+            color="secondary"
+          >
+            &lt;
+          </Button>
+          <Typography>
+            Trang {currentPage} / {Math.ceil(slots.length / slotsPerPage)}
+          </Typography>
+          <Button
+            onClick={handleNextPage}
+            disabled={currentPage === Math.ceil(slots.length / slotsPerPage)}
+            variant="contained"
+            color="secondary"
+          >
+            &gt;
+          </Button>
+        </Box>
       </Box>
-     
-
     </Box>
   );
 };
