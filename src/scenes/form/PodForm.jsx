@@ -26,7 +26,7 @@ const initialValues = {
 };
 
 const checkoutSchema = yup.object().shape({
-    pod_name: yup.string().required("Pod name is required"),
+    pod_name: yup.string().matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt").required("Pod name is required"),
     description: yup.string().required("Description is required"),
     image: yup.mixed().required("Image is required"),
     type_id: yup.number().required("Type ID is required"),

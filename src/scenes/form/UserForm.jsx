@@ -25,7 +25,10 @@ const initialValues = {
 };
 
 const userSchema = yup.object().shape({
-  user_name: yup.string().required("Username is required"),
+  user_name: yup
+  .string()
+  .matches(/^[a-zA-Z0-9_ ]*$/, "Username không được chứa ký tự đặc biệt")
+  .required("Username is required"),
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
     .string()
@@ -52,6 +55,7 @@ const UserForm = () => {
 
   const handleFormSubmit = async (values, actions) => {
     try {
+
       const response = await axios.post(
         `${API_URL}/api/v1/auth/register`,
         values
@@ -94,6 +98,7 @@ const UserForm = () => {
                 fullWidth
                 variant="filled"
                 label="Username"
+         
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.user_name}

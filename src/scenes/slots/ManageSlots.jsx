@@ -53,8 +53,13 @@ const Slots = () => {
 
   const fetchData = async () => {
     try {
-      const result = await axios.get(`${API_URL}/api/v1/slots`);
-
+      const result = await axios.get(`${API_URL}/api/v1/slots`, {
+        params: {
+          pod_id: pod_id,
+        }
+      });
+      console.log("Pod ID:", pod_id);
+      console.log(result.data)
       setData(result.data);
     } catch (error) {
       console.error("Error fetching data:", error.message);
@@ -152,6 +157,13 @@ const Slots = () => {
       field: "price",
       headerName: "Price",
       flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
     },
     {
       field: "is_available",

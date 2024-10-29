@@ -202,7 +202,15 @@ const StoreDetail = () => {
     },
     { field: "start_hour", headerName: "Start Hour", flex: 1 },
     { field: "end_hour", headerName: "End Hour", flex: 1 },
-    { field: "price", headerName: "Price", flex: 1 },
+    { field: "price", headerName: "Price", flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
+     },
     {
       field: "days_of_week",
       headerName: "Days of Week",

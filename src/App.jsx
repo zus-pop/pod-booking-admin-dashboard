@@ -21,11 +21,13 @@ import ProtectedRoute from './ProtectedRoute';
 
 import Unauthorized from './scenes/unauthorized/Unauthorized';
 import PrivateRoute from "./PrivateRoute";
+
 function App() {
   return (
 
       <Routes>
         <Route path="/" element={<Login />} />
+
         <Route path="/web" element={<Welcome />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<ManageUsers />} />
@@ -52,6 +54,7 @@ function App() {
           />
      
         </Route>
+
       </Routes>
         
   );

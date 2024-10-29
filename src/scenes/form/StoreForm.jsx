@@ -7,6 +7,7 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
+import React from "react";
 import { Header } from "../../components";
 import { FieldArray, Formik } from "formik";
 import * as yup from "yup";
@@ -17,7 +18,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const phoneRegExp = /^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$/;
+const phoneRegExp = /^0\d{9,10}$/;
 
 const notify = () => toast.success("Create a store successfully!");
 const failnotify = () => toast.error("Fail to create! Please try again later");
@@ -29,7 +30,7 @@ const initialValues = {
 };
 
 const checkoutSchema = yup.object().shape({
-  store_name: yup.string().required("Store name is required"),
+  store_name: yup.string() .matches(/^[a-zA-Z0-9_ ]*$/, "Store Name không được chứa ký tự đặc biệt").required("Store name is required"),
   address: yup.string().required("Address is required"),
   image: yup.mixed().required("Image is required"),
   hotline: yup

@@ -19,11 +19,11 @@ const VisuallyHiddenInput = styled("input")({
 });
 const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(store?.image || null);
-  
+  const phoneRegExp = /^0\d{9,10}$/;
   const validationSchema = yup.object({
     store_name: yup.string().required("Store name is required"),
     address: yup.string().required("Address is required"),
-    hotline: yup.string().required("Phone number is required"),
+    hotline: yup.string().required().matches(phoneRegExp, "Phone number is not valid"),
     image: yup.mixed().nullable(),
   });
   return (
