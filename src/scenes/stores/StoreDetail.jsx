@@ -152,7 +152,7 @@ const StoreDetail = () => {
         }
       );
         console.log(response.data)
-      if (response.status === 200) {
+      if (response.status === 201) {
         toast.success("Store price updated successfully");
         setIsUpdateModalOpen(false);
         fetchStorePrices(selectedTypeId);
