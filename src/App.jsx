@@ -21,6 +21,7 @@ import ProtectedRoute from './ProtectedRoute';
 
 import Unauthorized from './scenes/unauthorized/Unauthorized';
 import PrivateRoute from "./PrivateRoute";
+import CreateProduct from "./scenes/form/CreateProduct";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="pod/:pod_id" element={<Slots/>} />
           <Route path="pod/:pod_id/slot" element={<ProtectedRoute><GenerateSlot/></ProtectedRoute>} />
           <Route path="stores/:id/pod-type/:typeId/storeprice-form" element={<PrivateRoute><CreateStorePriceForm/></PrivateRoute>}/>
+          <Route path="productform" element={<CreateProduct/>} />
           <Route 
           path="podform"  
           element={

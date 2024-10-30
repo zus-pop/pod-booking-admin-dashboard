@@ -38,7 +38,7 @@ const UpdatePOD = ({ open, handleClose, pod, onSubmit }) => {
   const [utilities, setUtilities] = useState([]);
 
   const validationSchema = yup.object({
-    pod_name: yup.string(),
+    pod_name: yup.string().matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt").required("POD Name là bắt buộc"),
     description: yup.string(),
     image: yup.mixed(),
     type_id: yup.number(),
