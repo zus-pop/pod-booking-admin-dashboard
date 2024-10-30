@@ -127,7 +127,7 @@ const StoreDetail = () => {
 
   const handleUpdate = () => {
     const storePriceToUpdate = storePrices.find(
-      (slot) => slot.id === editingStorePrice
+      (storePrice) => storePrice.id === editingStorePrice
     );
     if (storePriceToUpdate) {
       setEditingStorePrice(storePriceToUpdate);
@@ -138,14 +138,24 @@ const StoreDetail = () => {
 
   const handleUpdateSubmit = async (values) => {
     try {
+       console.log(editingStorePrice)
+      const test = { ...values,
+        store_id: +id,
+        type_id: selectedTypeId,}
+        console.log(test)
       const response = await axios.put(
-        `${API_URL}/api/v1/store-prices/${editingStorePrice}`,
-        values
+        `${API_URL}/api/v1/store-prices/${editingStorePrice.id}`,
+        {
+          ...values,
+          store_id: id,
+          type_id : selectedTypeId,
+        }
       );
+        console.log(response.data)
       if (response.status === 200) {
         toast.success("Store price updated successfully");
         setIsUpdateModalOpen(false);
-        fetchData(); // Refresh data after update
+        fetchStorePrices(selectedTypeId);
       }
     } catch (error) {
       console.error("Error updating store price:", error);
@@ -286,8 +296,6 @@ const StoreDetail = () => {
           start_hour: editingStorePrice ? editingStorePrice.start_hour : "",
           end_hour: editingStorePrice ? editingStorePrice.end_hour : "",
           days_of_week: editingStorePrice ? editingStorePrice.days_of_week : [],
-          type_id: editingStorePrice ? editingStorePrice.type_id : "",
-          store_id: editingStorePrice ? editingStorePrice.store_id : "",
           priority: editingStorePrice ? editingStorePrice.priority : "",
         }}
         onSubmit={handleUpdateSubmit}

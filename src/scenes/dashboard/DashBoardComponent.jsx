@@ -49,7 +49,7 @@ function Dashboard() {
       </Box>
 
       {/* GRID & CHARTS */}
-      <Box
+      {/* <Box
         display="grid"
         gridTemplateColumns={
           isXlDevices
@@ -60,9 +60,9 @@ function Dashboard() {
         }
         gridAutoRows="140px"
         gap="20px"
-      >
+      > */}
         {/* Statistic Items */}
-        <Box
+        {/* <Box
           gridColumn="span 3"
           backgroundColor={colors.primary[400]}
           display="flex"
@@ -138,7 +138,7 @@ function Dashboard() {
             }
           />
         </Box>
-      </Box>
+      </Box> */}
 
       {/* Transaction Data */}
      {/* Transaction Data */}

@@ -26,6 +26,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UpdateProduct from "../form/UpdateProduct";
 import { useRole } from "../../RoleContext";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -33,7 +34,7 @@ const Product = () => {
   const { userRole } = useRole();
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
-
+  const navigate = useNavigate()
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
@@ -284,6 +285,15 @@ const Product = () => {
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
         </IconButton>
+        <Button
+          variant="contained"
+          color="primary"
+          sx={{ ml: "auto" }}
+          onClick={() => navigate("/web/productform")}
+          // disabled={isCreateDisabled()}
+        >
+          Create a new product
+        </Button>
       </Box>
       <Box
         mt="40px"

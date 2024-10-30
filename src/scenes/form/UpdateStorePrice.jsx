@@ -1,7 +1,20 @@
-import React from 'react';
-import { Modal, Box, Typography, TextField, Button, FormControl, InputLabel, Select, MenuItem, Checkbox, FormGroup, FormControlLabel } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
+import React from "react";
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  FormGroup,
+  FormControlLabel,
+} from "@mui/material";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
 
 const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
   const validationSchema = Yup.object({
@@ -11,8 +24,6 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
     days_of_week: Yup.array()
       .min(1, "Select at least one day")
       .required("Days of week are required"),
-    type_id: Yup.number().required("ID Loại Pod is required"),
-    store_id: Yup.number().required("ID Cửa hàng is required"),
     priority: Yup.number()
       .required("Priority is required")
       .min(1, "Priority must be between 1 and 10")
@@ -21,16 +32,18 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
 
   return (
     <Modal open={open} onClose={handleClose}>
-      <Box sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        boxShadow: 24,
-        p: 4,
-      }}>
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 400,
+          bgcolor: "background.paper",
+          boxShadow: 24,
+          p: 4,
+        }}
+      >
         <Typography variant="h6" component="h2" gutterBottom>
           Update Store Price
         </Typography>
@@ -39,7 +52,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
           validationSchema={validationSchema}
           onSubmit={onSubmit}
         >
-          {({ errors, touched, values, setFieldValue }) => (
+          {({ errors, touched, values, setFieldValue, handleChange}) => (
             <Form>
               <TextField
                 fullWidth
@@ -47,6 +60,8 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 label="Price"
                 type="number"
                 margin="normal"
+                onChange={handleChange}
+                value={values.price}
                 error={touched.price && Boolean(errors.price)}
                 helperText={touched.price && errors.price}
               />
@@ -56,6 +71,8 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 label="Start Hour"
                 type="number"
                 margin="normal"
+                onChange={handleChange}
+                value={values.start_hour}
                 error={touched.start_hour && Boolean(errors.start_hour)}
                 helperText={touched.start_hour && errors.start_hour}
               />
@@ -65,12 +82,23 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 label="End Hour"
                 type="number"
                 margin="normal"
+                onChange={handleChange}
+                value={values.end_hour}
                 error={touched.end_hour && Boolean(errors.end_hour)}
                 helperText={touched.end_hour && errors.end_hour}
               />
+
               <FormGroup>
                 <InputLabel>Select Days of Week</InputLabel>
-                {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
+                {[
+                  "Sunday",
+                  "Monday",
+                  "Tuesday",
+                  "Wednesday",
+                  "Thursday",
+                  "Friday",
+                  "Saturday",
+                ].map((day) => (
                   <FormControlLabel
                     key={day}
                     control={
@@ -85,34 +113,25 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                   />
                 ))}
               </FormGroup>
-              <TextField
-                fullWidth
-                name="type_id"
-                label="ID Loại Pod"
-                type="number"
-                margin="normal"
-                error={touched.type_id && Boolean(errors.type_id)}
-                helperText={touched.type_id && errors.type_id}
-              />
-              <TextField
-                fullWidth
-                name="store_id"
-                label="ID Cửa hàng"
-                type="number"
-                margin="normal"
-                error={touched.store_id && Boolean(errors.store_id)}
-                helperText={touched.store_id && errors.store_id}
-              />
+
               <TextField
                 fullWidth
                 name="priority"
                 label="Priority"
                 type="number"
                 margin="normal"
+                onChange={handleChange}
+                value={values.priority}
                 error={touched.priority && Boolean(errors.priority)}
                 helperText={touched.priority && errors.priority}
               />
-              <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                fullWidth
+                sx={{ mt: 2 }}
+              >
                 Update
               </Button>
             </Form>

@@ -1,11 +1,22 @@
-import React from "react";
-import { Modal, Box, Typography, TextField, Button, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import React, { useEffect } from "react";
+import {
+  Modal,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { Formik, Form } from "formik";
 import * as yup from "yup";
 import { useState } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
-
+import axios from "axios";
+const API_URL = import.meta.env.VITE_API_URL;
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
   clipPath: "inset(50%)",
@@ -20,16 +31,37 @@ const VisuallyHiddenInput = styled("input")({
 
 const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(product?.image || null);
-  
+  const [stores, setStores] = useState([]);
   const validationSchema = yup.object({
-    product_name: yup.string().matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt").required("Product name is required"),
+    product_name: yup
+      .string()
+      .matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt")
+      .required("Product name is required"),
     description: yup.string().required("Description is required"),
     price: yup.number().required("Price is required"),
     stock: yup.number().required("Stock is required"),
+    store_id: yup.number().required("Store is required"),
     category_id: yup.number().required("Category is required"),
     image: yup.mixed().nullable(),
   });
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const totalResponse = await axios.get(`${API_URL}/api/v1/stores`);
+        if (totalResponse.status === 200) {
+          const total = totalResponse.data.total;
+          const response = await axios.get(
+            `${API_URL}/api/v1/stores?limit=${total}`
+          );
+          setStores(response.data.stores);
+        }
+      } catch (error) {
+        console.error("Error fetching stores:", error);
+      }
+    };
 
+    fetchStores();
+  }, []);
   return (
     <Modal open={open} onClose={handleClose}>
       <Box
@@ -55,6 +87,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
             price: product?.price || "",
             stock: product?.stock || "",
             category_id: product?.category_id || "",
+            store_id: product?.store_id || "",
             image: null,
           }}
           validationSchema={validationSchema}
@@ -64,6 +97,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
             formData.append("description", values.description);
             formData.append("price", values.price);
             formData.append("stock", values.stock);
+            formData.append("store_id", values.store_id);
             formData.append("category_id", values.category_id);
             if (values.image) {
               formData.append("image", values.image);
@@ -71,7 +105,14 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
             onSubmit(formData, setSubmitting);
           }}
         >
-          {({ errors, touched, values, handleChange, handleBlur, setFieldValue }) => (
+          {({
+            errors,
+            touched,
+            values,
+            handleChange,
+            handleBlur,
+            setFieldValue,
+          }) => (
             <Form>
               <TextField
                 fullWidth
@@ -130,6 +171,22 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 >
                   <MenuItem value={1}>Food</MenuItem>
                   <MenuItem value={2}>Drink</MenuItem>
+                </Select>
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Store</InputLabel>
+                <Select
+                  name="store_id"
+                  value={values.store_id}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.store_id && Boolean(errors.store_id)}
+                >
+                  {stores.map((store) => (
+                    <MenuItem key={store.store_id} value={store.store_id}>
+                      {store.store_name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               <Box mt={2}>

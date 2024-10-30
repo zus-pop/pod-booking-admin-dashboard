@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { Chip } from "@mui/material";
+import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const initialValues = {
@@ -59,18 +60,21 @@ const PodForm = () => {
   };
   useEffect(() => {
     const fetchStore = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/v1/stores`);
-        if (res.ok) {
-          const data = await res.json();
-          setStores(data.stores);
-        } else {
-          console.log("Res is not ok");
+        try {
+          // Lấy tổng số stores
+          const totalResponse = await axios.get(`${API_URL}/api/v1/stores`);
+          if (totalResponse.status === 200) {
+            const total = totalResponse.data.total;
+      
+            const response = await axios.get(`${API_URL}/api/v1/stores?limit=${total}`);
+            if (response.status === 200) {
+              setStores(response.data.stores);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching stores:", error);
         }
-      } catch (err) {
-        console.log(err);
-      }
-    };
+      };
     const fetchPodType = async () => {
       try {
         const res = await fetch(`${API_URL}/api/v1/pod-types`);
@@ -213,6 +217,14 @@ const PodForm = () => {
                   name="store_id"
                   error={touched.store_id && Boolean(errors.store_id)}
                   sx={{ gridColumn: "span 2" }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 224,
+                        width: 250,
+                      },
+                    },
+                  }}
                 >
                   {stores.map((store) => (
                     <MenuItem key={store.store_id} value={store.store_id}>
