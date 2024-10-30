@@ -393,7 +393,7 @@ const StoreDetail = () => {
                     fontWeight: "bold" 
                   }}
                 >
-                  Status: {pod.is_available ? "Available" : "Occupied"}
+                  Status: {pod.is_available ? "Available" : "Unavailable"}
                 </Typography>
               </StatBox>
             ))}
