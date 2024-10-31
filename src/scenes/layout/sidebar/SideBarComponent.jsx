@@ -29,21 +29,49 @@ import { useRole } from "../../../RoleContext";
 
 const notify = () => {
   const toastId = toast.error(
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div>Session Expired! Please login again</div>
+    <Box sx={{
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '10px',
+      gap: '15px'
+    }}>
+      <Typography 
+        variant="subtitle1" 
+        sx={{
+          fontWeight: 500,
+          color: '#1C2536'
+        }}
+      >
+        Session Expired! Please login again
+      </Typography>
       <Button 
         onClick={() => toast.dismiss(toastId)} 
-        variant="contained" 
-        color="primary" 
-        style={{ marginTop: '10px' }}
+        variant="contained"
+        sx={{
+          backgroundColor: '#4CCEAC',
+          color: '#000000',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          padding: '8px 24px',
+          borderRadius: '8px',
+          '&:hover': {
+            backgroundColor: '#3DA58A'
+          }
+        }}
       >
         OK
       </Button>
-    </div>,
+    </Box>,
     {
       autoClose: false,
       closeOnClick: false,
       closeButton: false,
+      style: {
+        background: '#FFFFFF',
+        borderRadius: '12px',
+        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
+      }
     }
   );
 };

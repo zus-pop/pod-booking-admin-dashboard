@@ -25,17 +25,21 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const StatBox = styled(Box)(({ theme }) => ({
   backgroundColor: "#1F2A40",
-  borderRadius: "8px",
-  padding: "20px",
+  borderRadius: "12px",
+  padding: "24px",
   display: "flex",
   flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  textAlign: "center",
-  height: "250px",
-  width: "250px",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  width: "300px",
+  minHeight: "280px",
   margin: "10px",
-  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+  transition: "transform 0.2s, box-shadow 0.2s",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)"
+  }
 }));
 
 const ContentWrapper = styled(Box)(({ theme }) => ({
@@ -50,7 +54,7 @@ const BookingDetail = () => {
   const { id } = useParams();
   const [bookingDetail, setBookingDetail] = useState(null);
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState({});
   const [slots, setSlots] = useState([]);
  
   
@@ -65,6 +69,7 @@ const BookingDetail = () => {
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
 
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -76,13 +81,26 @@ const BookingDetail = () => {
 
     setBookingDetail(result.data);
     setSlots(result.data.slots)
-    setProducts(result.data.products);
-  
+    
+    // Lấy products cho từng slot
+    const slotProducts = {};
+    for (const slot of result.data.slots) {
+      try {
+        const productsResponse = await axios.get(
+          `${API_URL}/api/v1/bookings/${id}/slots/${slot.slot_id}/products`
+        );
+        slotProducts[slot.slot_id] = productsResponse.data || [];
+      } catch (error) {
+        console.error(`Error fetching products for slot ${slot.slot_id}:`, error);
+        slotProducts[slot.slot_id] = [];
+      }
+    }
+    setProducts(slotProducts);
   };
 
 
   
-  const handleOpenAddProductModal = async () => {
+  const handleOpenAddProductModal = async (slotId) => {
     try {
       const storeId = bookingDetail?.pod?.store?.store_id;
       if (!storeId) {
@@ -96,6 +114,7 @@ const BookingDetail = () => {
         }
       });
       setAvailableProducts(response.data.products || []);
+      setSelectedSlotId(slotId);
       setIsAddProductModalOpen(true);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -142,12 +161,13 @@ const BookingDetail = () => {
       const token = localStorage.getItem("token");
       const productsToAdd = selectedProducts.map((productId) => ({
         booking_id: parseInt(id),
+        slot_id: selectedSlotId,
         product_id: productId,
         quantity: quantities[productId],
         unit_price: availableProducts.find((p) => p.product_id === productId)
           .price,
       }));
-
+      console.log(productsToAdd)
       const response = await axios.post(
         `${API_URL}/api/v1/bookings/${id}/products`,
         productsToAdd,
@@ -185,12 +205,6 @@ const BookingDetail = () => {
     }, 0);
   };
 
-  const calculateBookingProductsTotal = () => {
-    return products.reduce((total, product) => {
-      return total + product.price * product.quantity;
-    }, 0);
-  };
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     const socket = initializeSocket(token);
@@ -225,10 +239,15 @@ const BookingDetail = () => {
         }
       );
       
-      if (response.status === 200) {
+      if (response.status === 201) {
         toast.success("Check-in successful!");
-        // Refresh slot data
-        fetchBookingDetail();
+        setSlots(prevSlots => 
+          prevSlots.map(slot => 
+            slot.slot_id === selectedSlotId 
+              ? { ...slot, is_checked_in: true }
+              : slot
+          )
+        );
       }
     } catch (error) {
       console.error("Error during check-in:", error);
@@ -236,6 +255,37 @@ const BookingDetail = () => {
     } finally {
       setIsCheckinModalOpen(false);
     }
+  };
+
+  // Thêm hàm tính tổng giá cho một slot cụ thể
+  const calculateSlotProductsTotal = (slotId) => {
+    const slotProducts = products[slotId] || [];
+    return slotProducts.reduce((total, product) => {
+      return total + (product.price * product.quantity);
+    }, 0);
+  };
+
+  // Thêm hàm kiểm tra thời gian
+  const isSlotExpired = (endTime) => {
+    const now = new Date();
+    const slotEnd = new Date(endTime);
+    return now > slotEnd;
+  };
+
+  // Sửa lại hàm kiểm tra thời gian bắt đầu
+  const isSlotNotStarted = (startTime) => {
+    const now = new Date();
+    const slotStart = new Date(startTime);
+    const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000); // 5 phút = 5 * 60000 milliseconds
+    return now < fiveMinutesBefore;
+  };
+
+  // Thêm hàm kiểm tra xem có đang trong thời gian cho phép check-in không
+  const isWithinCheckinWindow = (startTime) => {
+    const now = new Date();
+    const slotStart = new Date(startTime);
+    const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000);
+    return now >= fiveMinutesBefore && now <= slotStart;
   };
 
   return (
@@ -428,255 +478,7 @@ const BookingDetail = () => {
               </Box>
             </Box>
 
-            <ContentWrapper>
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={3}
-              >
-                <Typography variant="h4" sx={{ color: "#fff" }}>
-                  Products
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={handleOpenAddProductModal}
-                  sx={{
-                    backgroundColor: "#4cceac",
-                    color: "#000",
-                    "&:hover": {
-                      backgroundColor: "#3da58a",
-                    },
-                  }}
-                >
-                  Add Products
-                </Button>
-              </Box>
-              <Box display="flex" flexDirection="column" gap={2}>
-                <Box
-                  display="flex"
-                  flexWrap="wrap"
-                  gap={2}
-                  justifyContent="flex-start"
-                  minHeight="180px"
-                >
-                  {products.length > 0 ? (
-                    products.map((product) => (
-                      <StatBox key={product.product_id}>
-                        <Typography
-                          variant="h5"
-                          sx={{ color: "#4cceac", mb: 1 }}
-                        >
-                          {product.product_name}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: "#fff", mb: 1 }}
-                        >
-                          Price:{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(product.price)}
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{ color: "#fff", mb: 1 }}
-                        >
-                          Quantity: {product.quantity}
-                        </Typography>
-                        <Typography variant="body1" sx={{ color: "#fff" }}>
-                          Subtotal:{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(product.price * product.quantity)}
-                        </Typography>
-                      </StatBox>
-                    ))
-                  ) : (
-                    <Box
-                      display="flex"
-                      justifyContent="center"
-                      alignItems="center"
-                      width="100%"
-                    >
-                      <Typography
-                        variant="h5"
-                        sx={{ color: "#fff", opacity: 0.7 }}
-                      >
-                        No products yet
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-
-                {products.length > 0 && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      p: 2,
-                      borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                      display: "flex",
-                      justifyContent: "flex-end",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography variant="h5" sx={{ color: "#4cceac" }}>
-                      Total Products Cost:{" "}
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(calculateBookingProductsTotal())}
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-
-              <Modal
-                open={isAddProductModalOpen}
-                onClose={() => setIsAddProductModalOpen(false)}
-              >
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: 600,
-                    maxHeight: "80vh",
-                    bgcolor: "background.paper",
-                    boxShadow: 24,
-                    p: 4,
-                    borderRadius: 2,
-                    overflow: "auto",
-                  }}
-                >
-                  <Typography variant="h6" component="h2" gutterBottom>
-                    Add Products to Booking
-                  </Typography>
-
-                  <Box sx={{ mt: 2 }}>
-                    {availableProducts.map((product) => (
-                      <Box
-                        key={product.product_id}
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          mb: 2,
-                          p: 2,
-                          border: "1px solid #ccc",
-                          borderRadius: 1,
-                        }}
-                      >
-                        <Checkbox
-                          checked={selectedProducts.includes(
-                            product.product_id
-                          )}
-                          onChange={() =>
-                            handleProductSelect(product.product_id)
-                          }
-                        />
-                        <Box sx={{ flex: 1, ml: 2 }}>
-                          <Typography variant="subtitle1">
-                            {product.product_name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Unit Price:{" "}
-                            {new Intl.NumberFormat("vi-VN", {
-                              style: "currency",
-                              currency: "VND",
-                            }).format(product.price)}
-                          </Typography>
-                        </Box>
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          {selectedProducts.includes(product.product_id) && (
-                            <>
-                              <TextField
-                                type="number"
-                                label="Quantity"
-                                value={quantities[product.product_id] || 1}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    product.product_id,
-                                    e.target.value
-                                  )
-                                }
-                                sx={{ width: 100 }}
-                                InputProps={{ 
-                                  inputProps: { 
-                                    min: 1,
-                                    max: product.stock 
-                                  } 
-                                }}
-                                helperText={`Available: ${product.stock}`}
-                              />
-                              <Typography
-                                variant="body1"
-                                sx={{ minWidth: 150 }}
-                              >
-                                Total:{" "}
-                                {new Intl.NumberFormat("vi-VN", {
-                                  style: "currency",
-                                  currency: "VND",
-                                }).format(
-                                  product.price *
-                                    (quantities[product.product_id] || 1)
-                                )}
-                              </Typography>
-                            </>
-                          )}
-                        </Box>
-                      </Box>
-                    ))}
-                  </Box>
-
-                  <Box
-                    sx={{
-                      mt: 3,
-                      pt: 2,
-                      borderTop: "1px solid rgba(0, 0, 0, 0.12)",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography variant="h6">
-                      Total:{" "}
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(calculateTotalPrice())}
-                    </Typography>
-
-                    <Box>
-                      <Button
-                        onClick={() => setIsAddProductModalOpen(false)}
-                        sx={{ mr: 2 }}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleAddProducts}
-                        variant="contained"
-                        disabled={selectedProducts.length === 0}
-                        sx={{
-                          backgroundColor: "#4cceac",
-                          color: "#000",
-                          "&:hover": {
-                            backgroundColor: "#3da58a",
-                          },
-                        }}
-                      >
-                        Add Selected Products
-                      </Button>
-                    </Box>
-                  </Box>
-                </Box>
-              </Modal>
-            </ContentWrapper>
+          
             <ContentWrapper>
               <Typography variant="h4" sx={{ color: "#fff", mb: 3 }}>
                 Slots
@@ -691,55 +493,171 @@ const BookingDetail = () => {
                 {slots.length > 0 ? (
                   slots.map((slot) => (
                     <StatBox key={slot.slot_id}>
-                      <Typography variant="h6" sx={{ color: "#4cceac", mb: 1 }}>
-                        Time: {slot.start_time} - {slot.end_time}
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
-                        Slot ID: {slot.slot_id}
-                      </Typography>
-                      <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
-                        Price: {" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(slot.price)}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: slot.is_available ? "#4cceac" : "#ff0000",
-                          fontWeight: "bold",
-                          mb: 1
-                        }}
-                      >
-                        {slot.is_available ? "Available" : "Occupied"}
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: slot.is_checked_in ? "#4cceac" : "#ff9800",
-                          fontWeight: "bold",
-                          mb: 1
-                        }}
-                      >
-                        {slot.is_checked_in ? "Checked In" : "Not Checked In"}
-                      </Typography>
-                      {!slot.is_checked_in && (
-                        <Button
-                          variant="contained"
-                          onClick={() => handleCheckin(slot.slot_id)}
-                          sx={{
-                            backgroundColor: "#4cceac",
-                            color: "#000",
-                            "&:hover": {
-                              backgroundColor: "#3da58a",
-                            },
-                            mt: 1
+                      <Box sx={{ width: "100%" }}>
+                        <Typography 
+                          variant="h6" 
+                          sx={{ 
+                            color: "#4cceac",
+                            mb: 2,
+                            fontWeight: "600",
+                            fontSize: "1.1rem"
                           }}
                         >
-                          Check In
-                        </Button>
-                      )}
+                          {slot.start_time} <br/>
+                            
+                           {slot.end_time}
+                        </Typography>
+
+                        <Box sx={{ mb: 2 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: "#94a3b8",
+                              mb: 1 
+                            }}
+                          >
+                            Slot ID
+                          </Typography>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              color: "#fff",
+                              fontWeight: "500"
+                            }}
+                          >
+                            {slot.slot_id}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ mb: 2 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: "#94a3b8",
+                              mb: 1 
+                            }}
+                          >
+                            Price
+                          </Typography>
+                          <Typography 
+                            variant="body1" 
+                            sx={{ 
+                              color: "#fff",
+                              fontWeight: "500"
+                            }}
+                          >
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(slot.price)}
+                          </Typography>
+                        </Box>
+
+                        <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+                          <Box 
+                            sx={{ 
+                              px: 2,
+                              py: 0.5,
+                              borderRadius: "6px",
+                              backgroundColor: slot.is_available ? "rgba(76, 206, 172, 0.1)" : "rgba(255, 0, 0, 0.1)",
+                              border: `1px solid ${slot.is_available ? "#4cceac" : "#ff0000"}`
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: slot.is_available ? "#4cceac" : "#ff0000",
+                                fontWeight: "500"
+                              }}
+                            >
+                              {slot.is_available ? "Available" : "Occupied"}
+                            </Typography>
+                          </Box>
+
+                          <Box 
+                            sx={{ 
+                              px: 2,
+                              py: 0.5,
+                              borderRadius: "6px",
+                              backgroundColor: slot.is_checked_in ? "rgba(76, 206, 172, 0.1)" : "rgba(255, 152, 0, 0.1)",
+                              border: `1px solid ${slot.is_checked_in ? "#4cceac" : "#ff9800"}`
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                color: slot.is_checked_in ? "#4cceac" : "#ff9800",
+                                fontWeight: "500"
+                              }}
+                            >
+                              {slot.is_checked_in ? "Checked In" : "Not Checked In"}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 2, width: "100%" }}>
+                        {!slot.is_checked_in && (
+                          <Button
+                            onClick={() => handleCheckin(slot.slot_id)}
+                            disabled={isSlotExpired(slot.end_time) || isSlotNotStarted(slot.start_time)}
+                            sx={{
+                              backgroundColor: isSlotExpired(slot.end_time) 
+                                ? "#ff4d4d" 
+                                : isSlotNotStarted(slot.start_time)
+                                  ? "#ffa726"
+                                  : isWithinCheckinWindow(slot.start_time)
+                                    ? "#4cceac"
+                                    : "#4cceac",
+                              color: "#fff",
+                              fontWeight: "600",
+                              "&:hover": {
+                                backgroundColor: isSlotExpired(slot.end_time)
+                                  ? "#ff3333"
+                                  : isSlotNotStarted(slot.start_time)
+                                    ? "#fb8c00"
+                                    : "#3da58a",
+                              },
+                              "&:disabled": {
+                                backgroundColor: isSlotExpired(slot.end_time)
+                                  ? "#ff4d4d"
+                                  : isSlotNotStarted(slot.start_time)
+                                    ? "#ffa726"
+                                    : "rgba(0, 0, 0, 0.12)",
+                                color: "#fff",
+                                opacity: 0.8,
+                                cursor: "not-allowed"
+                              }
+                            }}
+                          >
+                            {isSlotExpired(slot.end_time) 
+                              ? "Expired" 
+                              : isSlotNotStarted(slot.start_time)
+                                ? "Not Yet"
+                                : isWithinCheckinWindow(slot.start_time)
+                                  ? "Early Check-in"
+                                  : "Check In"
+                            }
+                          </Button>
+                        )}
+                        {slot.is_checked_in && (
+                          <Button
+                            variant="contained"
+                            onClick={() => handleOpenAddProductModal(slot.slot_id)}
+                            sx={{
+                              flex: 1,
+                              backgroundColor: "#4cceac",
+                              color: "#000", 
+                              fontWeight: "600",
+                              "&:hover": {
+                                backgroundColor: "#3da58a",
+                              },
+                            }}
+                          >
+                            Add Products
+                          </Button>
+                        )}
+                      </Box>
                     </StatBox>
                   ))
                 ) : (
@@ -803,6 +721,231 @@ const BookingDetail = () => {
                   >
                     Confirm
                   </Button>
+                </Box>
+              </Box>
+            </Modal>
+            
+            {slots.map((slot) => (
+              <ContentWrapper key={slot.slot_id}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={3}
+                >
+                  <Typography variant="h4" sx={{ color: "#fff" }}>
+                    Products for Slot {slot.slot_id}
+                  </Typography>
+                 
+                </Box>
+                <Box display="flex" flexDirection="column" gap={2}>
+                  <Box
+                    display="flex"
+                    flexWrap="wrap"
+                    gap={2}
+                    justifyContent="flex-start"
+                    minHeight="180px"
+                  >
+                    {products[slot.slot_id]?.length > 0 ? (
+                      products[slot.slot_id].map((product) => (
+                        <StatBox key={product.product_id}>
+                          <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                            {product.product_name}
+                          </Typography>
+                          <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                            Price:{" "}
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(product.price)}
+                          </Typography>
+                          <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                            Quantity: {product.quantity}
+                          </Typography>
+                          <Typography variant="body1" sx={{ color: "#fff" }}>
+                            Subtotal:{" "}
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(product.price * product.quantity)}
+                          </Typography>
+                        </StatBox>
+                      ))
+                    ) : (
+                      <Box
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        width="100%"
+                      >
+                        <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                          No products yet
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+                <Box
+                  display="flex"
+                  justifyContent="flex-end"
+                  alignItems="center"
+                  mt={2}
+                  sx={{
+                    borderTop: "1px solid rgba(255, 255, 255, 0.12)",
+                    paddingTop: 2
+                  }}
+                >
+                  <Typography variant="h5" sx={{ color: "#4cceac", fontWeight: "600" }}>
+                    Total: {" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(calculateSlotProductsTotal(slot.slot_id))}
+                  </Typography>
+                </Box>
+              </ContentWrapper>
+            ))}
+
+            <Modal
+              open={isAddProductModalOpen}
+              onClose={() => setIsAddProductModalOpen(false)}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 600,
+                  maxHeight: "80vh",
+                  bgcolor: "background.paper",
+                  boxShadow: 24,
+                  p: 4,
+                  borderRadius: 2,
+                  overflow: "auto",
+                }}
+              >
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Add Products to Booking
+                </Typography>
+
+                <Box sx={{ mt: 2 }}>
+                  {availableProducts.map((product) => (
+                    <Box
+                      key={product.product_id}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        mb: 2,
+                        p: 2,
+                        border: "1px solid #ccc",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedProducts.includes(
+                          product.product_id
+                        )}
+                        onChange={() =>
+                          handleProductSelect(product.product_id)
+                        }
+                      />
+                      <Box sx={{ flex: 1, ml: 2 }}>
+                        <Typography variant="subtitle1">
+                          {product.product_name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Unit Price:{" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(product.price)}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
+                        {selectedProducts.includes(product.product_id) && (
+                          <>
+                            <TextField
+                              type="number"
+                              label="Quantity"
+                              value={quantities[product.product_id] || 1}
+                              onChange={(e) =>
+                                handleQuantityChange(
+                                  product.product_id,
+                                  e.target.value
+                                )
+                              }
+                              sx={{ width: 100 }}
+                              InputProps={{ 
+                                inputProps: { 
+                                  min: 1,
+                                  max: product.stock 
+                                } 
+                              }}
+                              helperText={`Available: ${product.stock}`}
+                            />
+                            <Typography
+                              variant="body1"
+                              sx={{ minWidth: 150 }}
+                            >
+                              Total:{" "}
+                              {new Intl.NumberFormat("vi-VN", {
+                                style: "currency",
+                                currency: "VND",
+                              }).format(
+                                product.price *
+                                  (quantities[product.product_id] || 1)
+                              )}
+                            </Typography>
+                          </>
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 3,
+                    pt: 2,
+                    borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="h6">
+                    Total:{" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(calculateTotalPrice())}
+                  </Typography>
+
+                  <Box>
+                    <Button
+                      onClick={() => setIsAddProductModalOpen(false)}
+                      sx={{ mr: 2 }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleAddProducts}
+                      variant="contained"
+                      disabled={selectedProducts.length === 0}
+                      sx={{
+                        backgroundColor: "#4cceac",
+                        color: "#000",
+                        "&:hover": {
+                          backgroundColor: "#3da58a",
+                        },
+                      }}
+                    >
+                      Add Selected Products
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             </Modal>
