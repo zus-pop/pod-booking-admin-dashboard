@@ -300,7 +300,46 @@ const StoreDetail = () => {
         }}
         onSubmit={handleUpdateSubmit}
       />
-      <Header title="Detail" subtitle="Detail of store" />
+      <Header 
+        title={`Detail of ${storeDetail ? storeDetail.store_name : ''}`} 
+        subtitle={`Store Information`} 
+      />
+      {storeDetail && (
+        <Box 
+          sx={{
+            mb: 4,
+            p: 3,
+            backgroundColor: "#1F2A40",
+            borderRadius: "8px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+          }}
+        >
+          <Box display="flex" gap={2} alignItems="center" mb={2}>
+            <Box
+              component="img"
+              src={storeDetail.image}
+              alt={storeDetail.store_name}
+              sx={{
+                width: 200,
+                height: 150,
+                objectFit: 'cover',
+                borderRadius: '8px'
+              }}
+            />
+            <Box>
+              <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                {storeDetail.store_name}
+              </Typography>
+              <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                Address: {storeDetail.address}
+              </Typography>
+              <Typography variant="body1" sx={{ color: "#fff" }}>
+                Hotline: {storeDetail.hotline}
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      )}
       <Box mb="20px" marginBottom={5}>
         <Box
           display="flex"
@@ -334,11 +373,11 @@ const StoreDetail = () => {
               color="primary"
               sx={{ ml: "auto", mb: "10px" }}
               onClick={() =>
-                navigate(`/web/stores/${id}/pod-type/${selectedTypeId}/storeprice-form`)
+                navigate(`/web/stores/${id}/storeprice-form`)
               }
               disabled={isActionDisabled()}
             >
-              Create new price
+              Create new price for {storeDetail.store_name}
             </Button>
           )}
         </Box>

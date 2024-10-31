@@ -56,6 +56,24 @@ const Stores = () => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchNameValue);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchNameValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchNameValue]);
+
+  useEffect(() => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      store_name: debouncedSearchValue,
+    }));
+    setPages(0);
+  }, [debouncedSearchValue]);
+
   useEffect(() => {
     fetchData();
   }, [pages, pageSize, filters]);
@@ -188,15 +206,6 @@ const Stores = () => {
     setPaginationModel(newPaginationModel);
     setPages(newPaginationModel.page);
     setPageSize(newPaginationModel.pageSize);
-  };
-
-  const handleSearch = () => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      store_name: searchNameValue,
-    }));
-    setPages(0);
-    fetchData();
   };
 
   const columns = [
@@ -333,11 +342,22 @@ const Stores = () => {
           onChange={(e) => setSearchNameValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleSearch();
+              setFilters((prevFilters) => ({
+                ...prevFilters,
+                store_name: searchNameValue,
+              }));
             }
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton 
+          type="button" 
+          onClick={() => {
+            setFilters((prevFilters) => ({
+              ...prevFilters,
+              store_name: searchNameValue,
+            }));
+          }}
+        >
           <SearchOutlined />
         </IconButton>
         <Button

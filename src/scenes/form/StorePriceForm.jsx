@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -31,10 +31,31 @@ const validationSchema = Yup.object({
     .required("Priority is required")
     .min(1, "Priority must be between 1 and 10")
     .max(10, "Priority must be between 1 and 10"),
+  type_id: Yup.number().required("POD Type is required"),
 });
 
 const StorePriceForm = () => {
-  const { typeId, id } = useParams();
+  const { id } = useParams();
+  const [storeName, setStoreName] = useState("");
+  const [podTypes] = useState([
+    { type_id: 1, type_name: "Single POD" },
+    { type_id: 2, type_name: "Double POD" },
+    { type_id: 3, type_name: "Meeting Room" }
+  ]);
+
+  useEffect(() => {
+    const fetchStoreDetails = async () => {
+      try {
+        const storeResponse = await axios.get(`${API_URL}/api/v1/stores/${id}`);
+        setStoreName(storeResponse.data.store_name);
+      } catch (error) {
+        console.error("Error fetching store details:", error);
+      }
+    };
+
+    fetchStoreDetails();
+  }, [id]);
+
   const initialValues = {
     price: "",
     start_hour: "",
@@ -44,14 +65,13 @@ const StorePriceForm = () => {
     type_id: "",
     priority: "",
   };
+
   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       const response = await axios.post(`${API_URL}/api/v1/store-prices`, {
         ...values,
         store_id: id,
-        type_id: typeId,
       });
-      console.log("Submitting values:", values);
       if (response.status === 201) {
         toast.success("Store price created successfully");
         resetForm();
@@ -59,7 +79,6 @@ const StorePriceForm = () => {
     } catch (error) {
       console.error("Error creating store price:", error);
       if (error.response) {
-        console.error("Error response:", error.response.data);
         toast.error(
           `Error: ${
             error.response.data.message || "An error occurred while creating store price"
@@ -100,15 +119,29 @@ const StorePriceForm = () => {
               <TextField
                 fullWidth
                 variant="filled"
-                type="number"
-                label="Price"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.price}
-                name="price"
-                error={touched.price && Boolean(errors.price)}
-                helperText={touched.price && errors.price}
+                label="Store Name"
+                value={storeName}
+                disabled
+                sx={{ backgroundColor: "rgba(0, 0, 0, 0.05)" }}
               />
+              <FormControl fullWidth variant="filled" error={touched.type_id && Boolean(errors.type_id)}>
+                <InputLabel>POD Type</InputLabel>
+                <Select
+                  value={values.type_id}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="type_id"
+                >
+                  {podTypes.map((type) => (
+                    <MenuItem key={type.type_id} value={type.type_id}>
+                      {type.type_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.type_id && errors.type_id && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.type_id}</div>
+                )}
+              </FormControl>
               <TextField
                 fullWidth
                 variant="filled"
@@ -187,7 +220,18 @@ const StorePriceForm = () => {
               {touched.days_of_week && errors.days_of_week && (
                 <div style={{ color: "red" }}>{errors.days_of_week}</div>
               )}
-
+               <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Price"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.price}
+                name="price"
+                error={touched.price && Boolean(errors.price)}
+                helperText={touched.price && errors.price}
+              />
               <TextField
                 fullWidth
                 variant="filled"

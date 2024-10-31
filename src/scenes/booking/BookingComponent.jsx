@@ -87,7 +87,9 @@ const Booking = () => {
           booking_id: booking.booking_id,
           booking_date: booking.booking_date,
           booking_status: booking.booking_status,
-        }));
+          user_name: booking.user.user_name,
+          email: booking.user.email,
+      }));
       setData(formattedData);
       setTotal(result.data.total)
       console.log("Formatted data:", formattedData);
@@ -156,11 +158,11 @@ const isActionDisabled = () => {
     try {
       const currentBooking = data.find(booking => booking.booking_id === id);
       if (!currentBooking) {
-        throw new Error("Không tìm thấy booking");
+        throw new Error("Booking not found");
       }
 
       if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
-        toast.error(`Không thể chuyển từ ${currentBooking.booking_status} sang ${newStatus}`);
+        toast.error(`Cannot change from ${currentBooking.booking_status} to ${newStatus}`);
         return;
       }
 
@@ -215,13 +217,55 @@ const isActionDisabled = () => {
     }
   };
 
+  const handleStatusChange = (e) => {
+    setSearchByStatus(e.target.value);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      booking_status: e.target.value
+    }));
+  };
+
+  const handleDateChange = (date) => {
+    if (date) {
+      const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      const dateString = localDate.toISOString().split('T')[0];
+      setSelectedDate(dateString);
+      if (validateDate(dateString)) {
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          booking_date: dateString
+        }));
+      }
+    } else {
+      setSelectedDate(null);
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        booking_date: ""
+      }));
+    }
+  };
+
   const columns = [
     {
       field: "booking_id",
       headerName: "Booking_ID",
       flex: 0.5,
     },
-    { field: "booking_date", headerName: "Date", flex: 1.5 },
+    { 
+      field: "user_name", 
+      headerName: "User Name", 
+      flex: 1 
+    },
+    { 
+      field: "email", 
+      headerName: "Email", 
+      flex: 1.5 
+    },
+    { 
+      field: "booking_date", 
+      headerName: "Date", 
+      flex: 1.5 
+    },
     {
       field: "booking_status",
       headerName: "Status",
@@ -314,7 +358,7 @@ const isActionDisabled = () => {
             labelId="type-select-label"
             id="type-select"
             value={searchByStatus}
-            onChange={(e) => setSearchByStatus(e.target.value)}
+            onChange={handleStatusChange}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Complete">Complete</MenuItem>
@@ -326,21 +370,22 @@ const isActionDisabled = () => {
         </FormControl>
         <ReactDatePicker
           selected={selectedDate}
-          onChange={(date) => {
-            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-            const dateString = localDate.toISOString().split('T')[0];
-            setSelectedDate(dateString);
-            validateDate(dateString);
-          }}
+          onChange={handleDateChange}
           dateFormat="yyyy-MM-dd"
           placeholderText="Select Date YYYY-MM-DD"
           customInput={<InputBase />}
           onChangeRaw={(e) => {
-            setSelectedDate(e.target.value);
-            validateDate(e.target.value);
+            const value = e.target.value;
+            setSelectedDate(value);
+            if (validateDate(value)) {
+              setFilters(prevFilters => ({
+                ...prevFilters,
+                booking_date: value
+              }));
+            }
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton>
           <SearchOutlined />
         </IconButton>
       </Box>

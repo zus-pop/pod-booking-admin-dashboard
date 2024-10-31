@@ -84,17 +84,32 @@ const Payment = () => {
     return true;
   };
 
-  const handleSearch = () => {
-    if (validateDate(selectedDate)) {
-      const adjustedDate = selectedDate
-        ? new Date(selectedDate).toISOString().split('T')[0]
-        : "";
-      setFilters((prevFilters) => ({
+  const handleStatusChange = (e) => {
+    const newStatus = e.target.value;
+    setSearchByStatus(newStatus);
+    setFilters(prevFilters => ({
+      ...prevFilters,
+      payment_status: newStatus
+    }));
+  };
+
+  const handleDateChange = (date) => {
+    if (date) {
+      const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      const dateString = localDate.toISOString().split('T')[0];
+      setSelectedDate(dateString);
+      if (validateDate(dateString)) {
+        setFilters(prevFilters => ({
+          ...prevFilters,
+          payment_date: dateString
+        }));
+      }
+    } else {
+      setSelectedDate(null);
+      setFilters(prevFilters => ({
         ...prevFilters,
-        payment_status: searchByStatus, 
-        payment_date: adjustedDate,
+        payment_date: ""
       }));
-      fetchData();
     }
   };
 
@@ -106,7 +121,12 @@ const Payment = () => {
       flex: 1,
       cellClassName: "name-column--cell",
     },
-
+    {
+      field: "booking_id",
+      headerName: "Booking_ID",
+      flex: 1,
+      cellClassName: "name-column--cell",
+    },
     {
       field: "total_cost",
       headerName: "Total Cost",
@@ -151,32 +171,32 @@ const Payment = () => {
             labelId="type-select-label"
             id="type-select"
             value={searchByStatus}
-            onChange={(e) => setSearchByStatus(e.target.value)}
+            onChange={handleStatusChange}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Paid">Paid</MenuItem>
             <MenuItem value="Failed">Failed</MenuItem>
             <MenuItem value="Unpaid">Unpaid</MenuItem>
-
           </Select>
         </FormControl>
         <ReactDatePicker
           selected={selectedDate}
-          onChange={(date) => {
-            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-            const dateString = localDate.toISOString().split('T')[0];
-            setSelectedDate(dateString);
-            validateDate(dateString);
-          }}
+          onChange={handleDateChange}
           dateFormat="yyyy-MM-dd"
           placeholderText="Select Date YYYY-MM-DD"
           customInput={<InputBase />}
           onChangeRaw={(e) => {
-            setSelectedDate(e.target.value);
-            validateDate(e.target.value);
+            const value = e.target.value;
+            setSelectedDate(value);
+            if (validateDate(value)) {
+              setFilters(prevFilters => ({
+                ...prevFilters,
+                payment_date: value
+              }));
+            }
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton>
           <SearchOutlined />
         </IconButton>
       </Box>

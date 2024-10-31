@@ -158,14 +158,22 @@ const PODManage = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-  const handleSearch = () => {
+  const handleTypeChange = (e) => {
+    setSearchTypeId(e.target.value);
     setFilters((prevFilters) => ({
       ...prevFilters,
-      name: searchNameValue,
-      type_id: searchTypeId,
+      type_id: e.target.value,
     }));
     setPages(0);
-    fetchData();
+  };
+
+  const handleNameChange = (e) => {
+    setSearchNameValue(e.target.value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      name: e.target.value,
+    }));
+    setPages(0);
   };
 
   const handleUpdate = () => {
@@ -218,6 +226,15 @@ const PODManage = () => {
     } finally {
       setIsDeleteModalOpen(false);
     }
+  };
+
+  const handleSearch = () => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      name: searchNameValue,
+      type_id: searchTypeId,
+    }));
+    setPages(0);
   };
 
   const columns = [
@@ -393,7 +410,7 @@ const PODManage = () => {
             id="type-select"
             value={searchTypeId}
             label="Type"
-            onChange={(e) => setSearchTypeId(e.target.value)}
+            onChange={handleTypeChange}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="1">Single POD</MenuItem>
@@ -412,9 +429,9 @@ const PODManage = () => {
             borderRadius: 2,
           }}
           value={searchNameValue}
-          onChange={(e) => setSearchNameValue(e.target.value)}
+          onChange={handleNameChange}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === 'Enter') {
               handleSearch();
             }
           }}

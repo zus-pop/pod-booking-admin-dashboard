@@ -162,6 +162,33 @@ const PodForm = () => {
               gap="30px"
               gridTemplateColumns="repeat(2, minmax(1, 5fr))"
             >
+                 <FormControl>
+                <InputLabel id="select-store-label">Store</InputLabel>
+                <Select
+                  variant="filled"
+                  labelID="select-store-label"
+                  onBlur={handleBlur}
+                  onChange={handleChange}
+                  value={values.store_id}
+                  name="store_id"
+                  error={touched.store_id && Boolean(errors.store_id)}
+                  sx={{ gridColumn: "span 2" }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 224,
+                        width: 250,
+                      },
+                    },
+                  }}
+                >
+                  {stores.map((store) => (
+                    <MenuItem key={store.store_id} value={store.store_id}>
+                      {store.store_name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
               <TextField
                 fullWidth
                 variant="filled"
@@ -206,33 +233,7 @@ const PodForm = () => {
                   ))}
                 </Select>
               </FormControl>
-              <FormControl>
-                <InputLabel id="select-store-label">Store</InputLabel>
-                <Select
-                  variant="filled"
-                  labelID="select-store-label"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.store_id}
-                  name="store_id"
-                  error={touched.store_id && Boolean(errors.store_id)}
-                  sx={{ gridColumn: "span 2" }}
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 224,
-                        width: 250,
-                      },
-                    },
-                  }}
-                >
-                  {stores.map((store) => (
-                    <MenuItem key={store.store_id} value={store.store_id}>
-                      {store.store_name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+           
               <Box display="flex" justifyContent="space-around">
                 <Button
                   variant="contained"

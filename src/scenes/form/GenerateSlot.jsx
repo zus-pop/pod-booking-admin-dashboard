@@ -67,6 +67,7 @@ const GenerateSlot = () => {
   const { pod_id } = useParams();
   const [slots, setSlots] = useState([]);
   const theme = useTheme();
+  const [pods, setPods] = useState([]);
   const colors = tokens(theme.palette.mode);
   const [storePrices, setStorePrices] = useState([]);
   const navigate = useNavigate();
@@ -81,8 +82,18 @@ const GenerateSlot = () => {
   useEffect(() => {
     // fetchData();
     fetchStorePrices();
+    fetchPods ();
   }, []);
-
+  const fetchPods = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`, {
+   
+      });
+      setPods(response.data);
+    } catch (error) {
+      console.error('Error fetching slots:', error);
+    }
+  };
   // const fetchData = async () => {
   //   try {
   //     const result = await axios.get(`${API_URL}/api/v1/slots`, {
@@ -394,7 +405,25 @@ const GenerateSlot = () => {
         pauseOnHover
         theme="light"
       />
-      <Header title="GENERATE SLOT" subtitle="" />
+       <Header 
+      title={
+        <Box component="span">
+          MANAGE SLOTS OF{' '}
+          <Typography
+            component="span"
+            sx={{
+              color: colors.greenAccent[500],
+              fontWeight: 'bold',
+              display: 'inline',
+              fontSize: "30px",
+            }}
+          >
+            {pods?.pod_name || ''}
+          </Typography>
+        </Box>
+      }
+      subtitle={`View Store Price and Generate Slot For ${pods?.pod_name || ''}`} 
+    />
 
       {/* Store Prices DataGrid */}
       <Box mb="10px" marginBottom={5}>
@@ -440,6 +469,16 @@ const GenerateSlot = () => {
           justifyContent="center"
           sx={{ gridColumn: "1", gridRow: "1 / 5" }}
         >
+          <Typography 
+            variant="h5" 
+            sx={{ 
+              marginBottom: "20px",
+              color: colors.greenAccent[500],
+              textAlign: "center" 
+            }}
+          >
+            Select values in form to generate slots for {pods?.pod_name || ''}
+          </Typography>
           <Formik
             onSubmit={handleFormSubmit}
             initialValues={initialValues}

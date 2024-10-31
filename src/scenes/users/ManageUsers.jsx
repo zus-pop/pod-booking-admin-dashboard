@@ -121,12 +121,11 @@ const ManageUsers = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-  const handleSearch = () => {
+  const handleSearch = (searchText) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
-      search: searchValue,
+      search: searchText,
     }));
-    fetchData();
   };
   const handleEditRole = (userId) => {
     console.log("Updating user with ID:", userId);
@@ -251,14 +250,12 @@ const ManageUsers = () => {
             borderRadius: 2,
           }}
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+            handleSearch(e.target.value);
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton>
           <SearchOutlined />
         </IconButton>
         <Button

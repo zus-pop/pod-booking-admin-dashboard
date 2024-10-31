@@ -32,7 +32,7 @@ const StatBox = styled(Box)(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   textAlign: "center",
-  height: "200px",
+  height: "250px",
   width: "250px",
   margin: "10px",
   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
@@ -49,40 +49,52 @@ const ContentWrapper = styled(Box)(({ theme }) => ({
 const BookingDetail = () => {
   const { id } = useParams();
   const [bookingDetail, setBookingDetail] = useState(null);
+
   const [products, setProducts] = useState([]);
   const [slots, setSlots] = useState([]);
+ 
+  
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
+
   const [quantities, setQuantities] = useState({});
   const [paymentUrl, setPaymentUrl] = useState(null);
   const [showQRModal, setShowQRModal] = useState(false);
+
+  const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
+  const [selectedSlotId, setSelectedSlotId] = useState(null);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
-    fetchProducts();
-    fetchSlots();
+
   }, [id]);
+
   const fetchBookingDetail = async () => {
     const result = await axios.get(`${API_URL}/api/v1/bookings/${id}`);
 
     setBookingDetail(result.data);
-    console.log("Booking detail:", bookingDetail.payment);
+    setSlots(result.data.slots)
+    setProducts(result.data.products);
+  
   };
 
-  const fetchSlots = async () => {
-    const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/slots`);
 
-    setSlots(result.data);
-  };
-  const fetchProducts = async () => {
-    const result = await axios.get(`${API_URL}/api/v1/bookings/${id}/products`);
-
-    setProducts(result.data);
-  };
+  
   const handleOpenAddProductModal = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/v1/products`);
+      const storeId = bookingDetail?.pod?.store?.store_id;
+      if (!storeId) {
+        toast.error("Store information not found");
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/api/v1/products`, {
+        params: {
+          store_id: storeId
+        }
+      });
       setAvailableProducts(response.data.products || []);
       setIsAddProductModalOpen(true);
     } catch (error) {
@@ -92,7 +104,6 @@ const BookingDetail = () => {
   };
 
   const handleProductSelect = (productId) => {
-    const product = availableProducts.find((p) => p.product_id === productId);
 
     if (selectedProducts.includes(productId)) {
       setSelectedProducts((prev) => prev.filter((id) => id !== productId));
@@ -148,7 +159,7 @@ const BookingDetail = () => {
       );
 
       if (response.status === 201) {
-        toast.success("Add products processinggg");
+        toast.success("Add products processing");
         setPaymentUrl(response.data.payment_url);
         setShowQRModal(true);
         setIsAddProductModalOpen(false);
@@ -164,7 +175,7 @@ const BookingDetail = () => {
   const handleCloseQRModal = () => {
     setShowQRModal(false);
     setPaymentUrl(null);
-    fetchProducts(); // Refresh products list
+    fetchBookingDetail(); 
   };
 
   const calculateTotalPrice = () => {
@@ -189,7 +200,7 @@ const BookingDetail = () => {
       toast.success(message);
       setShowQRModal(false);
       setPaymentUrl(null);
-      fetchProducts();
+      fetchBookingDetail();
     };
   
     socket.on("notification", handleNotification);
@@ -200,6 +211,33 @@ const BookingDetail = () => {
     };
   }, []);
 
+  const handleCheckin = async (slotId) => {
+    setSelectedSlotId(slotId);
+    setIsCheckinModalOpen(true);
+  };
+
+  const handleConfirmCheckin = async () => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/v1/bookings/${id}/slots/${selectedSlotId}`,
+        {
+          is_checked_in: true
+        }
+      );
+      
+      if (response.status === 200) {
+        toast.success("Check-in successful!");
+        // Refresh slot data
+        fetchBookingDetail();
+      }
+    } catch (error) {
+      console.error("Error during check-in:", error);
+      toast.error("Failed to check-in");
+    } finally {
+      setIsCheckinModalOpen(false);
+    }
+  };
+
   return (
     <Box m="20px" height="100vh">
       <Header title="Detail of Booking" sx={{ ml: "40px" }} />
@@ -208,45 +246,87 @@ const BookingDetail = () => {
         {bookingDetail && (
           <>
             <Box mb={4} display="flex" justifyContent="space-between">
-              <Box flex={1} mr={4}>
-                <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
-                  Booking Information
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Booking ID: {bookingDetail.booking_id}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Date: {bookingDetail.booking_date}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Status: {bookingDetail.booking_status}
-                </Typography>
+              {/* Left Column */}
+              <Box flex={1} mr={4} display="flex" flexDirection="column" gap={3}>
+                {/* Booking Information */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    Booking Information
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Booking ID: {bookingDetail.booking_id}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Date: {bookingDetail.booking_date}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Status: {bookingDetail.booking_status}
+                  </Typography>
+                </Box>
 
-                <Typography
-                  variant="h4"
-                  sx={{ color: "#4cceac", mb: 2, mt: 3 }}
-                >
-                  POD Information
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  POD ID: {bookingDetail.pod?.pod_id}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  POD Name: {bookingDetail.pod?.pod_name}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Type: {bookingDetail.pod?.type.type_name}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Description: {bookingDetail.pod?.description}
-                </Typography>
+                {/* Store Information */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    Store Information
+                  </Typography>
+                  {bookingDetail.pod.store ? (
+                    <>
+                      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <Box
+                          component="img"
+                          src={bookingDetail.pod.store.image}
+                          alt={bookingDetail.pod.store.store_name}
+                          sx={{
+                            width: 200,
+                            height: 150,
+                            objectFit: 'cover',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Box>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Store Name: {bookingDetail.pod.store.store_name}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Address: {bookingDetail.pod.store.address}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Phone: {bookingDetail.pod.store.hotline}
+                          </Typography>
+                         
+                        </Box>
+                      </Box>
+                    </>
+                  ) : (
+                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                      No store information available
+                    </Typography>
+                  )}
+                </Box>
 
+                {/* POD Information */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    POD Information
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    POD ID: {bookingDetail.pod?.pod_id}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    POD Name: {bookingDetail.pod?.pod_name}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Type: {bookingDetail.pod?.type.type_name}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Description: {bookingDetail.pod?.description}
+                  </Typography>
+                </Box>
+
+                {/* Rating & Comments (if exists) */}
                 {bookingDetail.rating && (
-                  <>
-                    <Typography
-                      variant="h4"
-                      sx={{ color: "#4cceac", mb: 2, mt: 3 }}
-                    >
+                  <Box>
+                    <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
                       Rating & Comments
                     </Typography>
                     <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
@@ -255,92 +335,96 @@ const BookingDetail = () => {
                     <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                       Comment: {bookingDetail.comment}
                     </Typography>
-                  </>
+                  </Box>
                 )}
               </Box>
 
-              <Box flex={1}>
-                <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
-                  User Information
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  User ID: {bookingDetail.user?.user_id}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Name: {bookingDetail.user?.user_name}
-                </Typography>
-                <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                  Email: {bookingDetail.user?.email}
-                </Typography>
-
-                <Typography
-                  variant="h4"
-                  sx={{ color: "#4cceac", mb: 2, mt: 3 }}
-                >
-                  Payment Information
-                </Typography>
-                {bookingDetail.payment && bookingDetail.payment.length > 0 ? (
-                  bookingDetail.payment.map((payment) => (
-                    <Box key={payment.payment_id} sx={{ mb: 2 }}>
-                      <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                        Payment ID: {payment.payment_id}
-                      </Typography>
-                      <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                        Transaction ID: {payment.transaction_id}
-                      </Typography>
-                      <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                        Total Cost:{" "}
-                        {new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(payment.total_cost)}
-                      </Typography>
-                      <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                        Payment Date: {payment.payment_date}
-                      </Typography>
-                      <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                        Status: {payment.payment_status}
-                      </Typography>
-                      {payment !== bookingDetail.payment[bookingDetail.payment.length - 1] && (
-                        <Box sx={{ my: 2, borderBottom: "1px solid rgba(255, 255, 255, 0.12)" }} />
-                      )}
-                    </Box>
-                  ))
-                ) : (
-                  <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
-                    No payment information available
+              {/* Right Column */}
+              <Box flex={1} display="flex" flexDirection="column" gap={3}>
+                {/* User Information */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    User Information
                   </Typography>
-                )}
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    User ID: {bookingDetail.user?.user_id}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Name: {bookingDetail.user?.user_name}
+                  </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Email: {bookingDetail.user?.email}
+                  </Typography>
+                </Box>
 
-                <Typography
-                  variant="h4"
-                  sx={{ color: "#4cceac", mb: 2, mt: 3 }}
-                >
-                  POD Utilities
-                </Typography>
-                {bookingDetail.pod?.utilities?.length > 0 ? (
-                  <Box display="flex" flexWrap="wrap" gap={1}>
-                    {bookingDetail.pod.utilities.map((utility) => (
-                      <Box
-                        key={utility.utility_id}
-                        sx={{
-                          backgroundColor: "#1F2A40",
-                          borderRadius: "4px",
-                          padding: "8px 16px",
-                          margin: "4px",
-                        }}
-                      >
-                        <Typography variant="body1" sx={{ color: "#fff" }}>
-                          {utility.utility_name}
+                {/* Payment Information */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    Payment Information
+                  </Typography>
+                  {bookingDetail.payment && bookingDetail.payment.length > 0 ? (
+                    bookingDetail.payment.map((payment) => (
+                      <Box key={payment.payment_id} sx={{ mb: 2 }}>
+                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          Payment ID: {payment.payment_id}
                         </Typography>
+                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          Transaction ID: {payment.transaction_id}
+                        </Typography>
+                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          Total Cost:{" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(payment.total_cost)}
+                        </Typography>
+                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          Payment Date: {payment.payment_date}
+                        </Typography>
+                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          Status: {payment.payment_status}
+                        </Typography>
+                        {payment !== bookingDetail.payment[bookingDetail.payment.length - 1] && (
+                          <Box sx={{ my: 2, borderBottom: "1px solid rgba(255, 255, 255, 0.12)" }} />
+                        )}
                       </Box>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
-                    No utilities available
+                    ))
+                  ) : (
+                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                      No payment information available
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* POD Utilities */}
+                <Box>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                    POD Utilities
                   </Typography>
-                )}
+                  {bookingDetail.pod?.utilities?.length > 0 ? (
+                    <Box display="flex" flexWrap="wrap" gap={1}>
+                      {bookingDetail.pod.utilities.map((utility) => (
+                        <Box
+                          key={utility.utility_id}
+                          sx={{
+                            backgroundColor: "#1F2A40",
+                            borderRadius: "4px",
+                            padding: "8px 16px",
+                            margin: "4px",
+                          }}
+                        >
+                          <Typography variant="body1" sx={{ color: "#fff" }}>
+                            {utility.utility_name}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                      No utilities available
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </Box>
 
@@ -560,7 +644,7 @@ const BookingDetail = () => {
                     }}
                   >
                     <Typography variant="h6">
-                      Tổng tiền:{" "}
+                      Total:{" "}
                       {new Intl.NumberFormat("vi-VN", {
                         style: "currency",
                         currency: "VND",
@@ -602,7 +686,7 @@ const BookingDetail = () => {
                 flexWrap="wrap"
                 gap={2}
                 justifyContent="flex-start"
-                minHeight="180px"
+                minHeight="200px"
               >
                 {slots.length > 0 ? (
                   slots.map((slot) => (
@@ -611,17 +695,51 @@ const BookingDetail = () => {
                         Time: {slot.start_time} - {slot.end_time}
                       </Typography>
                       <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
-                        Price: ${slot.price}
+                        Slot ID: {slot.slot_id}
+                      </Typography>
+                      <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                        Price: {" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(slot.price)}
                       </Typography>
                       <Typography
                         variant="body1"
                         sx={{
                           color: slot.is_available ? "#4cceac" : "#ff0000",
                           fontWeight: "bold",
+                          mb: 1
                         }}
                       >
                         {slot.is_available ? "Available" : "Occupied"}
                       </Typography>
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: slot.is_checked_in ? "#4cceac" : "#ff9800",
+                          fontWeight: "bold",
+                          mb: 1
+                        }}
+                      >
+                        {slot.is_checked_in ? "Checked In" : "Not Checked In"}
+                      </Typography>
+                      {!slot.is_checked_in && (
+                        <Button
+                          variant="contained"
+                          onClick={() => handleCheckin(slot.slot_id)}
+                          sx={{
+                            backgroundColor: "#4cceac",
+                            color: "#000",
+                            "&:hover": {
+                              backgroundColor: "#3da58a",
+                            },
+                            mt: 1
+                          }}
+                        >
+                          Check In
+                        </Button>
+                      )}
                     </StatBox>
                   ))
                 ) : (
@@ -641,6 +759,53 @@ const BookingDetail = () => {
                 )}
               </Box>
             </ContentWrapper>
+
+            <Modal
+              open={isCheckinModalOpen}
+              onClose={() => setIsCheckinModalOpen(false)}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 400,
+                  bgcolor: "background.paper",
+                  boxShadow: 24,
+                  p: 4,
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Confirm Check-in
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                  Are you sure you want to check in this slot?
+                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                  <Button
+                    onClick={() => setIsCheckinModalOpen(false)}
+                    variant="outlined"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmCheckin}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#4cceac",
+                      color: "#000",
+                      "&:hover": {
+                        backgroundColor: "#3da58a",
+                      },
+                    }}
+                  >
+                    Confirm
+                  </Button>
+                </Box>
+              </Box>
+            </Modal>
 
             <Box display="flex" justifyContent="center" mt={4}>
               <Button
@@ -680,7 +845,7 @@ const BookingDetail = () => {
           }}
         >
           <Typography variant="h6" component="h2" gutterBottom>
-            Quét mã để thanh toán qua ZaloPay
+            Scan QR code to pay via ZaloPay
           </Typography>
 
           <Box
@@ -711,11 +876,11 @@ const BookingDetail = () => {
           </Box>
 
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Sử dụng ứng dụng ZaloPay để quét mã QR
+            Use ZaloPay app to scan QR code
           </Typography>
 
           <Typography variant="body2" color="primary" sx={{ mb: 2 }}>
-            Đang chờ thanh toán...
+            Waiting for payment...
           </Typography>
 
           <Button
@@ -729,7 +894,7 @@ const BookingDetail = () => {
               },
             }}
           >
-            Đóng
+            Close
           </Button>
         </Box>
       </Modal>

@@ -20,6 +20,7 @@ const ManageSlots = () => {
   const {pod_id} = useParams()
   const colors = tokens(theme.palette.mode);
   const [slots, setSlots] = useState([]);
+  const [pods, setPods] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -28,8 +29,18 @@ const ManageSlots = () => {
 
   useEffect(() => {
     fetchSlots();
+    fetchPods ();
   }, []);
-
+  const fetchPods = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`, {
+   
+      });
+      setPods(response.data);
+    } catch (error) {
+      console.error('Error fetching slots:', error);
+    }
+  };
   const fetchSlots = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/v1/slots`, {
@@ -92,13 +103,31 @@ const ManageSlots = () => {
   return (
     <Box m="20px">
       <ToastContainer />
-      <Header title="MANAGE SLOTS" subtitle="View and manage booking slots" />
+      <Header 
+      title={
+        <Box component="span">
+          MANAGE SLOTS OF{' '}
+          <Typography
+            component="span"
+            sx={{
+              color: colors.greenAccent[500],
+              fontWeight: 'bold',
+              display: 'inline',
+              fontSize: "30px",
+            }}
+          >
+            {pods?.pod_name || ''}
+          </Typography>
+        </Box>
+      }
+      subtitle="View and manage booking slots" 
+    />
       <Button
             variant="contained"
             color="primary"
             onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
           >
-            Generate Slot
+            Generate Slot for {pods.pod_name }
           </Button>
       <Box
         sx={{
