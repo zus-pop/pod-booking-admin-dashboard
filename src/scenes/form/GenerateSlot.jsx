@@ -60,7 +60,7 @@ const slotSchema = yup.object().shape({
       return !startHour || !value || value > startHour;
     }),
   durationMinutes: yup.number().required("Duration is required"),
-  price: yup.number().required("Price is required"),
+  price: yup.number(),
 });
 
 const GenerateSlot = () => {
@@ -71,31 +71,31 @@ const GenerateSlot = () => {
   const [storePrices, setStorePrices] = useState([]);
   const navigate = useNavigate();
   
-  const [currentPage, setCurrentPage] = useState(1);
-const slotsPerPage = 12;
+//   const [currentPage, setCurrentPage] = useState(1);
+// const slotsPerPage = 12;
 
-  const indexOfLastSlot = currentPage * slotsPerPage;
-  const indexOfFirstSlot = indexOfLastSlot - slotsPerPage;
-  const currentSlots = slots.slice(indexOfFirstSlot, indexOfLastSlot);
+//   const indexOfLastSlot = currentPage * slotsPerPage;
+//   const indexOfFirstSlot = indexOfLastSlot - slotsPerPage;
+//   const currentSlots = slots.slice(indexOfFirstSlot, indexOfLastSlot);
 
   useEffect(() => {
-    fetchData();
+    // fetchData();
     fetchStorePrices();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const result = await axios.get(`${API_URL}/api/v1/slots`, {
-        params: {
-          pod_id: pod_id,
-        },
-      });
-      setSlots(result.data);
-      console.log("Data:", result.data);
-    } catch (error) {
-      console.error("Error fetching data:", error.message);
-    }
-  };
+  // const fetchData = async () => {
+  //   try {
+  //     const result = await axios.get(`${API_URL}/api/v1/slots`, {
+  //       params: {
+  //         pod_id: pod_id,
+  //       },
+  //     });
+  //     setSlots(result.data);
+  //     console.log("Data:", result.data);
+  //   } catch (error) {
+  //     console.error("Error fetching data:", error.message);
+  //   }
+  // };
 
   const fetchStorePrices = async () => {
     try {
@@ -129,38 +129,209 @@ const slotsPerPage = 12;
     }
   };
 
-  const handleFormSubmit = async (values, actions) => {
-    try {
-      console.log("Submitting values:", { ...values, pod_id });
-      console.log("Submitting values:", { values });
-      const response = await axios.post(`${API_URL}/api/v1/slots`, {
-        ...values,
-        startDate: values.startDate.toISOString().split("T")[0],
-        endDate: values.endDate.toISOString().split("T")[0],
-        pod_id,
+  const getDayOfWeek = (date) => {
+    const days = [
+      "Sunday",
+      "Monday", 
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday"
+    ];
+    return days[date.getDay()];
+  };
+
+  const calculatePrice = (startDate, endDate, startHour, endHour) => {
+    if (!startDate || !endDate || startHour === "" || endHour === "") return 20000;
+
+    // Tạo mảng các ngày từ startDate đến endDate
+    const dates = [];
+    let currentDate = new Date(startDate);
+    const lastDate = new Date(endDate);
+    
+    while (currentDate <= lastDate) {
+      dates.push(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Nếu chỉ có 1 ngày và có nhiều khoảng thời gian
+    if (dates.length === 1) {
+      const dayOfWeek = getDayOfWeek(dates[0]);
+      
+      // Lọc các store prices phù hợp với ngày trong tuần và khoảng thời gian
+      const applicablePrices = storePrices.filter(price => 
+        price.days_of_week.includes(dayOfWeek) &&
+        ((startHour >= price.start_hour && startHour < price.end_hour) ||
+         (endHour > price.start_hour && endHour <= price.end_hour))
+      );
+
+      if (applicablePrices.length === 0) return 20000;
+
+      // Sắp xếp theo độ ưu tiên
+      const sortedPrices = applicablePrices.sort((a, b) => a.priority - b.priority);
+      return sortedPrices[0].price;
+    } 
+    // Nếu có nhiều ngày
+    else {
+      const prices = dates.map(date => {
+        const dayOfWeek = getDayOfWeek(date);
+        const applicablePrices = storePrices.filter(price => 
+          price.days_of_week.includes(dayOfWeek) &&
+          startHour >= price.start_hour &&
+          endHour <= price.end_hour
+        );
+
+        if (applicablePrices.length === 0) return 20000;
+
+        const sortedPrices = applicablePrices.sort((a, b) => a.priority - b.priority);
+        return sortedPrices[0].price;
       });
-      console.log(response.status);
-      if (response.status === 201) {
-        console.log("Slot created successfully");
-        toast.success(response.data.message);
-        actions.resetForm();
-      } else {
-        console.error("Failed to create slot");
-        console.log(response.data);
-      }
-    } catch (error) {
-      console.error("Error:", error);
+
+      // Trả về mảng các giá theo từng ngày
+      return prices;
     }
   };
 
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleFormSubmit = async (values, actions) => {
+  try {
+    const calculatedPrices = calculatePrice(
+      values.startDate,
+      values.endDate,
+      parseInt(values.startHour),
+      parseInt(values.endHour)
+    );
+
+    // Thêm offset để điều chỉnh múi giờ
+    const offset = new Date().getTimezoneOffset();
+    
+    // Format dates với điều chỉnh múi giờ
+    const formattedStartDate = new Date(values.startDate.getTime() - (offset * 60 * 1000))
+      .toISOString()
+      .split('T')[0];
+      
+    const formattedEndDate = new Date(values.endDate.getTime() - (offset * 60 * 1000))
+      .toISOString()
+      .split('T')[0];
+
+    // Nếu chỉ có 1 ngày
+    if (!Array.isArray(calculatedPrices)) {
+      const payload = {
+        durationMinutes: parseInt(values.durationMinutes),
+        endDate: formattedEndDate,
+        endHour: parseInt(values.endHour),
+        pod_id: parseInt(pod_id),
+        price: calculatedPrices,
+        startDate: formattedStartDate,
+        startHour: parseInt(values.startHour)
+      };
+
+      console.log("Submitting values:", payload);
+      const response = await axios.post(`${API_URL}/api/v1/slots`, payload);
+
+      if (response.status === 201) {
+        toast.success("Slot created successfully");
+        actions.resetForm();
+      }
+    } 
+    // Nếu có nhiều ngày
+    else {
+      const dates = [];
+      let currentDate = new Date(values.startDate);
+      const lastDate = new Date(values.endDate);
+      
+      while (currentDate <= lastDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      for (let i = 0; i < dates.length; i++) {
+        const adjustedDate = new Date(dates[i].getTime() - (offset * 60 * 1000));
+        const payload = {
+          durationMinutes: parseInt(values.durationMinutes),
+          endDate: adjustedDate.toISOString().split('T')[0],
+          endHour: parseInt(values.endHour),
+          pod_id: parseInt(pod_id),
+          price: calculatedPrices[i],
+          startDate: adjustedDate.toISOString().split('T')[0],
+          startHour: parseInt(values.startHour)
+        };
+
+        await axios.post(`${API_URL}/api/v1/slots`, payload);
+      }
+
+      toast.success("All slots created successfully");
+      actions.resetForm();
+    }
+  } catch (error) {
+    console.error("Error:", error);
+    toast.error(error.response?.data?.message || "Error creating slot");
+  }
+};
+
+  const updatePrice = (values, setFieldValue) => {
+    const calculatedPrices = calculatePrice(
+      values.startDate,
+      values.endDate || values.startDate,
+      parseInt(values.startHour),
+      parseInt(values.endHour)
+    );
+
+    if (Array.isArray(calculatedPrices)) {
+      // Nếu có nhiều ngày, hiển thị tổng giá hoặc giá của ngày đầu tiên
+      setFieldValue("price", calculatedPrices[0]);
+    } else {
+      setFieldValue("price", calculatedPrices);
+    }
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prev) =>
-      Math.min(prev + 1, Math.ceil(slots.length / slotsPerPage))
+  // Sửa lại hàm getValidStartHours để lấy các giờ bắt đầu hợp lệ
+  const getValidStartHours = (selectedDate) => {
+    if (!selectedDate) return [];
+    
+    const dayOfWeek = getDayOfWeek(selectedDate);
+    const validHours = [];
+    
+    // Lọc các khoảng thời gian phù hợp với ngày được chọn
+    const validRanges = storePrices.filter(price => 
+      price.days_of_week.includes(dayOfWeek)
     );
+
+    // Với mỗi khoảng thời gian, thêm tất cả các giờ có thể bắt đầu
+    validRanges.forEach(range => {
+      for (let hour = range.start_hour; hour < range.end_hour; hour++) {
+        validHours.push(hour);
+      }
+    });
+    
+    return [...new Set(validHours)].sort((a, b) => a - b);
+  };
+
+  // Sửa lại hàm getValidEndHours để lấy các giờ kết thúc hợp lệ
+  const getValidEndHours = (selectedDate, startHour) => {
+    if (!selectedDate || startHour === "") return [];
+    
+    const dayOfWeek = getDayOfWeek(selectedDate);
+    const validHours = [];
+    
+    // Lọc các khoảng thời gian phù hợp với ngày được chọn và giờ bắt đầu
+    const validRanges = storePrices.filter(price => 
+      price.days_of_week.includes(dayOfWeek) &&
+      startHour < price.end_hour
+    );
+
+    // Tìm khoảng thời gian phù hợp nhất (có độ ưu tiên cao nhất)
+    const sortedRanges = validRanges.sort((a, b) => a.priority - b.priority);
+    const validRange = sortedRanges[0];
+
+    if (!validRange) return [];
+
+    // Thêm các giờ kết thúc hợp lệ (phải lớn hơn giờ bắt đầu)
+    for (let hour = startHour + 1; hour <= validRange.end_hour; hour++) {
+      validHours.push(hour);
+    }
+    
+    return validHours;
   };
 
   const columns = [
@@ -288,7 +459,10 @@ const slotsPerPage = 12;
                   <FormControl fullWidth sx={{ marginBottom: "10px" }}>
                     <ReactDatePicker
                       selected={values.startDate}
-                      onChange={(date) => setFieldValue("startDate", date)}
+                      onChange={(date) => {
+                        setFieldValue("startDate", date);
+                        updatePrice({ ...values, startDate: date }, setFieldValue);
+                      }}
                       dateFormat="yyyy-MM-dd"
                       placeholderText="Select start date"
                       customInput={
@@ -335,23 +509,19 @@ const slotsPerPage = 12;
                       variant="filled"
                       label="Start Hour"
                       onBlur={handleBlur}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        // Reset end hour when start hour changes
+                        setFieldValue("endHour", "");
+                        updatePrice({ ...values, startHour: e.target.value }, setFieldValue);
+                      }}
                       value={values.startHour}
                       name="startHour"
                       error={touched.startHour && Boolean(errors.startHour)}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 200,
-
-                            marginTop: "8px",
-                          },
-                        },
-                      }}
                     >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <MenuItem key={i} value={i} sx={{ py: 1 }}>
-                          {i.toString().padStart(2, "0")}:00
+                      {getValidStartHours(values.startDate).map((hour) => (
+                        <MenuItem key={hour} value={hour} sx={{ py: 1 }}>
+                          {hour.toString().padStart(2, "0")}:00
                         </MenuItem>
                       ))}
                     </Select>
@@ -369,28 +539,17 @@ const slotsPerPage = 12;
                       variant="filled"
                       label="End Hour"
                       onBlur={handleBlur}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        updatePrice({ ...values, endHour: e.target.value }, setFieldValue);
+                      }}
                       value={values.endHour}
                       name="endHour"
                       error={touched.endHour && Boolean(errors.endHour)}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            maxHeight: 200,
-
-                            marginTop: "8px",
-                          },
-                        },
-                      }}
                     >
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <MenuItem
-                          key={i}
-                          value={i}
-                          disabled={i <= values.startHour}
-                          sx={{ py: 1 }}
-                        >
-                          {i.toString().padStart(2, "0")}:00
+                      {getValidEndHours(values.startDate, values.startHour).map((hour) => (
+                        <MenuItem key={hour} value={hour} sx={{ py: 1 }}>
+                          {hour.toString().padStart(2, "0")}:00
                         </MenuItem>
                       ))}
                     </Select>
@@ -420,15 +579,14 @@ const slotsPerPage = 12;
                     fullWidth
                     variant="filled"
                     label="Price"
-                    onBlur={handleBlur}
-                    onChange={handleChange}
                     value={values.price}
                     name="price"
-                    error={touched.price && Boolean(errors.price)}
-                    helperText={touched.price && errors.price}
+                    disabled
                     sx={{ marginBottom: "40px" }}
                   />
                 </Box>
+
+               
 
                 <Box justifyContent="center" mt="0px">
                   <Button type="submit" color="secondary" variant="contained">
@@ -440,7 +598,7 @@ const slotsPerPage = 12;
           </Formik>
         </Box>
 
-        {currentSlots.map((slot, index) => (
+        {/* {currentSlots.map((slot, index) => (
           <Box
             key={index}
             bgcolor={colors.primary[400]}
@@ -491,8 +649,8 @@ const slotsPerPage = 12;
             color="secondary"
           >
             &gt;
-          </Button>
-        </Box>
+          </Button> */}
+        {/* </Box> */}
       </Box>
     </Box>
   );
