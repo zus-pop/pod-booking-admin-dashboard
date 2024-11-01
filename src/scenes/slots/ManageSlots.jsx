@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Box, Typography, Modal,Button } from '@mui/material';
+import { useState, useEffect } from "react";
+import { Box, Typography, Modal, Button, TextField } from "@mui/material";
 import { Header } from "../../components";
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import axios from 'axios';
-import { useTheme } from '@mui/material';
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import axios from "axios";
+import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -16,8 +16,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const ManageSlots = () => {
   const theme = useTheme();
-  const navigate = useNavigate()
-  const {pod_id} = useParams()
+  const navigate = useNavigate();
+  const { pod_id } = useParams();
   const colors = tokens(theme.palette.mode);
   const [slots, setSlots] = useState([]);
   const [pods, setPods] = useState([]);
@@ -25,20 +25,22 @@ const ManageSlots = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingSlotId, setDeletingSlotId] = useState(null);
-  
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPrice, setEditingPrice] = useState("");
+
+  const [editingSlot, setEditingSlot] = useState(null);
 
   useEffect(() => {
     fetchSlots();
-    fetchPods ();
+    fetchPods();
   }, []);
   const fetchPods = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`, {
-   
-      });
+      const response = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`, {});
       setPods(response.data);
     } catch (error) {
-      console.error('Error fetching slots:', error);
+      console.error("Error fetching slots:", error);
     }
   };
   const fetchSlots = async () => {
@@ -46,11 +48,11 @@ const ManageSlots = () => {
       const response = await axios.get(`${API_URL}/api/v1/slots`, {
         params: {
           pod_id: pod_id,
-        }
+        },
       });
       setSlots(response.data);
     } catch (error) {
-      console.error('Error fetching slots:', error);
+      console.error("Error fetching slots:", error);
     }
   };
 
@@ -66,14 +68,6 @@ const ManageSlots = () => {
 
   const handleDateClick = (arg) => {
     const clickedDate = new Date(arg.date);
-
-    
-    const slotsOnDay = slots.filter(slot => {
-      const slotDate = new Date(slot.start_time);
-      return slotDate.toDateString() === clickedDate.toDateString();
-    });
-    
-
   };
 
   const handleDelete = () => {
@@ -100,62 +94,99 @@ const ManageSlots = () => {
     }
   };
 
+  const handleEdit = () => {
+    setEditingSlot(selectedSlot);
+    setEditingPrice(selectedSlot.extendedProps.price);
+    setIsEditModalOpen(true);
+    handleCloseModal();
+  };
+
+  const handleUpdatePrice = async () => {
+    try {
+      if (editingPrice < 50000) {
+        toast.error("Price must be at least 50,000 VND");
+        return;
+      }
+
+      const response = await axios.put(`${API_URL}/api/v1/slots/${editingSlot.extendedProps.slot_id}`, {
+        price: editingPrice,
+      });
+
+      if (response.status === 200) {
+        toast.success("Slot price updated successfully");
+        fetchSlots();
+        setIsEditModalOpen(false);
+        setEditingPrice("");
+        setEditingSlot(null);
+      }
+    } catch (error) {
+      console.error("Error updating slot price:", error);
+      toast.error("An error occurred while updating slot price");
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingPrice("");
+    setEditingSlot(null);
+  };
+
   return (
     <Box m="20px">
       <ToastContainer />
-      <Header 
-      title={
-        <Box component="span">
-          MANAGE SLOTS OF{' '}
-          <Typography
-            component="span"
-            sx={{
-              color: colors.greenAccent[500],
-              fontWeight: 'bold',
-              display: 'inline',
-              fontSize: "30px",
-            }}
-          >
-            {pods?.pod_name || ''}
-          </Typography>
-        </Box>
-      }
-      subtitle="View and manage booking slots" 
-    />
+      <Header
+        title={
+          <Box component="span">
+            MANAGE SLOTS OF{" "}
+            <Typography
+              component="span"
+              sx={{
+                color: colors.greenAccent[500],
+                fontWeight: "bold",
+                display: "inline",
+                fontSize: "30px",
+              }}
+            >
+              {pods?.pod_name || ""}
+            </Typography>
+          </Box>
+        }
+        subtitle="View and manage booking slots"
+      />
       <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
-          >
-            Generate Slot for {pods.pod_name }
-          </Button>
+        variant="contained"
+        color="primary"
+        onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
+      >
+        Generate Slot for {pods.pod_name}
+      </Button>
       <Box
         sx={{
-          backgroundColor: '#1a1c23',
-          borderRadius: "16px", 
+          backgroundColor: "#1a1c23",
+          borderRadius: "16px",
           padding: "20px",
           "& .fc": {
             fontFamily: "'Inter', sans-serif",
           },
           "& .fc-toolbar-title": {
             color: "ffff",
-            fontSize: '1.5rem',
+            fontSize: "1.5rem",
             fontWeight: 600,
           },
           "& .fc-button": {
             backgroundColor: colors.greenAccent[500],
             borderColor: colors.greenAccent[500],
-            '&:hover': {
+            "&:hover": {
               backgroundColor: colors.greenAccent[600],
             },
-            '&:disabled': {
+            "&:disabled": {
               backgroundColor: colors.greenAccent[700],
             },
-            textTransform: 'capitalize',
+            textTransform: "capitalize",
             fontWeight: 500,
             color: colors.primary[500],
           },
-       
+
           "& .fc-day-today": {
             backgroundColor: "transparent !important",
           },
@@ -164,14 +195,14 @@ const ManageSlots = () => {
             borderColor: colors.greenAccent[500],
             opacity: "0.9 !important",
             color: "ffff",
-            '&:hover': {
+            "&:hover": {
               backgroundColor: colors.greenAccent[600],
-              cursor: 'pointer',
+              cursor: "pointer",
             },
           },
           "& .fc-timegrid-slot": {
             height: "70px !important",
-            borderColor: '#3f3f46',
+            borderColor: "#3f3f46",
           },
           "& .fc-col-header-cell": {
             backgroundColor: "#27272a",
@@ -210,13 +241,13 @@ const ManageSlots = () => {
             boxShadow: colors.greenAccent[600],
           },
           "& .fc-scrollgrid": {
-            borderColor: '#3f3f46',
+            borderColor: "#3f3f46",
           },
           "& .fc-scrollgrid td, & .fc-scrollgrid th": {
-            borderColor: '#3f3f46',
+            borderColor: "#3f3f46",
           },
           "& .fc-highlight": {
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            backgroundColor: "rgba(99, 102, 241, 0.1)",
           },
           "& .fc-event-title": {
             color: colors.primary[500],
@@ -243,23 +274,35 @@ const ManageSlots = () => {
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="timeGridWeek"
           headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'timeGridWeek,timeGridDay'
+            left: "prev,next today",
+            center: "title",
+            right: "timeGridWeek,timeGridDay",
           }}
-          events={slots.map(slot => ({
+          events={slots.map((slot) => ({
             id: slot.slot_id.toString(),
-            title: '',
+            title: "",
             start: slot.start_time,
             end: slot.end_time,
-            display: 'background',
             backgroundColor: colors.greenAccent[500],
-            classNames: ['day-has-slot'],
+            borderColor: colors.greenAccent[500],
+            textColor: "#ffffff",
             extendedProps: {
+              slot_id: slot.slot_id,
               price: slot.price,
               pod_id: slot.pod_id,
-              is_available: slot.is_available
-            }
+              is_available: slot.is_available,
+              start_time: new Date(slot.start_time).toLocaleTimeString(
+                "vi-VN",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              ),
+              end_time: new Date(slot.end_time).toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            },
           }))}
           eventClick={handleEventClick}
           dateClick={handleDateClick}
@@ -272,27 +315,67 @@ const ManageSlots = () => {
             timeGridWeek: {
               eventContent: (arg) => {
                 return {
-                  html: `<div style="color: #ffffff !important ; font-size: 20px; font-weight: 600;">
-                    ${new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(arg.event.extendedProps.price)}
-                  </div>`
-                }
-              }
+                  html: `
+                    <div style="
+                      padding: 2px 4px;
+                      color: #ffffff;
+                      font-size: 14px;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      text-align: center;
+                      line-height: 1.2;
+                    ">
+                      <div style="font-weight: 500;">
+                        ${arg.event.extendedProps.start_time} - ${
+                    arg.event.extendedProps.end_time
+                  }
+                      </div>
+                      <div style="font-weight: 600; margin-top: 4px;">
+                        ${new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(arg.event.extendedProps.price)}
+                      </div>
+                    </div>
+                  `,
+                };
+              },
             },
             timeGridDay: {
               eventContent: (arg) => {
                 return {
-                  html: `<div style="color: #ffffff !important; font-size: 16px; font-weight: 600;">
-                    ${new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    }).format(arg.event.extendedProps.price)}
-                  </div>`
-                }
-              }
-            }
+                  html: `
+                    <div style="
+                      padding: 2px 4px;
+                      color: #ffffff;
+                      font-size: 14px;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      text-align: center;
+                      line-height: 1.2;
+                    ">
+                      <div style="font-weight: 500;">
+                        ${arg.event.extendedProps.start_time} - ${
+                    arg.event.extendedProps.end_time
+                  }
+                      </div>
+                      <div style="font-weight: 600; margin-top: 4px;">
+                        ${new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(arg.event.extendedProps.price)}
+                      </div>
+                    </div>
+                  `,
+                };
+              },
+            },
           }}
         />
       </Box>
@@ -304,40 +387,64 @@ const ManageSlots = () => {
       >
         <Box
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
             width: 400,
-            bgcolor: '#1a1c23',
-            border: '1px solid #3f3f46',
-            boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+            bgcolor: "#1a1c23",
+            border: "1px solid #3f3f46",
+            boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)",
             p: 4,
-            borderRadius: '16px',
+            borderRadius: "16px",
           }}
         >
           {selectedSlot && (
             <>
-              <Typography variant="h6" component="h2" sx={{ color: '#ffffff', mb: 2, fontWeight: 600 }}>
+              <Typography
+                variant="h6"
+                component="h2"
+                sx={{ color: "#ffffff", mb: 2, fontWeight: 600 }}
+              >
                 Slot Details
               </Typography>
-              <Typography sx={{ color: '#ffffff' }}>
-                POD ID: {selectedSlot.extendedProps.pod_id}
+              <Typography sx={{ color: "#ffffff" ,  mb: 1 }}>
+               {pods?.pod_name || ""}
               </Typography>
-              <Typography sx={{ color: '#ffffff', mb: 1 }}>
+              <Typography sx={{ color: "#ffffff", mb: 1  }}>
+                Slot ID: {selectedSlot.extendedProps.slot_id}
+              </Typography>
+              <Typography sx={{ color: "#ffffff", mb: 1 }}>
                 Start: {new Date(selectedSlot.start).toLocaleString()}
               </Typography>
-              <Typography sx={{ color: '#ffffff', mb: 1 }}>
+              <Typography sx={{ color: "#ffffff", mb: 1 }}>
                 End: {new Date(selectedSlot.end).toLocaleString()}
               </Typography>
-              <Typography sx={{ color: '#ffffff', mb: 1 }}>
-                Status: {selectedSlot.extendedProps.is_available ? 'Available' : 'Occupied'}
+              <Typography sx={{ color: "#ffffff", mb: 1 }}>
+                Status:{" "}
+                {selectedSlot.extendedProps.is_available
+                  ? "Available"
+                  : "Occupied"}
               </Typography>
-              
-              <Typography sx={{ color: '#ffffff', mb: 1 }}>
-                Price: {selectedSlot.price}
+
+              <Typography sx={{ color: "#ffffff", mb: 1 }}>
+                Price:{" "}
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(selectedSlot.extendedProps.price)}
               </Typography>
-              <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+              <Box
+                sx={{ mt: 3, display: "flex", justifyContent: "space-between" }}
+              >
+                <Button
+                  onClick={handleEdit}
+                  variant="contained"
+                  color="primary"
+                  sx={{ mt: 2 }}
+                >
+                  Edit Price
+                </Button>
                 <Button
                   onClick={handleDelete}
                   variant="contained"
@@ -365,28 +472,105 @@ const ManageSlots = () => {
             left: "50%",
             transform: "translate(-50%, -50%)",
             width: 400,
-            bgcolor: '#1a1c23',
-            border: '1px solid #3f3f46',
+            bgcolor: "#1a1c23",
+            border: "1px solid #3f3f46",
             boxShadow: 24,
             p: 4,
             borderRadius: 2,
           }}
         >
-          <Typography id="delete-modal-title" variant="h6" component="h2" sx={{ color: '#ffffff' }}>
+          <Typography
+            id="delete-modal-title"
+            variant="h6"
+            component="h2"
+            sx={{ color: "#ffffff" }}
+          >
             Confirm Delete
           </Typography>
-          <Typography id="delete-modal-description" sx={{ mt: 2, color: '#ffffff' }}>
+          <Typography
+            id="delete-modal-description"
+            sx={{ mt: 2, color: "#ffffff" }}
+          >
             Are you sure you want to delete this slot?
           </Typography>
           <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
             <Button
               onClick={() => setIsDeleteModalOpen(false)}
-              sx={{ mr: 2, color: '#ffffff' }}
+              sx={{ mr: 2, color: "#ffffff" }}
             >
               Cancel
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
               Delete
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+
+      <Modal
+        open={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        aria-labelledby="edit-modal-title"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "#1a1c23",
+            border: "1px solid #3f3f46",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography
+            id="edit-modal-title"
+            variant="h6"
+            component="h2"
+            sx={{ color: "#ffffff", mb: 2 }}
+          >
+            Edit Slot Price
+          </Typography>
+          <TextField
+            fullWidth
+            type="number"
+            label="Price"
+            value={editingPrice}
+            onChange={(e) => setEditingPrice(e.target.value)}
+            inputProps={{ min: 50000 }}
+            helperText="Minimum price is 50,000 VND"
+            sx={{
+              mb: 3,
+              "& .MuiOutlinedInput-root": {
+                color: "#ffffff",
+              },
+              "& .MuiInputLabel-root": {
+                color: "#ffffff",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#3f3f46",
+              },
+              "& .MuiFormHelperText-root": {
+                color: "#ffffff",
+              },
+            }}
+          />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button
+              onClick={handleCloseEditModal}
+              sx={{ color: "#ffffff" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdatePrice}
+              variant="contained"
+              color="primary"
+            >
+              Update
             </Button>
           </Box>
         </Box>

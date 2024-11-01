@@ -18,6 +18,10 @@ import { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -53,9 +57,12 @@ const GenerateSlot = () => {
     pageSize: 5,  // Đảm bảo giá trị này khớp với pageSizeOptions
     page: 0
   });
+  const [podName, setPodName] = useState("");
+
   useEffect(() => {
     fetchData();
     fetchStorePrices();
+    fetchPodName();
   }, []);
 
   useEffect(() => {
@@ -102,6 +109,15 @@ const GenerateSlot = () => {
       }
     } catch (error) {
       console.error("Error fetching store prices:", error.message);
+    }
+  };
+
+  const fetchPodName = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/pods/${pod_id}`);
+      setPodName(response.data.pod_name);
+    } catch (error) {
+      console.error("Error fetching pod name:", error.message);
     }
   };
 
@@ -246,11 +262,206 @@ const GenerateSlot = () => {
         hideProgressBar={false}
         theme="light"
       />
-      <Header title="GENERATE SLOT" subtitle="" />
+      <Header 
+        title={`GENERATE SLOT FOR ${podName.toUpperCase()}`} 
+        subtitle="" 
+      />
+
+      <Box
+        sx={{
+          backgroundColor: '#1a1c23',
+          borderRadius: "16px", 
+          padding: "20px",
+          marginBottom: "20px",
+          maxHeight: "500px",
+          overflow: "auto",
+          "& .fc": {
+            fontFamily: "'Inter', sans-serif",
+          },
+          "& .fc-toolbar-title": {
+            color: "ffff",
+            fontSize: '1.5rem',
+            fontWeight: 600,
+          },
+          "& .fc-button": {
+            backgroundColor: colors.greenAccent[500],
+            borderColor: colors.greenAccent[500],
+            '&:hover': {
+              backgroundColor: colors.greenAccent[600],
+            },
+            '&:disabled': {
+              backgroundColor: colors.greenAccent[700],
+            },
+            textTransform: 'capitalize',
+            fontWeight: 500,
+            color: colors.primary[500],
+          },
+          "& .fc-day-today": {
+            backgroundColor: "transparent !important",
+          },
+          "& .fc-event": {
+            backgroundColor: `${colors.greenAccent[500]} !important`,
+            borderColor: colors.greenAccent[500],
+            opacity: "0.9 !important",
+            color: "ffff",
+            '&:hover': {
+              backgroundColor: colors.greenAccent[600],
+              cursor: 'pointer',
+            },
+          },
+          "& .fc-timegrid-slot": {
+            height: "70px !important",
+            borderColor: '#3f3f46',
+          },
+          "& .fc-col-header-cell": {
+            backgroundColor: "#27272a",
+            color: colors.gray[100],
+            padding: "12px",
+            fontWeight: 500,
+          },
+          "& .fc-timegrid-axis": {
+            backgroundColor: "#27272a",
+            color: colors.gray[100],
+          },
+          "& .fc-timegrid-slot-label": {
+            backgroundColor: "#27272a",
+            color: colors.gray[100],
+          },
+          "& .fc-scrollgrid": {
+            borderColor: '#3f3f46',
+          },
+          "& .fc-scrollgrid td, & .fc-scrollgrid th": {
+            borderColor: '#3f3f46',
+          },
+          "& .fc-highlight": {
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          },
+          "& .fc-event-title": {
+            color: colors.primary[500],
+          },
+          "& .fc-event-time": {
+            color: colors.primary[500],
+          },
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            height: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: colors.primary[400],
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: colors.greenAccent[500],
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: colors.greenAccent[600],
+          },
+        }}
+      >
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: 'prev,next today',
+            center: 'title',
+            right: 'timeGridWeek,timeGridDay'
+          }}
+          events={slots.map(slot => ({
+            id: slot.slot_id.toString(),
+            title: '',
+            start: slot.start_time,
+            end: slot.end_time,
+            backgroundColor: colors.greenAccent[500],
+            borderColor: colors.greenAccent[500],
+            textColor: '#ffffff',
+            extendedProps: {
+              price: slot.price,
+              pod_id: slot.pod_id,
+              is_available: slot.is_available,
+              start_time: new Date(slot.start_time).toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              end_time: new Date(slot.end_time).toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            }
+          }))}
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
+          allDaySlot={false}
+          slotDuration="01:00:00"
+          height="400px"
+          slotHeight={50}
+          views={{
+            timeGridWeek: {
+              eventContent: (arg) => {
+                return {
+                  html: `
+                    <div style="
+                      padding: 2px 4px;
+                      color: #ffffff;
+                      font-size: 14px;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      text-align: center;
+                      line-height: 1.2;
+                    ">
+                      <div style="font-weight: 500;">
+                        ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
+                      </div>
+                      <div style="font-weight: 600; margin-top: 4px;">
+                        ${new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(arg.event.extendedProps.price)}
+                      </div>
+                    </div>
+                  `
+                }
+              }
+            },
+            timeGridDay: {
+              eventContent: (arg) => {
+                return {
+                  html: `
+                    <div style="
+                      padding: 2px 4px;
+                      color: #ffffff;
+                      font-size: 14px;
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                      text-align: center;
+                      line-height: 1.2;
+                    ">
+                      <div style="font-weight: 500;">
+                        ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
+                      </div>
+                      <div style="font-weight: 600; margin-top: 4px;">
+                        ${new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(arg.event.extendedProps.price)}
+                      </div>
+                    </div>
+                  `
+                }
+              }
+            }
+          }}
+        />
+      </Box>
 
       <Box mb="10px" marginBottom={5}>
         <Typography variant="h4" gutterBottom>
-          Store Prices
+          Store Prices for {podName}
         </Typography>
         <Formik
           initialValues={initialValues}
@@ -296,8 +507,8 @@ const GenerateSlot = () => {
                 }}
               >
                 <Box sx={{ gridColumn: "1 / 3" }}>
-                  <Typography variant="h4" gutterBottom>
-                    Form
+                  <Typography variant="h6" gutterBottom>
+                  Select row in table and fill form to generate slot for {podName}
                   </Typography>
                   <form onSubmit={handleSubmit}>
                     <FormControl
