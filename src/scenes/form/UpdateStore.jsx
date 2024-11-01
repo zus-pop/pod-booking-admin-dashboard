@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, Box, Typography, TextField, Button } from "@mui/material";
 import { Formik, Form } from "formik";
 import * as yup from "yup";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 
@@ -19,6 +19,7 @@ const VisuallyHiddenInput = styled("input")({
 });
 const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(store?.image || null);
+  const fileInputRef = useRef(null);
   const phoneRegExp = /^0\d{9,10}$/;
   const validationSchema = yup.object({
     store_name: yup.string().matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt").required("Store name is required"),
@@ -26,8 +27,15 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
     hotline: yup.string().required().matches(phoneRegExp, "Phone number is not valid"),
     image: yup.mixed().nullable(),
   });
+  const handleModalClose = () => {
+    setFilePreview(store?.image || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    handleClose();
+  };
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleModalClose}>
       <Box
         sx={{
           position: "absolute",
@@ -119,29 +127,30 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                   />
                 </Button>
                 {filePreview && (
-                   <Box
-                   sx={{
-                     width: "100%",
-                     height: 200,
-                     display: "flex",
-                     justifyContent: "center",
-                     alignItems: "center",
-                     overflow: "hidden",
-                     borderRadius: 2,
-                     border: "1px solid #ccc",
-                   }}
-                 >
-                   <img
-                     src={filePreview}
-                     alt="image preview"
-                     style={{
-                       maxWidth: "100%",
-                       maxHeight: "100%",
-                       objectFit: "contain",
-                     }}
-                     
-                   />
-                   <Button
+                  <Box mt={2} position="relative">
+                    <Box
+                      sx={{
+                        width: "100%",
+                        height: 200,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        overflow: "hidden",
+                        borderRadius: 2,
+                        border: "1px solid #ccc",
+                      }}
+                    >
+                      <img
+                        src={filePreview}
+                        alt="image preview"
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "100%",
+                          objectFit: "contain",
+                        }}
+                      />
+                    </Box>
+                    <Button
                       variant="contained"
                       color="error"
                       size="small"
@@ -157,7 +166,7 @@ const UpdateStore = ({ open, handleClose, store, onSubmit }) => {
                     >
                       Remove
                     </Button>
-                 </Box>
+                  </Box>
                 )}
               </Box>
               {touched.image && errors.image && <div>{errors.image}</div>}

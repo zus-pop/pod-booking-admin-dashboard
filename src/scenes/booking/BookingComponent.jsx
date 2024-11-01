@@ -22,7 +22,6 @@ import {
 import { SearchOutlined } from "@mui/icons-material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UpdateIcon from "@mui/icons-material/Update";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ReactDatePicker from "react-datepicker";
@@ -30,6 +29,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
 import { Modal } from "@mui/material";
 import { useRole } from "../../RoleContext";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 const Booking = () => {
   const { userRole } = useRole();
   const theme = useTheme();
@@ -135,25 +137,20 @@ const Booking = () => {
     setIsConfirmModalOpen(true);
   };
 
-  // ... existing code ...
-
   const handleSearchByIdChange = (e) => {
     const value = e.target.value;
     setSearchById(value);
     
-    // Clear timeout cũ nếu có
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
-
-    // Set timeout mới để debounce
     const timeoutId = setTimeout(() => {
       if (!value) {
         fetchData();
       } else {
         handleSearchById(value);
       }
-    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+    }, 500); 
 
     setSearchTimeout(timeoutId);
   };
@@ -228,10 +225,12 @@ const Booking = () => {
         throw new Error("Failed to update booking status");
       }
 
+      toast.success("Booking status updated successfully!");
       fetchData();
-      setEditStatusId(null); // Đóng dropdown sau khi cập nhật
+      setEditStatusId(null);
     } catch (error) {
       console.error("Error updating booking status:", error.message);
+      toast.error("Failed to update booking status. Please try again.");
     }
   };
   const isValidStatusTransition = (currentStatus, newStatus) => {

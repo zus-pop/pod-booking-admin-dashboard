@@ -24,11 +24,13 @@ import Item from "./Item";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToggledContext } from "../../welcome/Welcome";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../../RoleContext";
 import ShowChartIcon from '@mui/icons-material/ShowChart';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import axios from "axios";
+import StorefrontIcon from '@mui/icons-material/Storefront';
 
 
 const notify = () => toast.warning("Session expired! Please login again.");
@@ -51,38 +53,31 @@ const SideBar = () => {
         return;
       }
       try {
-        const response = await fetch(
-          `${API_URL}/api/v1/auth/profile`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-  
-        if (response.ok) {
-          const data = await response.json();
-          setUserRole(data.role.role_name);
-          setUserName(data.user_name);
-          setRole(data.role.role_name);
-        } else if (response.status === 401) {
-          console.error("Unauthorized access. Redirecting to login.");
-          localStorage.removeItem("token");
-          navigate("/", { replace: true });
-        } else if (response.status === 403) {
-          console.error("Token expired. Please login again.");
-          notify();
-          localStorage.removeItem("token");
-          navigate("/", { replace: true });
-        } else {
-          console.error("Failed to fetch user profile");
-          // Có thể thêm xử lý lỗi khác ở đây nếu cần
+        const response = await axios.get(`${API_URL}/api/v1/auth/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          setUserRole(response.data.role.role_name);
+          setUserName(response.data.user_name);
+          setRole(response.data.role.role_name);
         }
       } catch (error) {
+        if (error.response) {
+          if (error.response.status === 401) {
+            console.error("Unauthorized access. Redirecting to login.");
+            localStorage.removeItem("token");
+            navigate("/", { replace: true });
+          } else if (error.response.status === 403) {
+            console.error("Token expired. Please login again.");
+            notify();
+            localStorage.removeItem("token");
+            navigate("/", { replace: true });
+          }
+        }
         console.error("Error fetching user profile:", error);
-        // Xử lý lỗi mạng hoặc lỗi không mong đợi
       }
     };
 
@@ -284,21 +279,15 @@ const SideBar = () => {
             colors={colors}
             icon={<MonetizationOnIcon />}
           />
+          <Item
+            title="Store Revenue"
+            path="/web/store-revenue"
+            colors={colors}
+            icon={<StorefrontIcon />}
+          />
           
         </Menu>
       </Box>
-      <ToastContainer
-                  position="top-center"
-                  autoClose={false}
-                  hideProgressBar={false}
-                  newestOnTop={false}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable={false}
-                  pauseOnHover
-                  theme="light"
-                />
     </Sidebar>
   );
 };

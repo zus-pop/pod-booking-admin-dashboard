@@ -12,7 +12,7 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { tokens } from "../../theme";
 import { useEffect, useState } from "react";
@@ -42,7 +42,20 @@ const slotSchema = yup.object().shape({
       return schema.min(startDate[0], "End date must be later than start date");
     })
     .required("End date is required"),
-  durationMinutes: yup.number().required("Duration is required").min(30,"Duration must be > 30 minutes"),
+  durationMinutes: yup
+    .number()
+    .min(30, "Duration must be > 30 minutes")
+    .test("duration-test", "Duration exceeds available time", function(value) {
+      if (!value) return true;
+      const { selectedStorePrice } = this.options.context;
+      if (!selectedStorePrice) return true;
+      
+      const startHour = selectedStorePrice.start_hour;
+      const endHour = selectedStorePrice.end_hour;
+      const maxMinutes = (endHour - startHour) * 60;
+      
+      return value <= maxMinutes;
+    }),
 });
 
 const GenerateSlot = () => {
@@ -55,7 +68,7 @@ const GenerateSlot = () => {
   const [isConsecutive, setIsConsecutive] = useState(true);
   const [pageSize, setPageSize] = useState(5); 
   const [paginationModel, setPaginationModel] = useState({
-    pageSize: 5,  // Đảm bảo giá trị này khớp với pageSizeOptions
+    pageSize: 5, 
     page: 0
   });
   const [podName, setPodName] = useState("");
@@ -155,7 +168,8 @@ const GenerateSlot = () => {
             }
           });
       } else {
-  
+        toast.error(error.response.data.message);
+      
       console.error("Error:", error);}
     }
   };
@@ -163,9 +177,10 @@ const GenerateSlot = () => {
   const handleRowSelect = (storePrice, setFieldValue) => {
     setSelectedStorePrice(storePrice);
 
-    // Reset startDate and endDate when selecting a new store price
+    // Reset toàn bộ form khi chọn store price mới
     setFieldValue("startDate", null);
     setFieldValue("endDate", null);
+    setFieldValue("durationMinutes", "");
   };
 
   const checkConsecutiveDays = (daysOfWeek) => {
@@ -257,12 +272,7 @@ const GenerateSlot = () => {
 
   return (
     <Box m="20px">
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        theme="light"
-      />
+      
       <Header 
         title="Generate Slots" 
         subtitle="Create new slots for POD"
@@ -400,12 +410,11 @@ const GenerateSlot = () => {
               }
             }
           }))}
-          slotMinTime="07:00:00"
-          slotMaxTime="22:00:00"
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
           allDaySlot={false}
           slotDuration="00:30:00"
           height="600px"
-          slotHeight={80}
           eventMinHeight={60}
           views={{
             timeGridWeek: {
@@ -484,6 +493,7 @@ const GenerateSlot = () => {
           initialValues={initialValues}
           validationSchema={slotSchema}
           onSubmit={handleFormSubmit}
+          validationContext={{ selectedStorePrice }}
         >
           {({
             values,
@@ -598,20 +608,27 @@ const GenerateSlot = () => {
                       fullWidth
                       variant="filled"
                       label="Duration Minutes"
-                       type="number"
+                      type="number"
                       onBlur={handleBlur}
                       onChange={handleChange}
                       value={values.durationMinutes}
                       name="durationMinutes"
-                      error={
-                        touched.durationMinutes &&
-                        Boolean(errors.durationMinutes)
-                      }
-                      helperText={
-                        touched.durationMinutes && errors.durationMinutes
-                      }
+                      error={touched.durationMinutes && Boolean(errors.durationMinutes)}
+                      helperText={touched.durationMinutes && errors.durationMinutes}
                       sx={{ marginBottom: "40px" }}
+                      disabled={!values.startDate || !selectedStorePrice}
+                      inputProps={{
+                        min: 30,
+                        max: selectedStorePrice ? (selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60 : 0
+                      }}
                     />
+
+                    {selectedStorePrice && values.startDate && (
+                      <Typography variant="body2" sx={{ marginBottom: "10px", color: "text.secondary" }}>
+                        Maximum duration: {(selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60} minutes
+                      </Typography>
+                    )}
+
                     <Button
                       type="submit"
                       color="secondary"

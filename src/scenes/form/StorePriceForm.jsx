@@ -15,7 +15,7 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Header } from "../../components";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -98,7 +98,7 @@ const StorePriceForm = () => {
         title="CREATE STORE PRICE"
         subtitle="New prices for store slots"
       />
-      <ToastContainer />
+ 
 
       <Formik
         initialValues={initialValues}

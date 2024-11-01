@@ -12,7 +12,7 @@ import { Formik } from "formik";
 import * as yup from "yup";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -77,7 +77,7 @@ const UserForm = () => {
   return (
     <Box m="20px">
       <Header title="CREATE USER" subtitle="Create a new user"   showBackButton={true}  />
-      <ToastContainer />
+
 
       <Formik
         onSubmit={handleFormSubmit}

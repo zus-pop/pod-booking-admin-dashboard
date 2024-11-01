@@ -77,12 +77,11 @@ const PodForm = () => {
       };
     const fetchPodType = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/v1/pod-types`);
-        if (res.ok) {
-          const data = await res.json();
-          setTypes(data);
+        const response = await axios.get(`${API_URL}/api/v1/pod-types`);
+        if (response.status === 200) {
+          setTypes(response.data);
         } else {
-          console.log("Res is not ok");
+          console.log("Response is not ok");
         }
       } catch (err) {
         console.log(err);
@@ -90,12 +89,11 @@ const PodForm = () => {
     };
     const fetchUtilities = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/v1/utilities`);
-        if (res.ok) {
-          const data = await res.json();
-          setUtilities(data);
+        const response = await axios.get(`${API_URL}/api/v1/utilities`);
+        if (response.status === 200) {
+          setUtilities(response.data);
         } else {
-          console.log("Res is not ok");
+          console.log("Response is not ok");
         }
       } catch (err) {
         console.log(err);
@@ -115,24 +113,16 @@ const PodForm = () => {
     formData.append("store_id", values.store_id);
     formData.append("utilities", JSON.stringify(values.utilities));
 
-    formData.forEach((value, key) => {
-      console.log(value);
-      console.log(key);
-    });
     try {
-      const response = await fetch(`${API_URL}/api/v1/pods`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        console.log("POD created successfully");
+      const response = await axios.post(`${API_URL}/api/v1/pods`, formData);
+      if (response.status === 200) {
+        console.log(response.data.message);
+        toast.success(response.data.message);
         actions.resetForm();
         clearFilePreview();
-      } else {
-        console.error("Failed to create new POD");
       }
     } catch (error) {
+      toast.error(error.response.data.message)
       console.error("Error:", error);
     }
   };

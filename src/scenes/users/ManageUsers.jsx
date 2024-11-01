@@ -15,7 +15,7 @@ import { IconButton, InputBase, useMediaQuery } from "@mui/material";
 import { SearchOutlined } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 import { useRole } from "../../RoleContext";
 
 const ManageUsers = () => {
@@ -237,7 +237,7 @@ const ManageUsers = () => {
   return (
     <Box m="20px">
       <Header title="Users" subtitle="List of Users" />
-      <ToastContainer />
+ 
       <Box
         display="flex"
         alignItems="center"
@@ -264,9 +264,15 @@ const ManageUsers = () => {
           <SearchOutlined />
         </IconButton>
         <Button
-          variant="contained"
-          color="primary"
-          sx={{ ml: "auto" }}
+          variant="outlined"
+          sx={{ ml: "auto" ,  
+            color: colors.gray[100],
+            
+            borderColor: colors.gray[100],
+            '&:hover': {
+              borderColor: colors.greenAccent[500],
+              color: colors.greenAccent[500],
+            }}}
           onClick={() => navigate("/web/userform")}
           disabled={isCreateDisabled()}
         >

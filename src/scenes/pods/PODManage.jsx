@@ -22,9 +22,9 @@ import { SearchOutlined } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import UpdatePOD from "../form/UpdatePOD";
-import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../RoleContext";
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -358,7 +358,6 @@ const PODManage = () => {
   return (
     <Box m="20px">
       <Header title="POD Management" subtitle="Managing the POD" />
-      <ToastContainer />
 
       <UpdatePOD
         open={isUpdateModalOpen}
@@ -440,9 +439,15 @@ const PODManage = () => {
           <SearchOutlined />
         </IconButton>
         <Button
-          variant="contained"
-          color="primary"
-          sx={{ ml: "auto" }}
+           variant="outlined"
+           sx={{ ml: "auto" ,  
+             color: colors.gray[100],
+             
+             borderColor: colors.gray[100],
+             '&:hover': {
+               borderColor: colors.greenAccent[500],
+               color: colors.greenAccent[500],
+             }}}
           onClick={() => navigate("/web/podform")}
           disabled={isActionDisabled()}
         >

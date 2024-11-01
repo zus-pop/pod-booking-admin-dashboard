@@ -4,6 +4,8 @@ import { ColorModeContext, useMode } from "../../theme";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import SideBar from "../layout/sidebar/SideBarComponent";
 import Navbar from "../layout/navbar/NavBarComponent";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import { RoleProvider } from "../../RoleContext";
 export const ToggledContext = createContext(null);
@@ -40,6 +42,18 @@ export default function Welcome() {
             <ThemeProvider theme={theme}>
             <RoleProvider>
                 <CssBaseline />
+                <ToastContainer
+                    position="top-center"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                />
                 <ToggledContext.Provider value={values}>
                     <Box
                         sx={{

@@ -25,12 +25,14 @@ import CreateProduct from "./scenes/form/CreateProduct";
 import LineChart from "./scenes/chart/LineChart";
 import PODRevenueChart from "./scenes/chart/PODRevenueChart";
 import ProductRevenueChart from "./scenes/chart/ProductRevenueChart";
+import StoreRevenue from "./scenes/chart/StoreRevenue";
 
 
 function App() {
   return (
 
       <Routes>
+        
         <Route path="/" element={<Login />} />
 
         <Route path="/web" element={<Welcome />}>
@@ -61,6 +63,7 @@ function App() {
           <Route path="line" element={<LineChart />} />
           <Route path="pod-revenue" element={<PODRevenueChart />} />
           <Route path="product-revenue" element={<ProductRevenueChart />} />
+          <Route path="store-revenue" element={<StoreRevenue />} />
 
           
      

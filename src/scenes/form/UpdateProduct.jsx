@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   Box,
@@ -32,6 +32,7 @@ const VisuallyHiddenInput = styled("input")({
 const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(product?.image || null);
   const [stores, setStores] = useState([]);
+  const fileInputRef = useRef(null);
   const validationSchema = yup.object({
     product_name: yup
       .string()
@@ -62,8 +63,18 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
 
     fetchStores();
   }, []);
+
+  // Reset form khi đóng modal
+  const handleModalClose = () => {
+    setFilePreview(product?.image || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    handleClose();
+  };
+
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleModalClose}>
       <Box
         sx={{
           position: "absolute",
@@ -197,6 +208,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 >
                   Upload Image
                   <VisuallyHiddenInput
+                    ref={fileInputRef}
                     type="file"
                     onChange={(event) => {
                       const file = event.target.files[0];
@@ -207,12 +219,48 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
                 </Button>
               </Box>
               {filePreview && (
-                <Box mt={2}>
-                  <img
-                    src={filePreview}
-                    alt="Preview"
-                    style={{ maxWidth: "200px" }}
-                  />
+                <Box mt={2} position="relative">
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 200,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden",
+                      borderRadius: 2,
+                      border: "1px solid #ccc",
+                    }}
+                  >
+                    <img
+                      src={filePreview}
+                      alt="image preview"
+                      style={{
+                        maxWidth: "100%",
+                        maxHeight: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </Box>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    onClick={() => {
+                      setFilePreview(null);
+                      setFieldValue("image", null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                    }}
+                  >
+                    Remove
+                  </Button>
                 </Box>
               )}
               <Button

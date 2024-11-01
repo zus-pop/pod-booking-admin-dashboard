@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { Formik, Form } from "formik";
 import * as yup from "yup";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import axios from "axios";
@@ -32,7 +32,7 @@ const VisuallyHiddenInput = styled("input")({
 
 const UpdatePOD = ({ open, handleClose, pod, onSubmit }) => {
   const [filePreview, setFilePreview] = useState(pod?.image || null);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
   const [podTypes, setPodTypes] = useState([]);
   const [stores, setStores] = useState([]);
   const [utilities, setUtilities] = useState([]);
@@ -94,8 +94,17 @@ const UpdatePOD = ({ open, handleClose, pod, onSubmit }) => {
     }
   };
 
+  // Reset form khi đóng modal
+  const handleModalClose = () => {
+    setFilePreview(pod?.image || null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    handleClose();
+  };
+
   return (
-    <Modal open={open} onClose={handleClose}>
+    <Modal open={open} onClose={handleModalClose}>
       <Box
         sx={{
           position: "absolute",

@@ -13,7 +13,7 @@ import {
   import { useState, useEffect } from "react";
   import { CloudUpload } from "@mui/icons-material";
   import { styled } from "@mui/material/styles";
-  import { toast, ToastContainer } from "react-toastify";
+  import { toast } from "react-toastify";
   import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
   const API_URL = import.meta.env.VITE_API_URL;
@@ -34,7 +34,7 @@ import axios from "axios";
       .matches(/^[a-zA-Z0-9_ ]*$/, "Product Name không được chứa ký tự đặc biệt")
       .required("Product name is required"),
     description: yup.string().required("Description is required"),
-    image: yup.mixed().nullable(),
+    image: yup.mixed().required("image is required"),
     category_id: yup.number().required("Category is required"),
     price: yup.number().required("Price is required"),
     store_id: yup.number().required("Store is required"),
@@ -122,7 +122,7 @@ import axios from "axios";
     return (
       <Box m="20px">
         <Header title="CREATE PRODUCT" subtitle="Create a New Product"   showBackButton={true} />
-        <ToastContainer />
+     
   
         <Formik
           onSubmit={handleFormSubmit}

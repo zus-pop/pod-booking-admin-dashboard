@@ -69,6 +69,8 @@ const BookingDetail = () => {
   const [isCheckinModalOpen, setIsCheckinModalOpen] = useState(false);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
 
+  // Thêm state để quản lý thời gian đếm ngược
+  const [countdown, setCountdown] = useState(600); // 600 seconds = 10 minutes
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -265,34 +267,100 @@ const BookingDetail = () => {
     }, 0);
   };
 
-  // Thêm hàm kiểm tra thời gian
+  
   const isSlotExpired = (endTime) => {
     const now = new Date();
     const slotEnd = new Date(endTime);
     return now > slotEnd;
   };
 
-  // Sửa lại hàm kiểm tra thời gian bắt đầu
-  const isSlotNotStarted = (startTime) => {
-    const now = new Date();
-    const slotStart = new Date(startTime);
-    const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000); // 5 phút = 5 * 60000 milliseconds
-    return now < fiveMinutesBefore;
-  };
 
-  // Thêm hàm kiểm tra xem có đang trong thời gian cho phép check-in không
-  const isWithinCheckinWindow = (startTime) => {
-    const now = new Date();
-    const slotStart = new Date(startTime);
-    const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000);
-    return now >= fiveMinutesBefore && now <= slotStart;
-  };
+  // const isSlotNotStarted = (startTime) => {
+  //   const now = new Date();
+  //   const slotStart = new Date(startTime);
+  //   const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000); // 5 phút = 5 * 60000 milliseconds
+  //   return now < fiveMinutesBefore;
+  // };
 
-  // Thêm hàm kiểm tra slot đã hoàn thành
+  // const isWithinCheckinWindow = (startTime) => {
+  //   const now = new Date();
+  //   const slotStart = new Date(startTime);
+  //   const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000);
+  //   return now >= fiveMinutesBefore && now <= slotStart;
+  // };
+
+
   const isSlotCompleted = (endTime, isCheckedIn) => {
     const now = new Date();
     const slotEnd = new Date(endTime);
     return isCheckedIn && now > slotEnd;
+  };
+
+ 
+  const getStatusStyles = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'complete':
+        return {
+          backgroundColor: "rgba(76, 206, 172, 0.1)",
+          color: "#4cceac",
+          borderColor: "#4cceac"
+        };
+      case 'pending':
+        return {
+          backgroundColor: "rgba(255, 235, 59, 0.1)",
+          color: "#ffeb3b",
+          borderColor: "#ffeb3b"
+        };
+      case 'ongoing':
+        return {
+          backgroundColor: "rgba(33, 150, 243, 0.1)",
+          color: "#2196f3",
+          borderColor: "#2196f3"
+        };
+      case 'canceled':
+        return {
+          backgroundColor: "rgba(244, 67, 54, 0.1)",
+          color: "#f44336",
+          borderColor: "#f44336"
+        };
+      case 'confirmed':
+        return {
+          backgroundColor: "rgba(255, 152, 0, 0.1)",
+          color: "#ff9800",
+          borderColor: "#ff9800"
+        };
+      default:
+        return {
+          backgroundColor: "rgba(158, 158, 158, 0.1)",
+          color: "#9e9e9e",
+          borderColor: "#9e9e9e"
+        };
+    }
+  };
+
+  // Thêm useEffect để xử lý đếm ngược
+  useEffect(() => {
+    let timer;
+    if (showQRModal && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (countdown === 0 && showQRModal) {
+      handleCloseQRModal();
+      toast.error("Payment time has expired!");
+    }
+    return () => clearInterval(timer);
+  }, [countdown, showQRModal]);
+
+  // Cập nhật hàm handleOpenQRModal để reset countdown
+  const handleOpenQRModal = () => {
+    setShowQRModal(true);
+    setCountdown(600); // Reset về 10 phút
+  };
+
+  // Thêm hàm mới để kiểm tra trạng thái
+  const isSlotDisabled = (endTime, bookingStatus) => {
+    return isSlotExpired(endTime) || bookingStatus === "Canceled";
   };
 
   return (
@@ -320,9 +388,42 @@ const BookingDetail = () => {
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     Date: {bookingDetail.booking_date}
                   </Typography>
-                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                    Status: {bookingDetail.booking_status}
-                  </Typography>
+                  <Box 
+                    sx={{ 
+                      display: 'inline-block',
+                      px: 2,
+                      py: 1,
+                      borderRadius: "6px",
+                      border: '1px solid',
+                      ...getStatusStyles(bookingDetail.booking_status),
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+                      }
+                    }}
+                  >
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: "600",
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          backgroundColor: getStatusStyles(bookingDetail.booking_status).color,
+                          animation: bookingDetail.booking_status?.toLowerCase() === 'ongoing' ? 'pulse 1.5s infinite' : 'none'
+                        }}
+                      />
+                      {bookingDetail.booking_status}
+                    </Typography>
+                  </Box>
                 </Box>
 
                 {/* Store Information */}
@@ -613,43 +714,31 @@ const BookingDetail = () => {
                             {!slot.is_checked_in && (
                               <Button
                                 onClick={() => handleCheckin(slot.slot_id)}
-                                disabled={isSlotExpired(slot.end_time) || isSlotNotStarted(slot.start_time)}
+                                disabled={isSlotDisabled(slot.end_time, bookingDetail.booking_status)}
                                 sx={{
-                                  backgroundColor: isSlotExpired(slot.end_time) 
-                                    ? "#ff4d4d" 
-                                    : isSlotNotStarted(slot.start_time)
-                                      ? "#ffa726"
-                                      : isWithinCheckinWindow(slot.start_time)
-                                        ? "#4cceac"
-                                        : "#4cceac",
+                                  backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
+                                    ? "#ff4d4d"
+                                    : "#4cceac",
                                   color: "#fff",
                                   fontWeight: "600",
                                   "&:hover": {
-                                    backgroundColor: isSlotExpired(slot.end_time)
+                                    backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
                                       ? "#ff3333"
-                                      : isSlotNotStarted(slot.start_time)
-                                        ? "#fb8c00"
-                                        : "#3da58a",
+                                      : "#3da58a",
                                   },
                                   "&:disabled": {
-                                    backgroundColor: isSlotExpired(slot.end_time)
+                                    backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
                                       ? "#ff4d4d"
-                                      : isSlotNotStarted(slot.start_time)
-                                        ? "#ffa726"
-                                        : "rgba(0, 0, 0, 0.12)",
+                                      : "rgba(0, 0, 0, 0.12)",
                                     color: "#fff",
                                     opacity: 0.8,
                                     cursor: "not-allowed"
                                   }
                                 }}
                               >
-                                {isSlotExpired(slot.end_time) 
-                                  ? "Expired" 
-                                  : isSlotNotStarted(slot.start_time)
-                                    ? "Not Yet"
-                                    : isWithinCheckinWindow(slot.start_time)
-                                      ? "Early Check-in"
-                                      : "Check In"
+                                {isSlotDisabled(slot.end_time, bookingDetail.booking_status)
+                                  ? "Expired"
+                                  : "Check In"
                                 }
                               </Button>
                             )}
@@ -849,16 +938,29 @@ const BookingDetail = () => {
                   top: "50%",
                   left: "50%",
                   transform: "translate(-50%, -50%)",
-                  width: 600,
-                  maxHeight: "80vh",
-                  bgcolor: "background.paper",
+                  width: 800,
+                  maxHeight: "90vh",
+                  bgcolor: "#1F2A40",
                   boxShadow: 24,
                   p: 4,
                   borderRadius: 2,
                   overflow: "auto",
+                  "&::-webkit-scrollbar": {
+                    width: "8px",
+                  },
+                  "&::-webkit-scrollbar-track": {
+                    background: "rgba(255, 255, 255, 0.05)",
+                  },
+                  "&::-webkit-scrollbar-thumb": {
+                    background: "rgba(255, 255, 255, 0.2)",
+                    borderRadius: "4px",
+                  },
+                  "&::-webkit-scrollbar-thumb:hover": {
+                    background: "rgba(255, 255, 255, 0.3)",
+                  },
                 }}
               >
-                <Typography variant="h6" component="h2" gutterBottom>
+                <Typography variant="h6" component="h2" gutterBottom sx={{ color: "#fff" }}>
                   Add Products to Booking
                 </Typography>
 
@@ -871,23 +973,34 @@ const BookingDetail = () => {
                         alignItems: "center",
                         mb: 2,
                         p: 2,
-                        border: "1px solid #ccc",
+                        border: "1px solid rgba(255, 255, 255, 0.12)",
                         borderRadius: 1,
+                        bgcolor: "background.paper",
                       }}
                     >
                       <Checkbox
-                        checked={selectedProducts.includes(
-                          product.product_id
-                        )}
-                        onChange={() =>
-                          handleProductSelect(product.product_id)
-                        }
+                        checked={selectedProducts.includes(product.product_id)}
+                        onChange={() => handleProductSelect(product.product_id)}
                       />
+                      
+                      <Box
+                        component="img"
+                        src={product.image}
+                        alt={product.product_name}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          objectFit: "cover",
+                          borderRadius: 1,
+                          ml: 2,
+                        }}
+                      />
+                      
                       <Box sx={{ flex: 1, ml: 2 }}>
-                        <Typography variant="subtitle1">
+                        <Typography variant="subtitle1" sx={{ color: "#fff", fontWeight: "500" }}>
                           {product.product_name}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="body2" sx={{ color: "#94a3b8" }}>
                           Unit Price:{" "}
                           {new Intl.NumberFormat("vi-VN", {
                             style: "currency",
@@ -895,9 +1008,8 @@ const BookingDetail = () => {
                           }).format(product.price)}
                         </Typography>
                       </Box>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                      >
+
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         {selectedProducts.includes(product.product_id) && (
                           <>
                             <TextField
@@ -905,32 +1017,42 @@ const BookingDetail = () => {
                               label="Quantity"
                               value={quantities[product.product_id] || 1}
                               onChange={(e) =>
-                                handleQuantityChange(
-                                  product.product_id,
-                                  e.target.value
-                                )
+                                handleQuantityChange(product.product_id, e.target.value)
                               }
-                              sx={{ width: 100 }}
-                              InputProps={{ 
-                                inputProps: { 
+                              sx={{
+                                width: 100,
+                                "& .MuiOutlinedInput-root": {
+                                  "& fieldset": {
+                                    borderColor: "rgba(255, 255, 255, 0.23)",
+                                  },
+                                  "&:hover fieldset": {
+                                    borderColor: "rgba(255, 255, 255, 0.23)",
+                                  },
+                                  "&.Mui-focused fieldset": {
+                                    borderColor: "#4cceac",
+                                  },
+                                },
+                                "& .MuiInputLabel-root": {
+                                  color: "rgba(255, 255, 255, 0.7)",
+                                },
+                                "& .MuiInputBase-input": {
+                                  color: "#fff",
+                                },
+                              }}
+                              InputProps={{
+                                inputProps: {
                                   min: 1,
-                                  max: product.stock 
-                                } 
+                                  max: product.stock,
+                                },
                               }}
                               helperText={`Available: ${product.stock}`}
                             />
-                            <Typography
-                              variant="body1"
-                              sx={{ minWidth: 150 }}
-                            >
+                            <Typography variant="body1" sx={{ minWidth: 150, color: "#4cceac" }}>
                               Total:{" "}
                               {new Intl.NumberFormat("vi-VN", {
                                 style: "currency",
                                 currency: "VND",
-                              }).format(
-                                product.price *
-                                  (quantities[product.product_id] || 1)
-                              )}
+                              }).format(product.price * (quantities[product.product_id] || 1))}
                             </Typography>
                           </>
                         )}
@@ -943,42 +1065,38 @@ const BookingDetail = () => {
                   sx={{
                     mt: 3,
                     pt: 2,
-                    borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+                    borderTop: "1px solid rgba(255, 255, 255, 0.12)",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
                   }}
                 >
-                  <Typography variant="h6">
-                    Total:{" "}
+                  <Typography variant="h6" sx={{ color: "#4cceac" }}>
+                    Total: {" "}
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     }).format(calculateTotalPrice())}
                   </Typography>
-
-                  <Box>
-                    <Button
-                      onClick={() => setIsAddProductModalOpen(false)}
-                      sx={{ mr: 2 }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddProducts}
-                      variant="contained"
-                      disabled={selectedProducts.length === 0}
-                      sx={{
-                        backgroundColor: "#4cceac",
-                        color: "#000",
-                        "&:hover": {
-                          backgroundColor: "#3da58a",
-                        },
-                      }}
-                    >
-                      Add Selected Products
-                    </Button>
-                  </Box>
+                  
+                  <Button
+                    onClick={handleAddProducts}
+                    disabled={selectedProducts.length === 0}
+                    sx={{
+                      backgroundColor: "#4cceac",
+                      color: "#000",
+                      px: 4,
+                      "&:hover": {
+                        backgroundColor: "#3da58a",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "rgba(76, 206, 172, 0.5)",
+                        color: "rgba(0, 0, 0, 0.7)",
+                      },
+                    }}
+                  >
+                    Add Selected Products
+                  </Button>
                 </Box>
               </Box>
             </Modal>
@@ -1010,20 +1128,31 @@ const BookingDetail = () => {
       <Modal open={showQRModal} onClose={handleCloseQRModal}>
         <Box
           sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             width: 400,
-            bgcolor: "background.paper",
+            bgcolor: 'background.paper',
+            borderRadius: 2,
             boxShadow: 24,
             p: 4,
-            borderRadius: 2,
-            textAlign: "center",
-          }}
-        >
+            textAlign: 'center'
+          }}>
           <Typography variant="h6" component="h2" gutterBottom>
             Scan QR code to pay via ZaloPay
+          </Typography>
+
+          {/* Thêm đồng hồ đếm ngược */}
+          <Typography 
+            variant="subtitle1" 
+            sx={{ 
+              color: countdown <= 60 ? '#f44336' : '#2196f3',
+              fontWeight: 'bold',
+              mb: 2 
+            }}
+          >
+            Time remaining: {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
           </Typography>
 
           <Box
@@ -1076,6 +1205,27 @@ const BookingDetail = () => {
           </Button>
         </Box>
       </Modal>
+
+      <style>
+        {`
+          @keyframes pulse {
+            0% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+            }
+            
+            70% {
+              transform: scale(1);
+              box-shadow: 0 0 0 6px rgba(33, 150, 243, 0);
+            }
+            
+            100% {
+              transform: scale(0.95);
+              box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+            }
+          }
+        `}
+      </style>
     </Box>
   );
 };
