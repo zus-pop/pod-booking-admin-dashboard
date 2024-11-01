@@ -152,6 +152,7 @@ const ManageSlots = () => {
           </Box>
         }
         subtitle="View and manage booking slots"
+        showBackButton={true} 
       />
       <Button
         variant="contained"
@@ -201,7 +202,7 @@ const ManageSlots = () => {
             },
           },
           "& .fc-timegrid-slot": {
-            height: "70px !important",
+            height: "80px !important",
             borderColor: "#3f3f46",
           },
           "& .fc-col-header-cell": {
@@ -227,19 +228,7 @@ const ManageSlots = () => {
               opacity: "0.4 !important",
             },
           },
-          "& .fc-daygrid-day.fc-day-has-event .fc-daygrid-day-number": {
-            background: colors.greenAccent[600],
-            borderRadius: "50%",
-            padding: "5px",
-            width: "32px",
-            height: "32px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: colors.primary[500],
-            fontWeight: "600",
-            boxShadow: colors.greenAccent[600],
-          },
+          
           "& .fc-scrollgrid": {
             borderColor: "#3f3f46",
           },
@@ -268,6 +257,16 @@ const ManageSlots = () => {
             fontWeight: "600",
             boxShadow: colors.greenAccent[600],
           },
+          "& .fc-timegrid-event": {
+            margin: "4px 0",
+            borderRadius: "4px",
+            height: "calc(100% - 8px) !important",
+          },
+          // "& .fc-event": {
+          //   backgroundColor: colors.greenAccent[500],
+          //   margin: "2px 0",
+          //   padding: "4px",
+          // },
         }}
       >
         <FullCalendar
@@ -302,36 +301,43 @@ const ManageSlots = () => {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
+              customStyle: {
+                margin: '4px 0',
+                borderRadius: '4px',
+                padding: '4px'
+              }
             },
           }))}
           eventClick={handleEventClick}
           dateClick={handleDateClick}
-          slotMinTime="00:00:00"
-          slotMaxTime="24:00:00"
+          slotMinTime="07:00:00"
+          slotMaxTime="22:00:00"
           allDaySlot={false}
-          slotDuration="01:00:00"
-          height="80vh"
+          slotDuration="00:30:00"
+          height="600px"
+          slotHeight={80}
+          eventMinHeight={60}
           views={{
             timeGridWeek: {
               eventContent: (arg) => {
                 return {
                   html: `
                     <div style="
-                      padding: 2px 4px;
+                      padding: 4px;
                       color: #ffffff;
                       font-size: 14px;
                       display: flex;
                       flex-direction: column;
                       align-items: center;
                       justify-content: center;
-                      height: 100%;
+                      height: calc(100% - 8px);
                       text-align: center;
                       line-height: 1.2;
+                      margin: 4px 0;
+                      border-radius: 4px;
                     ">
                       <div style="font-weight: 500;">
-                        ${arg.event.extendedProps.start_time} - ${
-                    arg.event.extendedProps.end_time
-                  }
+                        ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
                       </div>
                       <div style="font-weight: 600; margin-top: 4px;">
                         ${new Intl.NumberFormat("vi-VN", {
@@ -340,30 +346,30 @@ const ManageSlots = () => {
                         }).format(arg.event.extendedProps.price)}
                       </div>
                     </div>
-                  `,
-                };
-              },
+                  `
+                }
+              }
             },
             timeGridDay: {
               eventContent: (arg) => {
                 return {
                   html: `
                     <div style="
-                      padding: 2px 4px;
+                      padding: 4px;
                       color: #ffffff;
                       font-size: 14px;
                       display: flex;
                       flex-direction: column;
                       align-items: center;
                       justify-content: center;
-                      height: 100%;
+                      height: calc(100% - 8px);
                       text-align: center;
                       line-height: 1.2;
+                      margin: 4px 0;
+                      border-radius: 4px;
                     ">
                       <div style="font-weight: 500;">
-                        ${arg.event.extendedProps.start_time} - ${
-                    arg.event.extendedProps.end_time
-                  }
+                        ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
                       </div>
                       <div style="font-weight: 600; margin-top: 4px;">
                         ${new Intl.NumberFormat("vi-VN", {
@@ -372,10 +378,10 @@ const ManageSlots = () => {
                         }).format(arg.event.extendedProps.price)}
                       </div>
                     </div>
-                  `,
-                };
-              },
-            },
+                  `
+                }
+              }
+            }
           }}
         />
       </Box>

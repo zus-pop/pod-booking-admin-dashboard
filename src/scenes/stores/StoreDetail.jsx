@@ -300,10 +300,13 @@ const StoreDetail = () => {
         }}
         onSubmit={handleUpdateSubmit}
       />
-      <Header 
-        title={`Detail of ${storeDetail ? storeDetail.store_name : ''}`} 
-        subtitle={`Store Information`} 
-      />
+      <Box m="20px">
+        <Header 
+          title="Store Detail" 
+          subtitle="View and manage store details"
+          showBackButton={true} 
+        />
+      </Box>
       {storeDetail && (
         <Box 
           sx={{

@@ -297,7 +297,11 @@ const BookingDetail = () => {
 
   return (
     <Box m="20px" height="100vh">
-      <Header title="Detail of Booking" sx={{ ml: "40px" }} />
+      <Header 
+        title="Booking Detail" 
+        subtitle="View and manage booking details"
+        showBackButton={true} 
+      />
 
       <Box mx="20px">
         {bookingDetail && (

@@ -5,6 +5,7 @@ import {
   Button,
   FormControl,
   useTheme,
+  Card,
 } from "@mui/material";
 import { Header } from "../../components";
 import { Formik } from "formik";
@@ -263,8 +264,9 @@ const GenerateSlot = () => {
         theme="light"
       />
       <Header 
-        title={`GENERATE SLOT FOR ${podName.toUpperCase()}`} 
-        subtitle="" 
+        title="Generate Slots" 
+        subtitle="Create new slots for POD"
+        showBackButton={true} 
       />
 
       <Box
@@ -310,7 +312,7 @@ const GenerateSlot = () => {
             },
           },
           "& .fc-timegrid-slot": {
-            height: "70px !important",
+            height: "80px !important",
             borderColor: '#3f3f46',
           },
           "& .fc-col-header-cell": {
@@ -356,6 +358,11 @@ const GenerateSlot = () => {
           "&::-webkit-scrollbar-thumb:hover": {
             background: colors.greenAccent[600],
           },
+          "& .fc-timegrid-event": {
+            margin: "4px 0",
+            borderRadius: "4px",
+            height: "calc(100% - 8px) !important",
+          },
         }}
       >
         <FullCalendar
@@ -385,31 +392,39 @@ const GenerateSlot = () => {
               end_time: new Date(slot.end_time).toLocaleTimeString('vi-VN', {
                 hour: '2-digit',
                 minute: '2-digit'
-              })
+              }),
+              customStyle: {
+                margin: '4px 0',
+                borderRadius: '4px',
+                padding: '4px'
+              }
             }
           }))}
-          slotMinTime="00:00:00"
-          slotMaxTime="24:00:00"
+          slotMinTime="07:00:00"
+          slotMaxTime="22:00:00"
           allDaySlot={false}
-          slotDuration="01:00:00"
-          height="400px"
-          slotHeight={50}
+          slotDuration="00:30:00"
+          height="600px"
+          slotHeight={80}
+          eventMinHeight={60}
           views={{
             timeGridWeek: {
               eventContent: (arg) => {
                 return {
                   html: `
                     <div style="
-                      padding: 2px 4px;
+                      padding: 4px;
                       color: #ffffff;
                       font-size: 14px;
                       display: flex;
                       flex-direction: column;
                       align-items: center;
                       justify-content: center;
-                      height: 100%;
+                      height: calc(100% - 8px);
                       text-align: center;
                       line-height: 1.2;
+                      margin: 4px 0;
+                      border-radius: 4px;
                     ">
                       <div style="font-weight: 500;">
                         ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
@@ -430,16 +445,18 @@ const GenerateSlot = () => {
                 return {
                   html: `
                     <div style="
-                      padding: 2px 4px;
+                      padding: 4px;
                       color: #ffffff;
                       font-size: 14px;
                       display: flex;
                       flex-direction: column;
                       align-items: center;
                       justify-content: center;
-                      height: 100%;
+                      height: calc(100% - 8px);
                       text-align: center;
                       line-height: 1.2;
+                      margin: 4px 0;
+                      border-radius: 4px;
                     ">
                       <div style="font-weight: 500;">
                         ${arg.event.extendedProps.start_time} - ${arg.event.extendedProps.end_time}
@@ -610,6 +627,7 @@ const GenerateSlot = () => {
           )}
         </Formik>
       </Box>
+
     </Box>
   );
 };
