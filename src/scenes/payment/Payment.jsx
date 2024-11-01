@@ -1,4 +1,4 @@
-import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,InputBase,IconButton, } from "@mui/material";
+import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,InputBase,IconButton,TextField } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -7,7 +7,6 @@ import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
-import { SearchOutlined } from "@mui/icons-material";
 const Payment = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -33,8 +32,6 @@ const Payment = () => {
     payment_status: "",
     payment_date: "",
   });
-
-  const [dateError, setDateError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -70,23 +67,14 @@ const Payment = () => {
     setPageSize(newPaginationModel.pageSize);
   };
   
-  const validateDate = (date) => {
-    if (date) {
-      const regex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!regex.test(date)) {
-        setDateError("Please enter date in YYYY-MM-DD format");
-        return false;
-      }
-      setDateError("");
-      return true;
-    }
-    setDateError("");
-    return true;
-  };
-
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
     setSearchByStatus(newStatus);
+    setPages(0);
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters(prevFilters => ({
       ...prevFilters,
       payment_status: newStatus
@@ -98,14 +86,22 @@ const Payment = () => {
       const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
       const dateString = localDate.toISOString().split('T')[0];
       setSelectedDate(dateString);
-      if (validateDate(dateString)) {
-        setFilters(prevFilters => ({
-          ...prevFilters,
-          payment_date: dateString
-        }));
-      }
+      setPages(0);
+      setPaginationModel(prev => ({
+        ...prev,
+        page: 0
+      }));
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        payment_date: dateString
+      }));
     } else {
       setSelectedDate(null);
+      setPages(0);
+      setPaginationModel(prev => ({
+        ...prev,
+        page: 0
+      }));
       setFilters(prevFilters => ({
         ...prevFilters,
         payment_date: ""
@@ -179,32 +175,41 @@ const Payment = () => {
             <MenuItem value="Unpaid">Unpaid</MenuItem>
           </Select>
         </FormControl>
-        <ReactDatePicker
-          selected={selectedDate}
-          onChange={handleDateChange}
-          dateFormat="yyyy-MM-dd"
-          placeholderText="Select Date YYYY-MM-DD"
-          customInput={<InputBase />}
-          onChangeRaw={(e) => {
-            const value = e.target.value;
-            setSelectedDate(value);
-            if (validateDate(value)) {
-              setFilters(prevFilters => ({
-                ...prevFilters,
-                payment_date: value
-              }));
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel shrink>Select Date</InputLabel>
+          <ReactDatePicker
+            selected={selectedDate ? new Date(selectedDate) : null}
+            onChange={handleDateChange}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Select Date YYYY-MM-DD"
+            isClearable={true}
+            customInput={
+              <TextField
+                variant="filled"
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "50px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                  "& .MuiFilledInput-input": {
+                    paddingTop: "8px",
+                  },
+                }}
+                inputProps={{
+                  readOnly: true,
+                  style: {
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    color: "inherit",
+                  },
+                }}
+              />
             }
-          }}
-        />
-        <IconButton>
-          <SearchOutlined />
-        </IconButton>
+          />
+        </FormControl>
       </Box>
-      {dateError && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {dateError}
-        </Alert>
-      )}
       <Box
         mt="40px"
         height="75vh"
@@ -251,7 +256,7 @@ const Payment = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+      
           loading={loading}
           
           autoHeight 

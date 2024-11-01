@@ -67,11 +67,15 @@ const Stores = () => {
   }, [searchNameValue]);
 
   useEffect(() => {
+    setPages(0);
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters((prevFilters) => ({
       ...prevFilters,
       store_name: debouncedSearchValue,
     }));
-    setPages(0);
   }, [debouncedSearchValue]);
 
   useEffect(() => {
@@ -239,7 +243,16 @@ const Stores = () => {
     {
       field: "address",
       headerName: "Address",
-      flex: 1.2,
+      flex: 2,
+      renderCell: (params) => (
+        <div style={{ 
+          whiteSpace: 'normal',
+          lineHeight: '1.2',
+          padding: '8px 0'
+        }}>
+          {params.value}
+        </div>
+      )
     },
     {
       field: "detail",
@@ -416,7 +429,7 @@ const Stores = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+         
           rowHeight={100}
           loading={loading}
           autoHeight

@@ -122,6 +122,11 @@ const ManageUsers = () => {
   };
 
   const handleSearch = (searchText) => {
+    setPages(0); // Reset to first page
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters((prevFilters) => ({
       ...prevFilters,
       search: searchText,
@@ -311,7 +316,7 @@ const ManageUsers = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+        
           loading={loading}
           autoHeight
           sx={{

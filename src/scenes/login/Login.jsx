@@ -8,7 +8,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 
-const notify = () => toast.warning("Session Expired! Please login again");
+const notify = () => toast.warning("Session expired! Please login again.");
 const API_URL = import.meta.env.VITE_API_URL
 const loginSchema = yup.object().shape({
   email: yup.string().email('Invalid email').required('Required'),

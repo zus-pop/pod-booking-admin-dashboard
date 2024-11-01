@@ -288,6 +288,13 @@ const BookingDetail = () => {
     return now >= fiveMinutesBefore && now <= slotStart;
   };
 
+  // Thêm hàm kiểm tra slot đã hoàn thành
+  const isSlotCompleted = (endTime, isCheckedIn) => {
+    const now = new Date();
+    const slotEnd = new Date(endTime);
+    return isCheckedIn && now > slotEnd;
+  };
+
   return (
     <Box m="20px" height="100vh">
       <Header title="Detail of Booking" sx={{ ml: "40px" }} />
@@ -597,65 +604,87 @@ const BookingDetail = () => {
                       </Box>
 
                       <Box sx={{ display: 'flex', gap: 2, width: "100%" }}>
-                        {!slot.is_checked_in && (
-                          <Button
-                            onClick={() => handleCheckin(slot.slot_id)}
-                            disabled={isSlotExpired(slot.end_time) || isSlotNotStarted(slot.start_time)}
-                            sx={{
-                              backgroundColor: isSlotExpired(slot.end_time) 
-                                ? "#ff4d4d" 
-                                : isSlotNotStarted(slot.start_time)
-                                  ? "#ffa726"
-                                  : isWithinCheckinWindow(slot.start_time)
-                                    ? "#4cceac"
-                                    : "#4cceac",
-                              color: "#fff",
-                              fontWeight: "600",
-                              "&:hover": {
-                                backgroundColor: isSlotExpired(slot.end_time)
-                                  ? "#ff3333"
+                        {!isSlotCompleted(slot.end_time, slot.is_checked_in) ? (
+                          <>
+                            {!slot.is_checked_in && (
+                              <Button
+                                onClick={() => handleCheckin(slot.slot_id)}
+                                disabled={isSlotExpired(slot.end_time) || isSlotNotStarted(slot.start_time)}
+                                sx={{
+                                  backgroundColor: isSlotExpired(slot.end_time) 
+                                    ? "#ff4d4d" 
+                                    : isSlotNotStarted(slot.start_time)
+                                      ? "#ffa726"
+                                      : isWithinCheckinWindow(slot.start_time)
+                                        ? "#4cceac"
+                                        : "#4cceac",
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                  "&:hover": {
+                                    backgroundColor: isSlotExpired(slot.end_time)
+                                      ? "#ff3333"
+                                      : isSlotNotStarted(slot.start_time)
+                                        ? "#fb8c00"
+                                        : "#3da58a",
+                                  },
+                                  "&:disabled": {
+                                    backgroundColor: isSlotExpired(slot.end_time)
+                                      ? "#ff4d4d"
+                                      : isSlotNotStarted(slot.start_time)
+                                        ? "#ffa726"
+                                        : "rgba(0, 0, 0, 0.12)",
+                                    color: "#fff",
+                                    opacity: 0.8,
+                                    cursor: "not-allowed"
+                                  }
+                                }}
+                              >
+                                {isSlotExpired(slot.end_time) 
+                                  ? "Expired" 
                                   : isSlotNotStarted(slot.start_time)
-                                    ? "#fb8c00"
-                                    : "#3da58a",
-                              },
-                              "&:disabled": {
-                                backgroundColor: isSlotExpired(slot.end_time)
-                                  ? "#ff4d4d"
-                                  : isSlotNotStarted(slot.start_time)
-                                    ? "#ffa726"
-                                    : "rgba(0, 0, 0, 0.12)",
-                                color: "#fff",
-                                opacity: 0.8,
-                                cursor: "not-allowed"
-                              }
-                            }}
-                          >
-                            {isSlotExpired(slot.end_time) 
-                              ? "Expired" 
-                              : isSlotNotStarted(slot.start_time)
-                                ? "Not Yet"
-                                : isWithinCheckinWindow(slot.start_time)
-                                  ? "Early Check-in"
-                                  : "Check In"
-                            }
-                          </Button>
-                        )}
-                        {slot.is_checked_in && (
-                          <Button
-                            variant="contained"
-                            onClick={() => handleOpenAddProductModal(slot.slot_id)}
-                            sx={{
-                              flex: 1,
-                              backgroundColor: "#4cceac",
-                              color: "#000", 
-                              fontWeight: "600",
-                              "&:hover": {
-                                backgroundColor: "#3da58a",
-                              },
-                            }}
-                          >
-                            Add Products
-                          </Button>
+                                    ? "Not Yet"
+                                    : isWithinCheckinWindow(slot.start_time)
+                                      ? "Early Check-in"
+                                      : "Check In"
+                                }
+                              </Button>
+                            )}
+                            {slot.is_checked_in && !isSlotExpired(slot.end_time) && (
+                              <Button
+                                variant="contained"
+                                onClick={() => handleOpenAddProductModal(slot.slot_id)}
+                                sx={{
+                                  flex: 1,
+                                  backgroundColor: "#4cceac",
+                                  color: "#000", 
+                                  fontWeight: "600",
+                                  "&:hover": {
+                                    backgroundColor: "#3da58a",
+                                  },
+                                }}
+                              >
+                                Add Products
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                         
+                          
+                            <Button
+                              variant="body2"
+                              sx={{
+                               
+                                fcolor: "#fff",
+                                fontWeight: "600",
+                               disabled: true,
+                               color: "#fff",
+                               opacity: 0.8,
+                               
+                              }}
+                            >
+                              Completed
+                            </Button>
+                       
                         )}
                       </Box>
                     </StatBox>
@@ -960,8 +989,10 @@ const BookingDetail = () => {
                   fontSize: "14px",
                   fontWeight: "bold",
                   padding: "10px 20px",
+                   marginBottom: "10px",
                   "&:hover": {
                     backgroundColor: "#3da58a",
+                   
                   },
                 }}
               >

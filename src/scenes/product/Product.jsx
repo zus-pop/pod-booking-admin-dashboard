@@ -134,13 +134,16 @@ const Product = () => {
   };
 
   const handleSearch = () => {
+    setPages(0);
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters((prevFilters) => ({
       ...prevFilters,
       category: searchCategoryId,
       product_name: searchNameValue,
     }));
-    setPages(0);
-    fetchData();
   };
 
   const handleClick = (event, id) => {
@@ -225,7 +228,7 @@ const Product = () => {
   };
 
   const columns = [
-    { field: "product_id", headerName: "ID", flex: 1 },
+    { field: "product_id", headerName: "ID", flex: 0.2 },
     {
       field: "store_id",
       headerName: "Store",
@@ -253,7 +256,20 @@ const Product = () => {
           : params.value;
       },
     },
-    { field: "description", headerName: "Description", flex: 1 },
+    { 
+      field: "description", 
+      headerName: "Description", 
+      flex: 1,
+      renderCell: (params) => (
+        <div style={{ 
+          whiteSpace: 'normal',
+          lineHeight: '1.2',
+          padding: '8px 0'
+        }}>
+          {params.value}
+        </div>
+      )
+    },
     {
       field: "price",
       headerName: "Price",
@@ -429,9 +445,10 @@ const Product = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+          
           loading={loading}
           autoHeight
+          rowHeight={100}
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "15px",

@@ -22,6 +22,10 @@ import ProtectedRoute from './ProtectedRoute';
 import Unauthorized from './scenes/unauthorized/Unauthorized';
 import PrivateRoute from "./PrivateRoute";
 import CreateProduct from "./scenes/form/CreateProduct";
+import LineChart from "./scenes/chart/LineChart";
+import PODRevenueChart from "./scenes/chart/PODRevenueChart";
+import ProductRevenueChart from "./scenes/chart/ProductRevenueChart";
+
 
 function App() {
   return (
@@ -54,9 +58,14 @@ function App() {
             </ProtectedRoute>
           } 
           />
+          <Route path="line" element={<LineChart />} />
+          <Route path="pod-revenue" element={<PODRevenueChart />} />
+          <Route path="product-revenue" element={<ProductRevenueChart />} />
+
+          
      
         </Route>
-
+    
       </Routes>
         
   );

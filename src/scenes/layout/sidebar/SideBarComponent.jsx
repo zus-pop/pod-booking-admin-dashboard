@@ -13,6 +13,7 @@ import {
   PersonOutlined,
   InventoryOutlined,
 } from "@mui/icons-material";
+import BarChartIcon from '@mui/icons-material/BarChart';
 import StoreIcon from "@mui/icons-material/Store";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ChecklistIcon from "@mui/icons-material/Checklist";
@@ -26,55 +27,11 @@ import { ToggledContext } from "../../welcome/Welcome";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../../RoleContext";
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
-const notify = () => {
-  const toastId = toast.error(
-    <Box sx={{
-      display: 'flex', 
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: '10px',
-      gap: '15px'
-    }}>
-      <Typography 
-        variant="subtitle1" 
-        sx={{
-          fontWeight: 500,
-          color: '#1C2536'
-        }}
-      >
-        Session Expired! Please login again
-      </Typography>
-      <Button 
-        onClick={() => toast.dismiss(toastId)} 
-        variant="contained"
-        sx={{
-          backgroundColor: '#4CCEAC',
-          color: '#000000',
-          fontSize: '14px',
-          fontWeight: 'bold',
-          padding: '8px 24px',
-          borderRadius: '8px',
-          '&:hover': {
-            backgroundColor: '#3DA58A'
-          }
-        }}
-      >
-        OK
-      </Button>
-    </Box>,
-    {
-      autoClose: false,
-      closeOnClick: false,
-      closeButton: false,
-      style: {
-        background: '#FFFFFF',
-        borderRadius: '12px',
-        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
-      }
-    }
-  );
-};
+
+const notify = () => toast.warning("Session expired! Please login again.");
 const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
   const { setUserRole } = useRole();
@@ -289,8 +246,46 @@ const SideBar = () => {
             colors={colors}
             icon={<InventoryOutlined />}
           />
+      
         </Menu>
-  
+        <Typography
+          variant="h6"
+          color={colors.gray[100]}
+          sx={{ m: "15px 0 5px 20px" }}
+        >
+          {!collapsed ? "Chart" : " "}
+        </Typography>{" "}
+        <Menu
+          menuItemStyles={{
+            button: {
+              ":hover": {
+                color: "#868dfb",
+                background: "transparent",
+                transition: ".4s ease",
+              },
+            },
+          }}
+        >
+                <Item
+            title="Total Revenue"
+            path="/web/line"
+            colors={colors}
+            icon={<BarChartIcon />}
+          />
+          <Item
+            title="POD Revenue"
+            path="/web/pod-revenue"
+            colors={colors}
+            icon={<ShowChartIcon />}
+          />
+          <Item
+            title="Product Revenue"
+            path="/web/product-revenue"
+            colors={colors}
+            icon={<MonetizationOnIcon />}
+          />
+          
+        </Menu>
       </Box>
       <ToastContainer
                   position="top-center"
