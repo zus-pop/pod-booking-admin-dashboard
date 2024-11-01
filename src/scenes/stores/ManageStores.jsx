@@ -56,6 +56,28 @@ const Stores = () => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchNameValue);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchValue(searchNameValue);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchNameValue]);
+
+  useEffect(() => {
+    setPages(0);
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      store_name: debouncedSearchValue,
+    }));
+  }, [debouncedSearchValue]);
+
   useEffect(() => {
     fetchData();
   }, [pages, pageSize, filters]);
@@ -190,15 +212,6 @@ const Stores = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-  const handleSearch = () => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      store_name: searchNameValue,
-    }));
-    setPages(0);
-    fetchData();
-  };
-
   const columns = [
     { field: "store_id", headerName: "ID", flex: 0.2 },
     {
@@ -230,7 +243,16 @@ const Stores = () => {
     {
       field: "address",
       headerName: "Address",
-      flex: 1.2,
+      flex: 2,
+      renderCell: (params) => (
+        <div style={{ 
+          whiteSpace: 'normal',
+          lineHeight: '1.2',
+          padding: '8px 0'
+        }}>
+          {params.value}
+        </div>
+      )
     },
     {
       field: "detail",
@@ -333,11 +355,22 @@ const Stores = () => {
           onChange={(e) => setSearchNameValue(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              handleSearch();
+              setFilters((prevFilters) => ({
+                ...prevFilters,
+                store_name: searchNameValue,
+              }));
             }
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton 
+          type="button" 
+          onClick={() => {
+            setFilters((prevFilters) => ({
+              ...prevFilters,
+              store_name: searchNameValue,
+            }));
+          }}
+        >
           <SearchOutlined />
         </IconButton>
         <Button
@@ -396,7 +429,7 @@ const Stores = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+         
           rowHeight={100}
           loading={loading}
           autoHeight

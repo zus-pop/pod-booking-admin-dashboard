@@ -85,7 +85,7 @@ const StoreForm = () => {
   };
   return (
     <Box m="20px">
-      <Header title="CREATE STORE" subtitle="Create a New Store" />
+      <Header title="CREATE STORE" subtitle="Create a New Store"   showBackButton={true} />
 
       <Formik
         onSubmit={handleFormSubmit}

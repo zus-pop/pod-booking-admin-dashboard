@@ -13,6 +13,7 @@ import {
   PersonOutlined,
   InventoryOutlined,
 } from "@mui/icons-material";
+import BarChartIcon from '@mui/icons-material/BarChart';
 import StoreIcon from "@mui/icons-material/Store";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ChecklistIcon from "@mui/icons-material/Checklist";
@@ -26,27 +27,11 @@ import { ToggledContext } from "../../welcome/Welcome";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../../RoleContext";
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 
-const notify = () => {
-  const toastId = toast.error(
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <div>Session Expired! Please login again</div>
-      <Button 
-        onClick={() => toast.dismiss(toastId)} 
-        variant="contained" 
-        color="primary" 
-        style={{ marginTop: '10px' }}
-      >
-        OK
-      </Button>
-    </div>,
-    {
-      autoClose: false,
-      closeOnClick: false,
-      closeButton: false,
-    }
-  );
-};
+
+const notify = () => toast.warning("Session expired! Please login again.");
 const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
   const { setUserRole } = useRole();
@@ -261,8 +246,46 @@ const SideBar = () => {
             colors={colors}
             icon={<InventoryOutlined />}
           />
+      
         </Menu>
-  
+        <Typography
+          variant="h6"
+          color={colors.gray[100]}
+          sx={{ m: "15px 0 5px 20px" }}
+        >
+          {!collapsed ? "Chart" : " "}
+        </Typography>{" "}
+        <Menu
+          menuItemStyles={{
+            button: {
+              ":hover": {
+                color: "#868dfb",
+                background: "transparent",
+                transition: ".4s ease",
+              },
+            },
+          }}
+        >
+                <Item
+            title="Total Revenue"
+            path="/web/line"
+            colors={colors}
+            icon={<BarChartIcon />}
+          />
+          <Item
+            title="POD Revenue"
+            path="/web/pod-revenue"
+            colors={colors}
+            icon={<ShowChartIcon />}
+          />
+          <Item
+            title="Product Revenue"
+            path="/web/product-revenue"
+            colors={colors}
+            icon={<MonetizationOnIcon />}
+          />
+          
+        </Menu>
       </Box>
       <ToastContainer
                   position="top-center"

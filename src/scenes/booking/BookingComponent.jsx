@@ -1,4 +1,12 @@
-import { Box, useTheme, Menu, MenuItem, Select,Typography,} from "@mui/material";
+import {
+  Box,
+  useTheme,
+  Menu,
+  MenuItem,
+  Select,
+  Typography,
+  TextField,
+} from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -36,6 +44,7 @@ const Booking = () => {
   const [loading, setLoading] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
 
+  const [searchById, setSearchById] = useState("");
   const [editStatusId, setEditStatusId] = useState(null);
   const [newStatus, setNewStatus] = useState("");
   const [selectedBookingId, setSelectedBookingId] = useState(null);
@@ -46,7 +55,7 @@ const Booking = () => {
     booking_status: "",
     booking_date: "",
   });
-  
+
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState("");
 
@@ -60,17 +69,19 @@ const Booking = () => {
   });
   const totalPages = Math.ceil(total / pageSize);
   const STATUS_FLOW = {
-    Pending: ['Pending','Confirmed', 'Canceled'],
-    Confirmed: ['Confirmed','Ongoing', 'Canceled'],
-    Ongoing: ['Ongoing','Complete'],
-    Complete: ['Complete'],
-    Canceled: ['Canceled']
+    Pending: ["Pending", "Confirmed", "Canceled"],
+    Confirmed: ["Confirmed", "Ongoing", "Canceled"],
+    Ongoing: ["Ongoing", "Complete"],
+    Complete: ["Complete"],
+    Canceled: ["Canceled"],
   };
   const [dateError, setDateError] = useState("");
 
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
   useEffect(() => {
     fetchData();
-  }, [pages,pageSize,filters]);
+  }, [pages, pageSize, filters]);
 
   const fetchData = async (id = "") => {
     try {
@@ -84,12 +95,14 @@ const Booking = () => {
         },
       });
       const formattedData = result.data.bookings.map((booking) => ({
-          booking_id: booking.booking_id,
-          booking_date: booking.booking_date,
-          booking_status: booking.booking_status,
-        }));
+        booking_id: booking.booking_id,
+        booking_date: booking.booking_date,
+        booking_status: booking.booking_status,
+        user_name: booking.user.user_name,
+        email: booking.user.email,
+      }));
       setData(formattedData);
-      setTotal(result.data.total)
+      setTotal(result.data.total);
       console.log("Formatted data:", formattedData);
     } catch (error) {
       console.error("Error fetching data:", error.message);
@@ -107,7 +120,6 @@ const Booking = () => {
     setPages(newPaginationModel.page);
     setPageSize(newPaginationModel.pageSize);
   };
-  
 
   const handleClick = (event, id) => {
     setAnchorEl(event.currentTarget);
@@ -117,24 +129,63 @@ const Booking = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-const handleEditStatus = (bookingId, newStatus) => {  
-  setSelectedBookingId(bookingId);
-  setConfirmStatus(newStatus);
-  setIsConfirmModalOpen(true);
-}; 
+  const handleEditStatus = (bookingId, newStatus) => {
+    setSelectedBookingId(bookingId);
+    setConfirmStatus(newStatus);
+    setIsConfirmModalOpen(true);
+  };
 
-const isActionDisabled = () => {
-  switch (userRole) {
-    case "Staff":
-      return true;
-    case "Manager":
-      return false;
-    case "Admin":
-      return false;
-    default:
-      return true;
-  }
-};
+  // ... existing code ...
+
+  const handleSearchByIdChange = (e) => {
+    const value = e.target.value;
+    setSearchById(value);
+    
+    // Clear timeout cũ nếu có
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Set timeout mới để debounce
+    const timeoutId = setTimeout(() => {
+      if (!value) {
+        fetchData();
+      } else {
+        handleSearchById(value);
+      }
+    }, 500); // Đợi 500ms sau khi người dùng ngừng gõ
+
+    setSearchTimeout(timeoutId);
+  };
+
+  const handleSearchById = async (value) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${API_URL}/api/v1/bookings/${value}`
+      );
+      if (response.data) {
+        const booking = response.data;
+        const formattedData = [
+          {
+            booking_id: booking.booking_id,
+            booking_date: booking.booking_date,
+            booking_status: booking.booking_status,
+            user_name: booking.user.user_name,
+            email: booking.user.email,
+          },
+        ];
+        setData(formattedData);
+        setTotal(1);
+      }
+    } catch (error) {
+      console.error("Error searching booking:", error);
+      setData([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdate = () => {
     if (selectedBookingId) {
@@ -145,7 +196,6 @@ const isActionDisabled = () => {
       );
       if (bookingToUpdate) {
         setNewStatus(bookingToUpdate.booking_status);
-        
       } else {
         console.error("Booking not found for ID:", selectedBookingId);
       }
@@ -154,13 +204,15 @@ const isActionDisabled = () => {
 
   const handleConfirmUpdate = async (id) => {
     try {
-      const currentBooking = data.find(booking => booking.booking_id === id);
+      const currentBooking = data.find((booking) => booking.booking_id === id);
       if (!currentBooking) {
-        throw new Error("Không tìm thấy booking");
+        throw new Error("Booking not found");
       }
 
       if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
-        toast.error(`Không thể chuyển từ ${currentBooking.booking_status} sang ${newStatus}`);
+        toast.error(
+          `Cannot change from ${currentBooking.booking_status} to ${newStatus}`
+        );
         return;
       }
 
@@ -171,7 +223,7 @@ const isActionDisabled = () => {
         },
         body: JSON.stringify({ booking_status: newStatus }),
       });
-    
+
       if (!response.ok) {
         throw new Error("Failed to update booking status");
       }
@@ -201,17 +253,43 @@ const isActionDisabled = () => {
     return true;
   };
 
-  const handleSearch = () => {
-    if (validateDate(selectedDate)) {
-      const adjustedDate = selectedDate
-        ? new Date(selectedDate).toISOString().split('T')[0]
-        : "";
+  const handleStatusChange = (e) => {
+    setSearchByStatus(e.target.value);
+    setPages(0);
+    setPaginationModel((prev) => ({
+      ...prev,
+      page: 0,
+    }));
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      booking_status: e.target.value,
+    }));
+  };
+
+  const handleDateChange = (date) => {
+    if (date) {
+      const localDate = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000
+      );
+      const dateString = localDate.toISOString().split("T")[0];
+      setSelectedDate(dateString);
+      setPages(0);
+      setPaginationModel((prev) => ({
+        ...prev,
+        page: 0,
+      }));
+      if (validateDate(dateString)) {
+        setFilters((prevFilters) => ({
+          ...prevFilters,
+          booking_date: dateString,
+        }));
+      }
+    } else {
+      setSelectedDate(null);
       setFilters((prevFilters) => ({
         ...prevFilters,
-        booking_status: searchByStatus, 
-        booking_date: adjustedDate,
+        booking_date: "",
       }));
-      fetchData();
     }
   };
 
@@ -221,7 +299,21 @@ const isActionDisabled = () => {
       headerName: "Booking_ID",
       flex: 0.5,
     },
-    { field: "booking_date", headerName: "Date", flex: 1.5 },
+    {
+      field: "user_name",
+      headerName: "User Name",
+      flex: 1,
+    },
+    {
+      field: "email",
+      headerName: "Email",
+      flex: 1.5,
+    },
+    {
+      field: "booking_date",
+      headerName: "Date",
+      flex: 1.5,
+    },
     {
       field: "booking_status",
       headerName: "Status",
@@ -229,35 +321,37 @@ const isActionDisabled = () => {
       renderCell: (params) =>
         editStatusId === params.row.booking_id ? (
           <div>
-          <Select
-            value={newStatus}
-            onChange={(e) => {
-              const nextStatus = e.target.value;
-              if (isValidStatusTransition(params.row.booking_status, nextStatus)) {
-                setNewStatus(nextStatus);
-              } else {
-                toast.error(`Không thể chuyển từ ${params.row.booking_status} sang ${nextStatus}`);
-              }
-            }}
-          >
-            {STATUS_FLOW[params.row.booking_status]?.map(status => (
-              <MenuItem key={status} value={status}>
-                {status}
-              </MenuItem>
-            ))}
-          </Select>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleEditStatus(params.row.booking_id, newStatus)}
-          >
-            Choose
-          </Button>
-        </div>
-        ) : (
-          <div>
-            {params.value}
+            <Select
+              value={newStatus}
+              onChange={(e) => {
+                const nextStatus = e.target.value;
+                if (
+                  isValidStatusTransition(params.row.booking_status, nextStatus)
+                ) {
+                  setNewStatus(nextStatus);
+                } else {
+                  toast.error(
+                    `Không thể chuyển từ ${params.row.booking_status} sang ${nextStatus}`
+                  );
+                }
+              }}
+            >
+              {STATUS_FLOW[params.row.booking_status]?.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {status}
+                </MenuItem>
+              ))}
+            </Select>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => handleEditStatus(params.row.booking_id, newStatus)}
+            >
+              Choose
+            </Button>
           </div>
+        ) : (
+          <div>{params.value}</div>
         ),
     },
     {
@@ -274,8 +368,6 @@ const isActionDisabled = () => {
           </Button>
           <IconButton
             onClick={(event) => handleClick(event, params.row.booking_id)}
-           
-        
           >
             <MoreVertIcon />
           </IconButton>
@@ -297,8 +389,6 @@ const isActionDisabled = () => {
     },
   ];
 
-
-
   return (
     <Box m="20px">
       <Header title="Booking" subtitle="Manage Booking Data" />
@@ -314,7 +404,7 @@ const isActionDisabled = () => {
             labelId="type-select-label"
             id="type-select"
             value={searchByStatus}
-            onChange={(e) => setSearchByStatus(e.target.value)}
+            onChange={handleStatusChange}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="Complete">Complete</MenuItem>
@@ -324,25 +414,60 @@ const isActionDisabled = () => {
             <MenuItem value="Confirmed">Confirmed</MenuItem>
           </Select>
         </FormControl>
-        <ReactDatePicker
-          selected={selectedDate}
-          onChange={(date) => {
-            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-            const dateString = localDate.toISOString().split('T')[0];
-            setSelectedDate(dateString);
-            validateDate(dateString);
-          }}
-          dateFormat="yyyy-MM-dd"
-          placeholderText="Select Date YYYY-MM-DD"
-          customInput={<InputBase />}
-          onChangeRaw={(e) => {
-            setSelectedDate(e.target.value);
-            validateDate(e.target.value);
-          }}
-        />
-        <IconButton type="button" onClick={handleSearch}>
-          <SearchOutlined />
-        </IconButton>
+        <FormControl sx={{ minWidth: 200, mr: 2 }}>
+          <TextField
+            label="Search by ID"
+            variant="filled"
+            value={searchById}
+            onChange={handleSearchByIdChange}
+            InputProps={{
+              endAdornment: (
+                <IconButton disabled>
+                  <SearchOutlined />
+                </IconButton>
+              ),
+            }}
+            sx={{
+              "& .MuiInputBase-root": {
+                height: "50px",
+              },
+            }}
+          />
+        </FormControl>
+        <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel shrink>Select Date</InputLabel>
+          <ReactDatePicker
+            selected={selectedDate}
+            onChange={handleDateChange}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Select Date YYYY-MM-DD"
+            isClearable={true}
+            customInput={
+              <TextField
+                variant="filled"
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "50px",
+                    display: "flex",
+                    alignItems: "center",
+                  },
+                  "& .MuiFilledInput-input": {
+                    paddingTop: "8px",
+                  },
+                }}
+                inputProps={{
+                  readOnly: true,
+                  style: {
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    color: "inherit",
+                  },
+                }}
+              />
+            }
+          />
+        </FormControl>
       </Box>
       {dateError && (
         <Alert severity="error" sx={{ mt: 2 }}>
@@ -379,77 +504,72 @@ const isActionDisabled = () => {
         <DataGrid
           rows={data}
           columns={columns}
-          getRowId={(row) => row.booking_id}        
+          getRowId={(row) => row.booking_id}
           pagination
           paginationModel={paginationModel}
-          onPaginationModelChange={handlePaginationModelChange}  
+          onPaginationModelChange={handlePaginationModelChange}
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
           loading={loading}
-          
-          autoHeight 
+          autoHeight
           sx={{
             "& .MuiDataGrid-cell": {
-              fontSize: "15px", 
+              fontSize: "15px",
             },
             "& .MuiDataGrid-columnHeaders": {
-              fontSize: "15px", 
+              fontSize: "15px",
             },
           }}
         />
         <Box mt="10px">
-     <Typography variant="body1">
-       Page {pages + 1 } of {totalPages}
-     </Typography>
-     </Box>
+          <Typography variant="body1">
+            Page {pages + 1} of {totalPages}
+          </Typography>
+        </Box>
       </Box>
       <Modal
-  open={isConfirmModalOpen}
-  onClose={() => setIsConfirmModalOpen(false)}
-  aria-labelledby="confirm-modal-title"
-  aria-describedby="confirm-modal-description"
->
-  <Box
-    sx={{
-      position: "absolute",
-      top: "50%",
-      left: "50%", 
-      transform: "translate(-50%, -50%)",
-      width: 400,
-      bgcolor: "background.paper",
-      boxShadow: 24,
-      p: 4,
-      borderRadius: 2,
-    }}
-  >
-    <Typography id="confirm-modal-title" variant="h6" component="h2">
-      Confirm Update Status
-    </Typography>
-    <Typography id="confirm-modal-description" sx={{ mt: 2 }}>
-     Are you sure about updating to this status: {confirmStatus} ?
-    </Typography>
-    <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-      <Button 
-        onClick={() => setIsConfirmModalOpen(false)} 
-        sx={{ mr: 2 }}
+        open={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        aria-labelledby="confirm-modal-title"
+        aria-describedby="confirm-modal-description"
       >
-        Cancel
-      </Button>
-      <Button
-        onClick={() => {
-          handleConfirmUpdate(selectedBookingId, confirmStatus);
-          setIsConfirmModalOpen(false);
-        }}
-        variant="contained"
-        color="primary"
-      >
-        Confirm
-      </Button>
-    </Box>
-  </Box>
-</Modal>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography id="confirm-modal-title" variant="h6" component="h2">
+            Confirm Update Status
+          </Typography>
+          <Typography id="confirm-modal-description" sx={{ mt: 2 }}>
+            Are you sure about updating to this status: {confirmStatus} ?
+          </Typography>
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+            <Button onClick={() => setIsConfirmModalOpen(false)} sx={{ mr: 2 }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleConfirmUpdate(selectedBookingId, confirmStatus);
+                setIsConfirmModalOpen(false);
+              }}
+              variant="contained"
+              color="primary"
+            >
+              Confirm
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };

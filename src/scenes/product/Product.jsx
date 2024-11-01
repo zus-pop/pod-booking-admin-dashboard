@@ -58,10 +58,29 @@ const Product = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [stores, setStores] = useState([]);
 
   useEffect(() => {
+    fetchStores();
     fetchData();
   }, [pages, pageSize, filters]);
+
+  const fetchStores = async () => {
+    try {
+      // Lấy tổng số stores
+      const totalResponse = await axios.get(`${API_URL}/api/v1/stores`);
+      if (totalResponse.status === 200) {
+        const total = totalResponse.data.total;
+  
+        const response = await axios.get(`${API_URL}/api/v1/stores?limit=${total}`);
+        if (response.status === 200) {
+          setStores(response.data.stores);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -115,13 +134,16 @@ const Product = () => {
   };
 
   const handleSearch = () => {
+    setPages(0);
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters((prevFilters) => ({
       ...prevFilters,
       category: searchCategoryId,
       product_name: searchNameValue,
     }));
-    setPages(0);
-    fetchData();
   };
 
   const handleClick = (event, id) => {
@@ -185,8 +207,37 @@ const Product = () => {
     }
   };
 
+  const handleCategoryChange = (e) => {
+    setSearchCategoryId(e.target.value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      category: e.target.value,
+      product_name: searchNameValue,
+    }));
+    setPages(0);
+  };
+
+  const handleNameChange = (e) => {
+    setSearchNameValue(e.target.value);
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      category: searchCategoryId,
+      product_name: e.target.value,
+    }));
+    setPages(0);
+  };
+
   const columns = [
-    { field: "product_id", headerName: "ID", flex: 1 },
+    { field: "product_id", headerName: "ID", flex: 0.2 },
+    {
+      field: "store_id",
+      headerName: "Store",
+      flex: 1,
+      renderCell: (params) => {
+        const store = stores.find(store => store.store_id === params.value);
+        return store ? store.store_name : params.value;
+      },
+    },
     {
       field: "product_name",
       headerName: "Name",
@@ -205,7 +256,20 @@ const Product = () => {
           : params.value;
       },
     },
-    { field: "description", headerName: "Description", flex: 1 },
+    { 
+      field: "description", 
+      headerName: "Description", 
+      flex: 1,
+      renderCell: (params) => (
+        <div style={{ 
+          whiteSpace: 'normal',
+          lineHeight: '1.2',
+          padding: '8px 0'
+        }}>
+          {params.value}
+        </div>
+      )
+    },
     {
       field: "price",
       headerName: "Price",
@@ -257,7 +321,7 @@ const Product = () => {
             id="type-select"
             value={searchCategoryId}
             label="Type"
-            onChange={(e) => setSearchCategoryId(e.target.value)}
+            onChange={handleCategoryChange}
           >
             <MenuItem value="">All</MenuItem>
             <MenuItem value="1">Food</MenuItem>
@@ -275,12 +339,7 @@ const Product = () => {
             borderRadius: 2,
           }}
           value={searchNameValue}
-          onChange={(e) => setSearchNameValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
-          }}
+          onChange={handleNameChange}
         />
         <IconButton type="button" onClick={handleSearch}>
           <SearchOutlined />
@@ -386,9 +445,10 @@ const Product = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+          
           loading={loading}
           autoHeight
+          rowHeight={100}
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "15px",

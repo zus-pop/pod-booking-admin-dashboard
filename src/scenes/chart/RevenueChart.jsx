@@ -109,7 +109,7 @@ const RevenueChart = () => {
       boxShadow={3}
       mt={2}
       height={500}
-      width="50%"
+     width="50%"
     >
       <Header
         title="Daily Revenue"

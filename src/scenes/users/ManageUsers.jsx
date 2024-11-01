@@ -121,12 +121,16 @@ const ManageUsers = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
-  const handleSearch = () => {
+  const handleSearch = (searchText) => {
+    setPages(0); // Reset to first page
+    setPaginationModel(prev => ({
+      ...prev,
+      page: 0
+    }));
     setFilters((prevFilters) => ({
       ...prevFilters,
-      search: searchValue,
+      search: searchText,
     }));
-    fetchData();
   };
   const handleEditRole = (userId) => {
     console.log("Updating user with ID:", userId);
@@ -251,14 +255,12 @@ const ManageUsers = () => {
             borderRadius: 2,
           }}
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+            handleSearch(e.target.value);
           }}
         />
-        <IconButton type="button" onClick={handleSearch}>
+        <IconButton>
           <SearchOutlined />
         </IconButton>
         <Button
@@ -314,7 +316,7 @@ const ManageUsers = () => {
           pageSizeOptions={[4, 6, 8]}
           rowCount={total}
           paginationMode="server"
-          checkboxSelection
+        
           loading={loading}
           autoHeight
           sx={{

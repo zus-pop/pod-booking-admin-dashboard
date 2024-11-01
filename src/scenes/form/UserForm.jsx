@@ -76,7 +76,7 @@ const UserForm = () => {
 
   return (
     <Box m="20px">
-      <Header title="CREATE USER" subtitle="Create a new user" />
+      <Header title="CREATE USER" subtitle="Create a new user"   showBackButton={true}  />
       <ToastContainer />
 
       <Formik

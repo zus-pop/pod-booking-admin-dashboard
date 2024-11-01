@@ -7,8 +7,11 @@ import {
 } from "@mui/material";
 import { Header, StatBox, ProgressCircle } from "../../components";
 import {
+  ContactsOutlined,
   DownloadOutlined,
   Email,
+  Inventory2Outlined,
+  PeopleAltOutlined,
   PersonAdd,
   PointOfSale,
   Traffic,
@@ -19,7 +22,9 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import RevenueChart from "../chart/RevenueChart";
 import PieChart from "../chart/PieChart";
-import PODPieChart from "../chart/PODPieChart";
+
+import { useNavigate } from "react-router-dom";
+
 
 function Dashboard() {
   const theme = useTheme();
@@ -27,6 +32,8 @@ function Dashboard() {
   const isXlDevices = useMediaQuery("(min-width: 1260px)");
   const isMdDevices = useMediaQuery("(min-width: 724px)");
   const API_URL = import.meta.env.VITE_API_URL;
+  const [total, setTotal] = useState(0);
+  const naviggate = useNavigate()
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData();
@@ -41,15 +48,28 @@ function Dashboard() {
       console.error("Error fetching data:", error.message);
     }
   };
-
+  const fetchTotalUser = async () => {
+    try {
+      setLoading(true);
+      const result = await axios.get(`${API_URL}/api/v1/auth/users`);
+      
+      setTotal(result.data.total);
+      
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Box m="20px">
       <Box display="flex" justifyContent="space-between">
         <Header title="DASHBOARD" subtitle="Welcome to your dashboard" />
       </Box>
 
-      {/* GRID & CHARTS */}
-      {/* <Box
+    
+      <Box
         display="grid"
         gridTemplateColumns={
           isXlDevices
@@ -60,9 +80,9 @@ function Dashboard() {
         }
         gridAutoRows="140px"
         gap="20px"
-      > */}
-        {/* Statistic Items */}
-        {/* <Box
+      >
+      
+        <Box
           gridColumn="span 3"
           backgroundColor={colors.primary[400]}
           display="flex"
@@ -72,8 +92,7 @@ function Dashboard() {
           <StatBox
             title="11,361"
             subtitle="Email Sent"
-            progress="0.75"
-            increase="+14%"
+            
             icon={
               <Email
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
@@ -91,10 +110,9 @@ function Dashboard() {
           <StatBox
             title="431,225"
             subtitle="Product Saled"
-            progress="0.50"
-            increase="+21%"
+          
             icon={
-              <PointOfSale
+              <Inventory2Outlined
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
@@ -108,12 +126,11 @@ function Dashboard() {
           justifyContent="center"
         >
           <StatBox
-            title="32,441"
-            subtitle="New Clients"
-            progress="0.30"
-            increase="+5%"
+            title={total}
+            subtitle="Clients"
+    
             icon={
-              <PersonAdd
+              <PeopleAltOutlined
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
@@ -129,27 +146,29 @@ function Dashboard() {
           <StatBox
             title="1,325,134"
             subtitle="POD Received"
-            progress="0.80"
-            increase="+43%"
+            
             icon={
-              <Traffic
+              <ContactsOutlined
                 sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
               />
             }
           />
         </Box>
-      </Box> */}
+      </Box>
 
-      {/* Transaction Data */}
-     {/* Transaction Data */}
+     
 <Box
   display="flex"
   gap="10px"
-
+  flexDirection={isXlDevices ? "row" : "column"}
 >
   <RevenueChart />
   <PieChart />
 </Box>
+
+      {/* Add POD Usage Chart */}
+
+
       <Box
         mt="15px"
         gridColumn={isXlDevices ? "span 4" : "span 3"}
