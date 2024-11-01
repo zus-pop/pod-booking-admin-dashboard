@@ -42,7 +42,7 @@ const slotSchema = yup.object().shape({
       return schema.min(startDate[0], "End date must be later than start date");
     })
     .required("End date is required"),
-  durationMinutes: yup.number().required("Duration is required"),
+  durationMinutes: yup.number().required("Duration is required").min(30,"Duration must be > 30 minutes"),
 });
 
 const GenerateSlot = () => {

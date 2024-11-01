@@ -5,7 +5,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Header, StatBox, ProgressCircle } from "../../components";
+import { Header, StatBox } from "../../components";
 import {
   ContactsOutlined,
   DownloadOutlined,
@@ -37,6 +37,7 @@ function Dashboard() {
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData();
+    fetchTotalUser();
   }, []);
 
   const fetchData = async () => {
@@ -83,7 +84,7 @@ function Dashboard() {
       >
       
         <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
@@ -91,7 +92,7 @@ function Dashboard() {
         >
           <StatBox
             title="11,361"
-            subtitle="Email Sent"
+            subtitle="Store"
             
             icon={
               <Email
@@ -101,7 +102,7 @@ function Dashboard() {
           />
         </Box>
         <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
@@ -118,26 +119,9 @@ function Dashboard() {
             }
           />
         </Box>
+       
         <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title={total}
-            subtitle="Clients"
-    
-            icon={
-              <PeopleAltOutlined
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
