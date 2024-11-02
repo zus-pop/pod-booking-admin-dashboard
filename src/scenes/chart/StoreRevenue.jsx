@@ -1,4 +1,4 @@
-import { Box, useTheme, FormControl, Select, MenuItem, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, useTheme, FormControl, Select, MenuItem, ToggleButton, ToggleButtonGroup, Typography,InputLabel } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import { tokens } from "../../theme";
 import { useState, useEffect } from "react";
@@ -234,7 +234,11 @@ const StoreRevenue = () => {
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb="20px">
           <FormControl sx={{ minWidth: 200 }}>
+          <InputLabel id="store-select-label">Select Store</InputLabel>
             <Select
+         
+            labelId="store-select-label"
+            label="store"
               value={selectedStore}
               onChange={(e) => setSelectedStore(e.target.value)}
               sx={{

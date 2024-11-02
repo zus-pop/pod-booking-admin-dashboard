@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Box, Button, TextField, Typography } from '@mui/material';
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -44,6 +44,14 @@ const Login = () => {
 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  useEffect(() => {
+    // Kiểm tra token khi component mount
+    const token = localStorage.getItem("token");
+    if (token && location.pathname === "/") {
+        navigate("/web");
+    }
+}, [navigate, location.pathname]);
+
   const handleLogin = async (values, actions) => {
     try {
       const response = await fetch(`${API_URL}/api/v1/auth/login`, {

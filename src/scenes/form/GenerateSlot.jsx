@@ -535,7 +535,7 @@ const GenerateSlot = () => {
               >
                 <Box sx={{ gridColumn: "1 / 3" }}>
                   <Typography variant="h6" gutterBottom>
-                  Select row in table and fill form to generate slot for {podName}
+                  Please first select row in table then fill form to generate slot for {podName}
                   </Typography>
                   <form onSubmit={handleSubmit}>
                     <FormControl
