@@ -4,7 +4,7 @@ import { Formik } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 
@@ -103,18 +103,6 @@ const Login = () => {
   
   return (
     <Container>
-        <ToastContainer
-                  position="top-center"
-                  autoClose={5000}
-                  hideProgressBar={false}
-                  newestOnTop={false}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                  theme="light"
-                />
       <LeftPanel> 
         <Typography variant="h4">We Are The POD Admin Team</Typography>
         <Typography variant="h6" sx={{padding: "20px", textAlign: "justify"}}>

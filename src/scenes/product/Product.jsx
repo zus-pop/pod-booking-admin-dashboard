@@ -22,7 +22,7 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UpdateIcon from "@mui/icons-material/Update";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UpdateProduct from "../form/UpdateProduct";
 import { useRole } from "../../RoleContext";
@@ -230,6 +230,20 @@ const Product = () => {
   const columns = [
     { field: "product_id", headerName: "ID", flex: 0.2 },
     {
+      field: "image",
+      headerName: "Image",
+      flex: 1,
+      renderCell: (params) => (
+        <div>
+          <img
+            src={params.value}
+            alt={` ${params.row.product_name}`}
+            style={{ width: "200px", height: "130px", objectFit: "cover" }}
+          />
+        </div>
+      ),
+    },
+    {
       field: "store_id",
       headerName: "Store",
       flex: 1,
@@ -285,7 +299,7 @@ const Product = () => {
     {
       field: "action",
       headerName: "Action",
-      flex: 1,
+      flex: 0.5,
       renderCell: (params) => (
         <div style={{ display: "flex", alignItems: "center" }}>
           <IconButton
@@ -345,9 +359,16 @@ const Product = () => {
           <SearchOutlined />
         </IconButton>
         <Button
-          variant="contained"
-          color="primary"
-          sx={{ ml: "auto" }}
+          variant="outlined"
+           sx={{ ml: "auto" ,  
+             color: colors.gray[100],
+             
+             borderColor: colors.gray[100],
+             '&:hover': {
+               borderColor: colors.greenAccent[500],
+               color: colors.greenAccent[500],
+             }}}
+          
           onClick={() => navigate("/web/productform")}
           // disabled={isCreateDisabled()}
         >
@@ -390,7 +411,6 @@ const Product = () => {
           },
         }}
       >
-        <ToastContainer />
         <UpdateProduct
           open={isUpdateModalOpen}
           handleClose={() => setIsUpdateModalOpen(false)}
@@ -448,7 +468,7 @@ const Product = () => {
           
           loading={loading}
           autoHeight
-          rowHeight={100}
+          rowHeight={120}
           sx={{
             "& .MuiDataGrid-cell": {
               fontSize: "15px",

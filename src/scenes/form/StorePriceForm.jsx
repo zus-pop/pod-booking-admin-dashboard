@@ -15,13 +15,13 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { Header } from "../../components";
 import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
+import { toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const validationSchema = Yup.object({
-  price: Yup.number().required("Price is required"),
+  price: Yup.number().required("Price is required").min(100000, "Price > 100.000"),
   start_hour: Yup.number().required("Start hour is required").min(0).max(23),
   end_hour: Yup.number().required("End hour is required").min(0).max(23),
   days_of_week: Yup.array()
@@ -98,7 +98,7 @@ const StorePriceForm = () => {
         title="CREATE STORE PRICE"
         subtitle="New prices for store slots"
       />
-      <ToastContainer />
+ 
 
       <Formik
         initialValues={initialValues}

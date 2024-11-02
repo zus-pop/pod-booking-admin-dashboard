@@ -374,9 +374,15 @@ const Stores = () => {
           <SearchOutlined />
         </IconButton>
         <Button
-          variant="contained"
-          color="primary"
-          sx={{ ml: "auto" }}
+          variant="outlined"
+          sx={{ ml: "auto" ,  
+            color: colors.gray[100],
+            
+            borderColor: colors.gray[100],
+            '&:hover': {
+              borderColor: colors.greenAccent[500],
+              color: colors.greenAccent[500],
+            }}}
           onClick={() => navigate("/web/storeform")}
           disabled={isActDisabled()}
         >

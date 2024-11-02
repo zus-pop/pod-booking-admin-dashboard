@@ -1,4 +1,4 @@
-import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,InputBase,IconButton,TextField } from "@mui/material";
+import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,InputBase,IconButton,TextField,Button } from "@mui/material";
 import { Header } from "../../components";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
@@ -7,6 +7,11 @@ import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import Modal from "@mui/material/Modal";
+import CircularProgress from "@mui/material/CircularProgress";
+import { toast } from "react-toastify";
+
 const Payment = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
@@ -32,6 +37,12 @@ const Payment = () => {
     payment_status: "",
     payment_date: "",
   });
+
+  const navigate = useNavigate();
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [paymentDetails, setPaymentDetails] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -109,8 +120,39 @@ const Payment = () => {
     }
   };
 
+  const handleViewDetail = async (payment) => {
+    setSelectedPayment(payment);
+    setIsModalOpen(true);
+    setIsLoading(true);
+
+    try {
+      let response;
+      if (payment.payment_for === "Product") {
+        response = await axios.get(
+          `${API_URL}/api/v1/bookings/${payment.booking_id}/payments/${payment.payment_id}/products`
+        );
+      } else if (payment.payment_for === "Slot") {
+        response = await axios.get(
+          `${API_URL}/api/v1/bookings/${payment.booking_id}/payments/${payment.payment_id}/slots`
+        );
+      }
+      setPaymentDetails(response.data);
+    } catch (error) {
+      
+    
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedPayment(null);
+    setPaymentDetails([]);
+  };
+
   const columns = [
-    { field: "payment_id", headerName: "Payment_ID", flex: 1, },
+    { field: "payment_id", headerName: "Payment_ID", flex: 0.5 },
     {
       field: "transaction_id",
       headerName: "Transaction_ID",
@@ -124,6 +166,12 @@ const Payment = () => {
       cellClassName: "name-column--cell",
     },
     {
+      field: "payment_date",
+      headerName: "Date",
+      flex: 1,
+      
+    },
+    {
       field: "total_cost",
       headerName: "Total Cost",
       flex: 1,
@@ -135,20 +183,70 @@ const Payment = () => {
         }).format(params.value)
       }
     },
-
-    {
-      field: "payment_date",
-      headerName: "Date",
-      flex: 1,
-      
-    },
-    
     {
       field: "payment_status",
       headerName: "Status",
       flex: 1,
     },
+    {
+      field: "detail",  
+      headerName: "Detail",
+      renderCell: (params) => (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleViewDetail(params.row)}
+          >
+            View Detail
+          </Button>
+        </div>
+      ),
+      flex: 0.5,
+    },
   ];
+
+  const getPaymentStatusStyles = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return {
+          backgroundColor: "rgba(76, 206, 172, 0.1)",
+          color: "#4cceac",
+          borderColor: "#4cceac",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          border: "1px solid"
+        };
+      case 'failed':
+        return {
+          backgroundColor: "rgba(244, 67, 54, 0.1)", 
+          color: "#f44336",
+          borderColor: "#f44336",
+          padding: "4px 8px",
+          borderRadius: "4px",
+          border: "1px solid"
+        };
+      case 'unpaid':
+        return {
+          backgroundColor: "rgba(255, 235, 59, 0.1)",
+          color: "#ffeb3b",
+          borderColor: "#ffeb3b",
+          padding: "4px 8px", 
+          borderRadius: "4px",
+          border: "1px solid"
+        };
+      default:
+        return {
+          backgroundColor: "rgba(158, 158, 158, 0.1)",
+          color: "#9e9e9e",
+          borderColor: "#9e9e9e",
+          padding: "4px 8px",
+          borderRadius: "4px", 
+          border: "1px solid"
+        };
+    }
+  };
+
   return (
     <Box m="20px">
       <Header
@@ -275,6 +373,156 @@ const Payment = () => {
      </Typography>
      </Box>
       </Box>
+
+      <Modal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        aria-labelledby="payment-detail-modal"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 600,
+            backgroundColor: "#000000",
+            border: `1px solid ${colors.primary[500]}`,
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+            maxHeight: "80vh",
+            overflowY: "auto",
+          }}
+        >
+          {isLoading ? (
+            <Box display="flex" justifyContent="center">
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              <Typography 
+                variant="h5" 
+                component="h1" 
+                sx={{ 
+                  mb: 3, 
+                  color: colors.gray[100],
+                  fontSize: "24px"
+                }}
+              >
+                Payment Details
+              </Typography>
+
+              {selectedPayment && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                    Payment ID: {selectedPayment.payment_id}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                    Transaction ID: {selectedPayment.transaction_id}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                    Booking ID: {selectedPayment.booking_id}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                    Date: {selectedPayment.payment_date}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px", display: "flex", alignItems: "center", gap: 1 }}>
+                    Status: 
+                    <Box component="span" sx={getPaymentStatusStyles(selectedPayment.payment_status)}>
+                      {selectedPayment.payment_status}
+                    </Box>
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 2, fontSize: "16px" }}>
+                    Total Cost:{" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(selectedPayment.total_cost)}
+                  </Typography>
+                </Box>
+              )}
+
+              <Typography variant="h6" sx={{ mb: 2, color: colors.gray[100], fontSize: "20px" }}>
+                {selectedPayment?.payment_for} Details:
+              </Typography>
+
+              {selectedPayment?.payment_for === "Product" && (
+                <Box>
+                  {paymentDetails.map((product) => (
+                    <Box
+                      key={product.product_id}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: colors.primary[500],
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                        Product Name: {product.product_name}
+                      </Typography>
+                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                        Quantity: {product.quantity}
+                      </Typography>
+                      <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
+                        Unit Price:{" "}
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(product.unit_price)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              {selectedPayment?.payment_for === "Slot" && (
+                <Box>
+                  {paymentDetails.map((slot) => (
+                    <Box
+                      key={slot.slot_id}
+                      sx={{
+                        mb: 2,
+                        p: 2,
+                        bgcolor: colors.primary[500],
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                        Start Time: {new Date(slot.start_time).toLocaleString()}
+                      </Typography>
+                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                        End Time: {new Date(slot.end_time).toLocaleString()}
+                      </Typography>
+                      <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
+                        Price:{" "}
+                        {new Intl.NumberFormat("vi-VN", {
+                          style: "currency",
+                          currency: "VND",
+                        }).format(slot.price)}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCloseModal}
+                  sx={{
+                    bgcolor: colors.blueAccent[700],
+                    "&:hover": { bgcolor: colors.blueAccent[800] },
+                  }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 };

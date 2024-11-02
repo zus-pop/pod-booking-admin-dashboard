@@ -9,7 +9,7 @@ import axios from "axios";
 import { useTheme } from "@mui/material";
 import { tokens } from "../../theme";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -133,7 +133,7 @@ const ManageSlots = () => {
 
   return (
     <Box m="20px">
-      <ToastContainer />
+     
       <Header
         title={
           <Box component="span">
@@ -155,8 +155,15 @@ const ManageSlots = () => {
         showBackButton={true} 
       />
       <Button
-        variant="contained"
-        color="primary"
+         variant="outlined"
+         sx={{ ml: "auto" ,  
+           color: colors.gray[100],
+           
+           borderColor: colors.gray[100],
+           '&:hover': {
+             borderColor: colors.greenAccent[500],
+             color: colors.greenAccent[500],
+           }}}
         onClick={() => navigate(`/web/pod/${pod_id}/slot`)}
       >
         Generate Slot for {pods.pod_name}
@@ -310,12 +317,11 @@ const ManageSlots = () => {
           }))}
           eventClick={handleEventClick}
           dateClick={handleDateClick}
-          slotMinTime="07:00:00"
-          slotMaxTime="22:00:00"
+          slotMinTime="00:00:00"
+          slotMaxTime="24:00:00"
           allDaySlot={false}
           slotDuration="00:30:00"
-          height="600px"
-          slotHeight={80}
+          height="650px"
           eventMinHeight={60}
           views={{
             timeGridWeek: {

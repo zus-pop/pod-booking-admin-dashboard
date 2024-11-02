@@ -14,7 +14,7 @@ import * as yup from "yup";
 import { useState } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -181,18 +181,6 @@ const StoreForm = () => {
             >
               <Button type="submit" color="secondary" variant="contained">
                 Create New Store
-                <ToastContainer
-                  position="top-center"
-                  autoClose={5000}
-                  hideProgressBar={false}
-                  newestOnTop={false}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                  theme="light"
-                />
               </Button>
             
             </Box>

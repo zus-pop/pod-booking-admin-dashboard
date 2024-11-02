@@ -5,16 +5,13 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { Header, StatBox, ProgressCircle } from "../../components";
+import { Header, StatBox } from "../../components";
 import {
   ContactsOutlined,
-  DownloadOutlined,
+
   Email,
   Inventory2Outlined,
-  PeopleAltOutlined,
-  PersonAdd,
-  PointOfSale,
-  Traffic,
+
 } from "@mui/icons-material";
 import { tokens } from "../../theme";
 
@@ -33,10 +30,15 @@ function Dashboard() {
   const isMdDevices = useMediaQuery("(min-width: 724px)");
   const API_URL = import.meta.env.VITE_API_URL;
   const [total, setTotal] = useState(0);
+  const [totalProduct, setTotalProduct] = useState(0);
+  const [totalPod, setTotalPod] = useState(0);
   const naviggate = useNavigate()
   const [data, setData] = useState([]);
   useEffect(() => {
     fetchData();
+    fetchTotal();
+    fetchTotalProduct();
+    fetchTotalPod();
   }, []);
 
   const fetchData = async () => {
@@ -48,18 +50,37 @@ function Dashboard() {
       console.error("Error fetching data:", error.message);
     }
   };
-  const fetchTotalUser = async () => {
+  const fetchTotal = async () => {
     try {
-      setLoading(true);
-      const result = await axios.get(`${API_URL}/api/v1/auth/users`);
+
+      const result = await axios.get(`${API_URL}/api/v1/stores`);
       
       setTotal(result.data.total);
-      
+ 
     } catch (error) {
       console.error("Error fetching data:", error.message);
     
-    } finally {
-      setLoading(false);
+    } 
+  };
+  const fetchTotalProduct = async () => {
+    try {
+
+      const result = await axios.get(`${API_URL}/api/v1/products/total-quantity`);
+      
+      setTotalProduct(result.data.totalQuantitySold);
+ 
+    } catch (error) {
+      console.error("Error fetching data:", error.message);
+    
+    } 
+  };
+  const fetchTotalPod = async () => {
+    try {
+      const result = await axios.get(`${API_URL}/api/v1/bookings/bookings-count-by-pod`);
+      const totalPodCount = result.data.reduce((acc, pod) => acc + pod.booking_count, 0);
+      setTotalPod(totalPodCount);
+    } catch (error) {
+      console.error("Error fetching total POD count:", error.message);
     }
   };
   return (
@@ -83,15 +104,15 @@ function Dashboard() {
       >
       
         <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title="11,361"
-            subtitle="Email Sent"
+            title={total}
+            subtitle="Store"
             
             icon={
               <Email
@@ -101,14 +122,14 @@ function Dashboard() {
           />
         </Box>
         <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title="431,225"
+            title={totalProduct}
             subtitle="Product Saled"
           
             icon={
@@ -118,34 +139,17 @@ function Dashboard() {
             }
           />
         </Box>
+       
         <Box
-          gridColumn="span 3"
+          gridColumn="span 4"
           backgroundColor={colors.primary[400]}
           display="flex"
           alignItems="center"
           justifyContent="center"
         >
           <StatBox
-            title={total}
-            subtitle="Clients"
-    
-            icon={
-              <PeopleAltOutlined
-                sx={{ color: colors.greenAccent[600], fontSize: "26px" }}
-              />
-            }
-          />
-        </Box>
-        <Box
-          gridColumn="span 3"
-          backgroundColor={colors.primary[400]}
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <StatBox
-            title="1,325,134"
-            subtitle="POD Received"
+            title={totalPod}
+            subtitle="POD Booked"
             
             icon={
               <ContactsOutlined
@@ -198,6 +202,12 @@ function Dashboard() {
                 fontWeight="600"
               >
                 {transaction.transaction_id}
+              </Typography>
+              <Typography
+                color={colors.gray[100]}
+                variant="subtitle2"
+              >
+                Booking ID: {transaction.booking_id}
               </Typography>
             </Box>
             <Typography color={colors.gray[100]}>

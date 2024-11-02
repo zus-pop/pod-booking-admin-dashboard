@@ -27,9 +27,11 @@ ChartJS.register(
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const ProductRevenueChart = () => {
+const StoreRevenue = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
+  const [stores, setStores] = useState([]);
+  const [selectedStore, setSelectedStore] = useState('');
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: []
@@ -43,16 +45,38 @@ const ProductRevenueChart = () => {
   const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
-    if (chartType === 'daily') {
-      fetchDailyData();
-    } else {
-      fetchMonthlyData();
+    fetchStores();
+  }, []);
+
+  useEffect(() => {
+    if (selectedStore) {
+      if (chartType === 'daily') {
+        fetchDailyData();
+      } else {
+        fetchMonthlyData();
+      }
     }
-  }, [chartType, selectedMonth]);
+  }, [chartType, selectedMonth, selectedStore]);
+
+  const fetchStores = async () => {
+    try {
+      const totalResponse = await axios.get(`${API_URL}/api/v1/stores`);
+      if (totalResponse.status === 200 ) {
+        const total = totalResponse.data.total;
+  
+        const response = await axios.get(`${API_URL}/api/v1/stores?limit=${total}`);
+ 
+          setStores( response.data.stores);
+          console.log( response.data.stores)
+      }
+    } catch (error) {
+      console.error("Error fetching stores:", error);
+    }
+  };
 
   const fetchDailyData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/v1/products/daily-total-revenue`);
+      const response = await axios.get(`${API_URL}/api/v1/stores/${selectedStore}/daily-revenue`);
       let data = response.data;
 
       data = data.filter(item => item.date !== null);
@@ -67,7 +91,6 @@ const ProductRevenueChart = () => {
         });
       }
 
-      // Tính tổng doanh thu
       const total = data.reduce((sum, item) => sum + item.daily_revenue, 0);
       setTotalRevenue(total);
 
@@ -75,7 +98,7 @@ const ProductRevenueChart = () => {
         setChartData({
           labels: ['No data'],
           datasets: [{
-            label: 'Daily Product Revenue',
+            label: 'Daily Store Revenue',
             data: [0],
             borderColor: colors.greenAccent[500],
             backgroundColor: `${colors.greenAccent[500]}33`,
@@ -92,18 +115,11 @@ const ProductRevenueChart = () => {
       }
 
       const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
-
+      
       setChartData({
-        labels: sortedData.map(item => {
-          const date = new Date(item.date);
-          return date.toLocaleDateString('vi-VN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          });
-        }),
+        labels: sortedData.map(item => item.date),
         datasets: [{
-          label: 'Daily Product Revenue',
+          label: 'Daily Store Revenue',
           data: sortedData.map(item => item.daily_revenue),
           borderColor: colors.greenAccent[500],
           backgroundColor: `${colors.greenAccent[500]}33`,
@@ -118,91 +134,56 @@ const ProductRevenueChart = () => {
       });
     } catch (error) {
       console.error("Error fetching daily data:", error);
-      setTotalRevenue(0);
-      setChartData({
-        labels: ['Error loading data'],
-        datasets: [{
-          label: 'Daily Product Revenue',
-          data: [0],
-          borderColor: colors.greenAccent[500],
-          backgroundColor: `${colors.greenAccent[500]}33`,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: colors.greenAccent[500],
-          pointBorderColor: colors.primary[400],
-          pointBorderWidth: 2,
-        }]
-      });
     }
   };
 
   const fetchMonthlyData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/v1/products/monthly-revenue`);
+      const response = await axios.get(`${API_URL}/api/v1/stores/${selectedStore}/monthly-revenue`);
       const data = response.data;
 
-      // Tính tổng doanh thu
       const total = data.reduce((sum, item) => sum + item.monthly_revenue, 0);
       setTotalRevenue(total);
 
-      if (data.length === 0) {
+      if (!data || data.length === 0) {
         setMonthlyData({
           labels: ['No data'],
           datasets: [{
-            label: 'Monthly Product Revenue',
+            label: 'Monthly Store Revenue',
             data: [0],
             borderColor: colors.greenAccent[500],
             backgroundColor: `${colors.greenAccent[500]}33`,
             tension: 0.4,
-            fill: true,
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            pointBackgroundColor: colors.greenAccent[500],
-            pointBorderColor: colors.primary[400],
-            pointBorderWidth: 2,
+            fill: true
           }]
         });
         return;
       }
 
+      const sortedData = data.sort((a, b) => new Date(a.month) - new Date(b.month));
+
       setMonthlyData({
-        labels: data.map(item => `${item.month}`),
+        labels: sortedData.map(item => item.month),
         datasets: [{
-          label: 'Monthly Product Revenue',
-          data: data.map(item => item.monthly_revenue),
+          label: 'Monthly Store Revenue',
+          data: sortedData.map(item => item.monthly_revenue),
           borderColor: colors.greenAccent[500],
           backgroundColor: `${colors.greenAccent[500]}33`,
           tension: 0.4,
-          fill: true,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: colors.greenAccent[500],
-          pointBorderColor: colors.primary[400],
-          pointBorderWidth: 2,
+          fill: true
         }]
       });
     } catch (error) {
       console.error("Error fetching monthly data:", error);
-      setTotalRevenue(0);
-      setMonthlyData({
-        labels: ['Error loading data'],
-        datasets: [{
-          label: 'Monthly Product Revenue',
-          data: [0],
-          borderColor: colors.greenAccent[500],
-          backgroundColor: `${colors.greenAccent[500]}33`,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointBackgroundColor: colors.greenAccent[500],
-          pointBorderColor: colors.primary[400],
-          pointBorderWidth: 2,
-        }]
-      });
     }
+  };
+
+  const handleStoreChange = (event) => {
+    setSelectedStore(event.target.value);
+  };
+
+  const handleMonthChange = (event) => {
+    setSelectedMonth(event.target.value);
   };
 
   const options = {
@@ -211,88 +192,38 @@ const ProductRevenueChart = () => {
     plugins: {
       legend: {
         position: 'top',
-        align: 'end',
         labels: {
-          color: colors.gray[100],
-          font: {
-            size: 14,
-            weight: 'bold'
-          },
-          padding: 20,
-          usePointStyle: true,
-          pointStyle: 'circle'
-        }
-      },
-      tooltip: {
-        backgroundColor: colors.primary[400],
-        titleColor: colors.gray[100],
-        bodyColor: colors.gray[100],
-        bodyFont: {
-          size: 14
-        },
-        padding: 12,
-        cornerRadius: 8,
-        displayColors: false,
-        callbacks: {
-          label: (context) => {
-            if (context.raw === 0 && (context.chart.data.labels[0] === 'No data' || context.chart.data.labels[0] === 'Error loading data')) {
-              return 'No data available';
-            }
-            return `Revenue: ${new Intl.NumberFormat('vi-VN', {
-              style: 'currency',
-              currency: 'VND'
-            }).format(context.raw)}`;
-          }
+          color: colors.gray[100]
         }
       }
     },
     scales: {
       y: {
-        beginAtZero: true,
         ticks: {
           color: colors.gray[100],
-          font: {
-            size: 12
-          },
-          padding: 10,
           callback: (value) => new Intl.NumberFormat('vi-VN', {
             style: 'currency',
             currency: 'VND'
           }).format(value)
         },
         grid: {
-          color: `${colors.gray[700]}55`,
-          drawBorder: false
+          color: colors.gray[700]
         }
       },
       x: {
         ticks: {
-          color: colors.gray[100],
-          font: {
-            size: 12
-          },
-          padding: 10
+          color: colors.gray[100]
         },
         grid: {
-          display: false
+          color: colors.gray[700]
         }
       }
     }
   };
 
-  const handleChartTypeChange = (event, newType) => {
-    if (newType !== null) {
-      setChartType(newType);
-    }
-  };
-
-  const handleMonthChange = (event) => {
-    setSelectedMonth(event.target.value);
-  };
-
   return (
     <Box m="20px">
-      <Header title="PRODUCT REVENUE" subtitle="Product revenue over time" />
+      <Header title="STORE REVENUE" subtitle="Store revenue over time" />
       <Box
         display="flex"
         flexDirection="column"
@@ -302,24 +233,78 @@ const ProductRevenueChart = () => {
         boxShadow="0 4px 6px rgba(0, 0, 0, 0.1)"
       >
         <Box display="flex" justifyContent="space-between" alignItems="center" mb="20px">
-          <Box display="flex" gap="20px" alignItems="center">
+          <FormControl sx={{ minWidth: 200 }}>
+            <Select
+              value={selectedStore}
+              onChange={(e) => setSelectedStore(e.target.value)}
+              sx={{
+                color: colors.gray[100],
+                '.MuiOutlinedInput-notchedOutline': {
+                  borderColor: colors.gray[700],
+                },
+                '& .MuiSelect-select': {
+                  paddingY: '10px',
+                },
+                '& .MuiPaper-root': {
+                  maxHeight: 300
+                }
+              }}
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 150,
+                    '&::-webkit-scrollbar': {
+                      width: '8px'
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      background: colors.primary[400]
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: colors.gray[700],
+                      borderRadius: '4px'
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                      background: colors.gray[600]
+                    }
+                  }
+                }
+              }}
+            >
+              <MenuItem value="" disabled>
+                Select Store
+              </MenuItem>
+              {stores.map((store) => (
+                <MenuItem 
+                  key={store.store_id} 
+                  value={store.store_id}
+                  sx={{
+                    color: colors.gray[100],
+                    '&:hover': {
+                      backgroundColor: colors.primary[600]
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: colors.primary[600]
+                    }
+                  }}
+                >
+                  {store.store_name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <Box display="flex" gap={2}>
             <ToggleButtonGroup
               value={chartType}
               exclusive
-              onChange={handleChartTypeChange}
+              onChange={(e, newType) => newType && setChartType(newType)}
               sx={{
                 '& .MuiToggleButton-root': {
                   color: colors.gray[100],
                   borderColor: colors.gray[700],
                   '&.Mui-selected': {
                     color: colors.greenAccent[500],
-                    backgroundColor: colors.primary[600],
-                    '&:hover': {
-                      backgroundColor: colors.primary[600],
-                    }
-                  },
-                  '&:hover': {
-                    backgroundColor: colors.primary[600],
+                    backgroundColor: colors.primary[600]
                   }
                 }
               }}
@@ -336,12 +321,6 @@ const ProductRevenueChart = () => {
                   sx={{
                     color: colors.gray[100],
                     '.MuiOutlinedInput-notchedOutline': {
-                      borderColor: colors.gray[700],
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: colors.gray[700],
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                       borderColor: colors.gray[700],
                     }
                   }}
@@ -373,7 +352,7 @@ const ProductRevenueChart = () => {
             alignItems="center"
           >
             <Typography variant="subtitle2" color={colors.gray[100]}>
-              Total Product Revenue {selectedMonth !== 'all' ? `(${new Date(2024, parseInt(selectedMonth) - 1).toLocaleString('en-US', {month: 'long'})})` : ''}
+              Total Store Revenue {selectedMonth !== 'all' ? `(${new Date(2024, parseInt(selectedMonth) - 1).toLocaleString('en-US', {month: 'long'})})` : ''}
             </Typography>
             <Typography 
               variant="h5" 
@@ -399,4 +378,4 @@ const ProductRevenueChart = () => {
   );
 };
 
-export default ProductRevenueChart; 
+export default StoreRevenue; 

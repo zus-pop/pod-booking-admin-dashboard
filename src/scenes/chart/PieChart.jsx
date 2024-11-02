@@ -42,7 +42,7 @@ const PieChart = () => {
           data: data.map(item => item.booking_count),
           backgroundColor: [
             colors.greenAccent[500],
-            colors.blueAccent[500],
+            colors.blueAccent[600],
             colors.gray[100]
           ],
           borderColor: colors.primary[400],
@@ -56,6 +56,7 @@ const PieChart = () => {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: 'top',
@@ -77,22 +78,28 @@ const PieChart = () => {
 
   return (
     <Box
-    bgcolor={colors.primary[400]}
-    p={3}
-    borderRadius={2}
-    boxShadow={3}
-    mt={2}
-    height={500}
-    width="60%"
-  >
+      bgcolor={colors.primary[400]}
+      p={3}
+      borderRadius={2}
+      boxShadow={3}
+      mt={2}
+      height={500}
+      width="60%"
+      display="flex"
+      flexDirection="column"
+    >
       <Header
         title="Bookings by POD Type"
         subtitle="Distribution of bookings across different POD types"
       />
-      <Box   height="350px"
-  display="flex"
-  alignItems="center"
-  justifyContent="center">
+      <Box
+        flex={1}
+        position="relative"
+        minHeight="350px"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+      >
         <Pie data={chartData} options={options} />
       </Box>
     </Box>

@@ -1,4 +1,4 @@
-import { Box, useTheme, FormControl, Select, MenuItem, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, useTheme, FormControl, Select, MenuItem, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { Line } from "react-chartjs-2";
 import { tokens } from "../../theme";
 import { useState, useEffect } from "react";
@@ -40,6 +40,7 @@ const LineChart = () => {
     labels: [],
     datasets: []
   });
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   useEffect(() => {
     if (chartType === 'daily') {
@@ -60,6 +61,9 @@ const LineChart = () => {
           return month === parseInt(selectedMonth);
         });
       }
+
+      const total = data.reduce((sum, item) => sum + item.daily_revenue, 0);
+      setTotalRevenue(total);
 
       if (data.length === 0) {
         setChartData({
@@ -115,6 +119,7 @@ const LineChart = () => {
       });
     } catch (error) {
       console.error("Error fetching data:", error);
+      setTotalRevenue(0);
       setChartData({
         labels: ['Error loading data'],
         datasets: [
@@ -163,6 +168,9 @@ const LineChart = () => {
         return;
       }
 
+      const total = data.reduce((sum, item) => sum + item.monthly_revenue, 0);
+      setTotalRevenue(total);
+
       const labels = data.map(item => `${item.month}/${item.year}`);
       const revenues = data.map(item => item.monthly_revenue);
 
@@ -186,6 +194,7 @@ const LineChart = () => {
       });
     } catch (error) {
       console.error("Error fetching monthly data:", error);
+      setTotalRevenue(0);
       setMonthlyData({
         labels: ['Error loading data'],
         datasets: [
@@ -329,51 +338,76 @@ const LineChart = () => {
             <ToggleButton value="monthly">Monthly</ToggleButton>
           </ToggleButtonGroup>
 
-          {chartType === 'daily' && (
-            <FormControl 
-              sx={{ 
-                minWidth: 150,
-                '& .MuiOutlinedInput-root': {
-                  color: colors.gray[100],
-                  '& fieldset': {
-                    borderColor: colors.gray[700],
-                  },
-                  '&:hover fieldset': {
-                    borderColor: colors.greenAccent[500],
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: colors.greenAccent[500],
-                  }
-                }
-              }}
+          <Box display="flex" alignItems="center" gap={2}>
+            <Box
+              bgcolor={colors.primary[600]}
+              p="10px 20px"
+              borderRadius="8px"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
             >
-              <Select
-                value={selectedMonth}
-                onChange={handleMonthChange}
-                displayEmpty
-                sx={{
-                  height: '40px',
-                  '& .MuiSelect-icon': {
-                    color: colors.gray[100]
+              <Typography variant="subtitle2" color={colors.gray[100]}>
+                Total Revenue {selectedMonth !== 'all' ? `(${new Date(2024, parseInt(selectedMonth) - 1).toLocaleString('en-US', {month: 'long'})})` : ''}
+              </Typography>
+              <Typography 
+                variant="h5" 
+                color={colors.greenAccent[500]}
+                sx={{ fontWeight: 'bold' }}
+              >
+                {new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND'
+                }).format(totalRevenue)}
+              </Typography>
+            </Box>
+
+            {chartType === 'daily' && (
+              <FormControl 
+                sx={{ 
+                  minWidth: 150,
+                  '& .MuiOutlinedInput-root': {
+                    color: colors.gray[100],
+                    '& fieldset': {
+                      borderColor: colors.gray[700],
+                    },
+                    '&:hover fieldset': {
+                      borderColor: colors.greenAccent[500],
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: colors.greenAccent[500],
+                    }
                   }
                 }}
               >
-               <MenuItem value="all">All Months</MenuItem>
-                  <MenuItem value="1">January</MenuItem>
-                  <MenuItem value="2">February</MenuItem>
-                  <MenuItem value="3">March</MenuItem>
-                  <MenuItem value="4">April</MenuItem>
-                  <MenuItem value="5">May</MenuItem>
-                  <MenuItem value="6">June</MenuItem>
-                  <MenuItem value="7">July</MenuItem>
-                  <MenuItem value="8">August</MenuItem>
-                  <MenuItem value="9">September</MenuItem>
-                  <MenuItem value="10">October</MenuItem>
-                  <MenuItem value="11">November</MenuItem>
-                  <MenuItem value="12">December</MenuItem>
-              </Select>
-            </FormControl>
-          )}
+                <Select
+                  value={selectedMonth}
+                  onChange={handleMonthChange}
+                  displayEmpty
+                  sx={{
+                    height: '40px',
+                    '& .MuiSelect-icon': {
+                      color: colors.gray[100]
+                    }
+                  }}
+                >
+                 <MenuItem value="all">All Months</MenuItem>
+                    <MenuItem value="1">January</MenuItem>
+                    <MenuItem value="2">February</MenuItem>
+                    <MenuItem value="3">March</MenuItem>
+                    <MenuItem value="4">April</MenuItem>
+                    <MenuItem value="5">May</MenuItem>
+                    <MenuItem value="6">June</MenuItem>
+                    <MenuItem value="7">July</MenuItem>
+                    <MenuItem value="8">August</MenuItem>
+                    <MenuItem value="9">September</MenuItem>
+                    <MenuItem value="10">October</MenuItem>
+                    <MenuItem value="11">November</MenuItem>
+                    <MenuItem value="12">December</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+          </Box>
         </Box>
         
         <Box height="70vh">

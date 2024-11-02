@@ -22,7 +22,8 @@ import UpdateStorePrice from "../form/UpdateStorePrice";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UpdateIcon from "@mui/icons-material/Update";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../RoleContext";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -276,18 +277,6 @@ const StoreDetail = () => {
   ];
   return (
     <Box mt="20px" ml="20px" height="100vh">
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
       <UpdateStorePrice
         open={isUpdateModalOpen}
         handleClose={() => setIsUpdateModalOpen(false)}
@@ -370,7 +359,7 @@ const StoreDetail = () => {
               <MenuItem value={3}>Meeting Room</MenuItem>
             </Select>
           </FormControl>
-          {selectedTypeId && (
+         
             <Button
               variant="contained"
               color="primary"
@@ -380,9 +369,9 @@ const StoreDetail = () => {
               }
               disabled={isActionDisabled()}
             >
-              Create new price for {storeDetail.store_name}
+              Create new price for {storeDetail ? storeDetail.store_name : ""}
             </Button>
-          )}
+       
         </Box>
         {selectedTypeId && (
           <DataGrid
