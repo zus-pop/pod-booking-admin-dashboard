@@ -52,7 +52,7 @@ const ProductRevenueChart = () => {
 
   const fetchDailyData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/v1/products/daily-revenue`);
+      const response = await axios.get(`${API_URL}/api/v1/products/daily-total-revenue`);
       let data = response.data;
 
       data = data.filter(item => item.date !== null);

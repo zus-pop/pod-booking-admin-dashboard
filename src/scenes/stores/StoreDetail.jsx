@@ -359,7 +359,7 @@ const StoreDetail = () => {
               <MenuItem value={3}>Meeting Room</MenuItem>
             </Select>
           </FormControl>
-          {selectedTypeId && (
+         
             <Button
               variant="contained"
               color="primary"
@@ -369,9 +369,9 @@ const StoreDetail = () => {
               }
               disabled={isActionDisabled()}
             >
-              Create new price for {storeDetail.store_name}
+              Create new price for {storeDetail ? storeDetail.store_name : ""}
             </Button>
-          )}
+       
         </Box>
         {selectedTypeId && (
           <DataGrid

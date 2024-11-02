@@ -42,7 +42,7 @@ const PieChart = () => {
           data: data.map(item => item.booking_count),
           backgroundColor: [
             colors.greenAccent[500],
-            colors.blueAccent[500],
+            colors.blueAccent[600],
             colors.gray[100]
           ],
           borderColor: colors.primary[400],

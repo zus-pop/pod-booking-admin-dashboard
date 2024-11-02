@@ -13,6 +13,8 @@ import * as yup from "yup";
 import { useEffect, useState } from "react";
 import { CloudUpload } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import { toast} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Chip } from "@mui/material";
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -115,7 +117,7 @@ const PodForm = () => {
 
     try {
       const response = await axios.post(`${API_URL}/api/v1/pods`, formData);
-      if (response.status === 200) {
+      if (response.status === 201) {
         console.log(response.data.message);
         toast.success(response.data.message);
         actions.resetForm();

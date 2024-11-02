@@ -72,6 +72,12 @@ const BookingDetail = () => {
   // Thêm state để quản lý thời gian đếm ngược
   const [countdown, setCountdown] = useState(600); // 600 seconds = 10 minutes
 
+  // Thêm states mới
+  const [paymentDetails, setPaymentDetails] = useState({});
+
+  // Thêm state để quản lý việc hiển thị payment details
+  const [expandedPaymentId, setExpandedPaymentId] = useState(null);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -93,7 +99,6 @@ const BookingDetail = () => {
         );
         slotProducts[slot.slot_id] = productsResponse.data || [];
       } catch (error) {
-        console.error(`Error fetching products for slot ${slot.slot_id}:`, error);
         slotProducts[slot.slot_id] = [];
       }
     }
@@ -109,7 +114,7 @@ const BookingDetail = () => {
         toast.error("Store information not found");
         return;
       }
-
+      console.log()
       const response = await axios.get(`${API_URL}/api/v1/products`, {
         params: {
           store_id: storeId
@@ -120,7 +125,7 @@ const BookingDetail = () => {
       setIsAddProductModalOpen(true);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to load products");
+      toast.error("NO have products menu");
     }
   };
 
@@ -363,6 +368,33 @@ const BookingDetail = () => {
     return isSlotExpired(endTime) || bookingStatus === "Canceled";
   };
 
+  // Thêm hàm để fetch payment details
+  const fetchPaymentDetails = async (paymentId, paymentFor) => {
+    try {
+      let endpoint = '';
+      if (paymentFor === 'Product') {
+        endpoint = `${API_URL}/api/v1/bookings/${id}/payments/${paymentId}/products`;
+      } else if (paymentFor === 'Slot') {
+        endpoint = `${API_URL}/api/v1/bookings/${id}/payments/${paymentId}/slots`;
+      }
+
+      const response = await axios.get(endpoint);
+      setPaymentDetails(prev => ({
+        ...prev,
+        [paymentId]: response.data
+      }));
+      setExpandedPaymentId(paymentId);
+    } catch (error) {
+      console.error(`Error fetching payment details for payment ${paymentId}:`, error);
+      toast.error("Failed to load payment details");
+    }
+  };
+
+  // Thêm hàm để đóng payment details
+  const handleClosePaymentDetails = () => {
+    setExpandedPaymentId(null);
+  };
+
   return (
     <Box m="20px" height="100vh">
       <Header 
@@ -526,26 +558,128 @@ const BookingDetail = () => {
                   </Typography>
                   {bookingDetail.payment && bookingDetail.payment.length > 0 ? (
                     bookingDetail.payment.map((payment) => (
-                      <Box key={payment.payment_id} sx={{ mb: 2 }}>
-                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                          Payment ID: {payment.payment_id}
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                          Transaction ID: {payment.transaction_id}
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                          Total Cost:{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(payment.total_cost)}
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                          Payment Date: {payment.payment_date}
-                        </Typography>
-                        <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
-                          Status: {payment.payment_status}
-                        </Typography>
+                      <Box key={payment.payment_id} sx={{ mb: 4 }}>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Payment ID: {payment.payment_id}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Transaction ID: {payment.transaction_id}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Total Cost:{" "}
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(payment.total_cost)}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Payment Date: {payment.payment_date}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            Status: {payment.payment_status}
+                          </Typography>
+                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                            For: {payment.payment_for}
+                          </Typography>
+                          
+                          {/* Thêm button để load chi tiết */}
+                          <Button
+                            onClick={() => fetchPaymentDetails(payment.payment_id, payment.payment_for)}
+                            sx={{
+                              backgroundColor: "#4cceac",
+                              color: "#000",
+                              mt: 1,
+                              "&:hover": {
+                                backgroundColor: "#3da58a",
+                              },
+                            }}
+                          >
+                            View Details
+                          </Button>
+
+                          {/* Hiển thị chi tiết payment */}
+                          {paymentDetails[payment.payment_id] && expandedPaymentId === payment.payment_id && (
+                            <Box sx={{ mt: 2, ml: 2, position: 'relative' }}>
+                              <Box sx={{ 
+                                position: 'absolute', 
+                                right: 0, 
+                                top: 0,
+                                cursor: 'pointer',
+                                color: '#94a3b8',
+                                '&:hover': {
+                                  color: '#fff'
+                                }
+                              }} onClick={handleClosePaymentDetails}>
+                                ✕
+                              </Box>
+                              <Typography variant="h6" sx={{ color: "#4cceac", mb: 1 }}>
+                                Payment Details:
+                              </Typography>
+                              
+                              {payment.payment_for === 'Product' && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                  {paymentDetails[payment.payment_id].map((product) => (
+                                    <Box
+                                      key={product.product_id}
+                                      sx={{
+                                        backgroundColor: "rgba(31, 42, 64, 0.7)",
+                                        p: 2,
+                                        borderRadius: 1,
+                                        minWidth: 200
+                                      }}
+                                    >
+                                      <Typography variant="body1" sx={{ color: "#fff" }}>
+                                        {product.product_name}
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                                        Quantity: {product.quantity}
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                                        Price: {new Intl.NumberFormat("vi-VN", {
+                                          style: "currency",
+                                          currency: "VND",
+                                        }).format(product.price)}
+                                      </Typography>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              )}
+
+                              {payment.payment_for === 'Slot' && (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                  {paymentDetails[payment.payment_id].map((slot) => (
+                                    <Box
+                                      key={slot.slot_id}
+                                      sx={{
+                                        backgroundColor: "rgba(31, 42, 64, 0.7)",
+                                        p: 2,
+                                        borderRadius: 1,
+                                        minWidth: 200
+                                      }}
+                                    >
+                                      <Typography variant="body1" sx={{ color: "#fff" }}>
+                                        Slot ID: {slot.slot_id}
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                                        Start Time: {slot.start_time}
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                                        End Time: {slot.end_time}
+                                      </Typography>
+                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+                                        Price: {new Intl.NumberFormat("vi-VN", {
+                                          style: "currency",
+                                          currency: "VND",
+                                        }).format(slot.price)}
+                                      </Typography>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              )}
+                            </Box>
+                          )}
+                        </Box>
                         {payment !== bookingDetail.payment[bookingDetail.payment.length - 1] && (
                           <Box sx={{ my: 2, borderBottom: "1px solid rgba(255, 255, 255, 0.12)" }} />
                         )}
