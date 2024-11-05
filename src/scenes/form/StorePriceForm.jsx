@@ -29,8 +29,8 @@ const validationSchema = Yup.object({
     .required("Days of week are required"),
   priority: Yup.number()
     .required("Priority is required")
-    .min(1, "Priority must be between 1 and 10")
-    .max(10, "Priority must be between 1 and 10"),
+    .min(1, "Priority must be between 1 and 4")
+    .max(4, "Priority must be between 1 and 4"),
   type_id: Yup.number().required("POD Type is required"),
 });
 
@@ -232,18 +232,24 @@ const StorePriceForm = () => {
                 error={touched.price && Boolean(errors.price)}
                 helperText={touched.price && errors.price}
               />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Priority"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.priority}
-                name="priority"
-                error={touched.priority && Boolean(errors.priority)}
-                helperText={touched.priority && errors.priority}
-              />
+              <FormControl fullWidth variant="filled" error={touched.priority && Boolean(errors.priority)}>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={values.priority}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="priority"
+                >
+                  {[1, 2, 3, 4].map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {value}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.priority && errors.priority && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.priority}</div>
+                )}
+              </FormControl>
             </Box>
             <Box display="flex" justifyContent="center" mt="20px">
               <Button
