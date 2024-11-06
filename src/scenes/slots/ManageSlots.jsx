@@ -131,6 +131,30 @@ const ManageSlots = () => {
     setEditingSlot(null);
   };
 
+  const getStatusStyles = (isAvailable) => {
+    if (isAvailable) {
+      return {
+        backgroundColor: "rgba(76, 206, 172, 0.1)",
+        color: "#4cceac",
+        borderColor: "#4cceac",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "12px",
+        fontWeight: "500"
+      };
+    } else {
+      return {
+        backgroundColor: "rgba(244, 67, 54, 0.1)", 
+        color: "#f44336",
+        borderColor: "#f44336",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "12px",
+        fontWeight: "500"
+      };
+    }
+  };
+
   return (
     <Box m="20px">
      
@@ -351,6 +375,17 @@ const ManageSlots = () => {
                           currency: "VND",
                         }).format(arg.event.extendedProps.price)}
                       </div>
+                      <div style="
+                        margin-top: 4px;
+                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
+                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 500;
+                      ">
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                      </div>
                     </div>
                   `
                 }
@@ -382,6 +417,17 @@ const ManageSlots = () => {
                           style: "currency",
                           currency: "VND",
                         }).format(arg.event.extendedProps.price)}
+                      </div>
+                      <div style="
+                        margin-top: 4px;
+                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
+                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 500;
+                      ">
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
                       </div>
                     </div>
                   `
