@@ -12,7 +12,8 @@ import {
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 } from 'chart.js';
 
 ChartJS.register(
@@ -22,7 +23,8 @@ ChartJS.register(
   LineElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -134,6 +136,23 @@ const StoreRevenue = () => {
       });
     } catch (error) {
       console.error("Error fetching daily data:", error);
+      setTotalRevenue(0);
+      setChartData({
+        labels: ['No data'],
+        datasets: [{
+          label: 'Daily Store Revenue',
+          data: [0],
+          borderColor: colors.greenAccent[500],
+          backgroundColor: `${colors.greenAccent[500]}33`,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          pointBackgroundColor: colors.greenAccent[500],
+          pointBorderColor: colors.primary[400],
+          pointBorderWidth: 2,
+        }]
+      });
     }
   };
 
@@ -175,6 +194,18 @@ const StoreRevenue = () => {
       });
     } catch (error) {
       console.error("Error fetching monthly data:", error);
+      setTotalRevenue(0);
+      setMonthlyData({
+        labels: ['No data'],
+        datasets: [{
+          label: 'Monthly Store Revenue',
+          data: [0],
+          borderColor: colors.greenAccent[500],
+          backgroundColor: `${colors.greenAccent[500]}33`,
+          tension: 0.4,
+          fill: true
+        }]
+      });
     }
   };
 

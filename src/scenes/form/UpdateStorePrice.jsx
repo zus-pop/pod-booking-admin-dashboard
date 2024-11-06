@@ -26,8 +26,8 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
       .required("Days of week are required"),
     priority: Yup.number()
       .required("Priority is required")
-      .min(1, "Priority must be between 1 and 10")
-      .max(10, "Priority must be between 1 and 10"),
+      .min(1, "Priority must be between 1 and 4")
+      .max(4, "Priority must be between 1 and 4"),
   });
 
   return (
@@ -52,7 +52,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
           validationSchema={validationSchema}
           onSubmit={onSubmit}
         >
-          {({ errors, touched, values, setFieldValue, handleChange}) => (
+          {({ errors, touched, values, setFieldValue, handleChange }) => (
             <Form>
               <TextField
                 fullWidth
@@ -114,17 +114,30 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 ))}
               </FormGroup>
 
-              <TextField
+              <FormControl
                 fullWidth
-                name="priority"
-                label="Priority"
-                type="number"
-                margin="normal"
-                onChange={handleChange}
-                value={values.priority}
+                variant="filled"
                 error={touched.priority && Boolean(errors.priority)}
-                helperText={touched.priority && errors.priority}
-              />
+              >
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={values.priority}
+                  onChange={handleChange}
+                
+                  name="priority"
+                >
+                  {[1, 2, 3, 4].map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {value}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.priority && errors.priority && (
+                  <div style={{ color: "red", marginTop: "8px" }}>
+                    {errors.priority}
+                  </div>
+                )}
+              </FormControl>
               <Button
                 type="submit"
                 variant="contained"

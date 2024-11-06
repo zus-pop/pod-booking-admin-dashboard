@@ -266,8 +266,46 @@ const GenerateSlot = () => {
     return daysMap[day];
   });
 
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 7);
+    return maxDate;
+  };
+
   const isDateAllowed = (date) => {
-    return validDaysOfWeek?.includes(date.getDay());
+    const maxDate = getMaxDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return (
+      validDaysOfWeek?.includes(date.getDay()) && 
+      date >= today && 
+      date <= maxDate
+    );
+  };
+
+  const getStatusStyles = (isAvailable) => {
+    if (isAvailable) {
+      return {
+        backgroundColor: "rgba(76, 206, 172, 0.1)",
+        color: "#4cceac",
+        borderColor: "#4cceac",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "12px",
+        fontWeight: "500"
+      };
+    } else {
+      return {
+        backgroundColor: "rgba(244, 67, 54, 0.1)", 
+        color: "#f44336",
+        borderColor: "#f44336",
+        padding: "2px 8px",
+        borderRadius: "4px",
+        fontSize: "12px",
+        fontWeight: "500"
+      };
+    }
   };
 
   return (
@@ -278,7 +316,9 @@ const GenerateSlot = () => {
         subtitle="Create new slots for POD"
         showBackButton={true} 
       />
-
+       <Typography variant="h4" gutterBottom>
+          Slots in {podName}
+        </Typography>
       <Box
         sx={{
           backgroundColor: '#1a1c23',
@@ -444,6 +484,17 @@ const GenerateSlot = () => {
                           currency: "VND",
                         }).format(arg.event.extendedProps.price)}
                       </div>
+                      <div style="
+                        margin-top: 4px;
+                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
+                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 500;
+                      ">
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                      </div>
                     </div>
                   `
                 }
@@ -475,6 +526,17 @@ const GenerateSlot = () => {
                           style: "currency",
                           currency: "VND",
                         }).format(arg.event.extendedProps.price)}
+                      </div>
+                      <div style="
+                        margin-top: 4px;
+                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
+                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: 500;
+                      ">
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
                       </div>
                     </div>
                   `
@@ -534,109 +596,171 @@ const GenerateSlot = () => {
                 }}
               >
                 <Box sx={{ gridColumn: "1 / 3" }}>
-                  <Typography variant="h6" gutterBottom>
-                  Please first select row in table then fill form to generate slot for {podName}
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      mb: 3,
+                      color: colors.gray[100],
+                      fontWeight: "500",
+                      fontSize: "1rem"
+                    }}
+                  >
+                    Please first select row in table then fill form to generate slot for {podName}
                   </Typography>
+
                   <form onSubmit={handleSubmit}>
-                    <FormControl
-                      sx={{
-                        marginBottom: "10px",
-                        marginRight: "5px",
-                      }}
-                    >
-                      <ReactDatePicker
-                        selected={values.startDate}
-                        onChange={(date) => {
-                          setFieldValue("startDate", date);
-                          if (!isConsecutive) {
-                            setFieldValue("endDate", date);
-                          }
+                    <Box sx={{ maxWidth: "500px" }}>
+                      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                        <FormControl sx={{ flex: 1 }}>
+                          <ReactDatePicker
+                            selected={values.startDate}
+                            onChange={(date) => {
+                              setFieldValue("startDate", date);
+                              if (!isConsecutive) {
+                                setFieldValue("endDate", date);
+                              }
+                            }}
+                            dateFormat="yyyy-MM-dd"
+                            filterDate={isDateAllowed}
+                            customInput={
+                              <TextField
+                                fullWidth
+                                variant="filled"
+                                label="Start Date"
+                                inputProps={{
+                                  readOnly: true,
+                                }}
+                              />
+                            }
+                            minDate={new Date()}
+                            maxDate={getMaxDate()}
+                          />
+                        </FormControl>
+
+                        <FormControl sx={{ flex: 1 }}>
+                          <ReactDatePicker
+                            selected={values.endDate}
+                            onChange={(date) => setFieldValue("endDate", date)}
+                            dateFormat="yyyy-MM-dd"
+                            filterDate={isDateAllowed}
+                            customInput={
+                              <TextField
+                                fullWidth
+                                variant="filled"
+                                label="End Date"
+                                inputProps={{
+                                  readOnly: true,
+                                }}
+                              />
+                            }
+                            minDate={values.startDate || new Date()}
+                            maxDate={getMaxDate()}
+                            disabled={!isConsecutive}
+                          />
+                        </FormControl>
+                      </Box>
+
+                      <Box 
+                        sx={{ 
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: 2,
+                          mb: 3,
+                          backgroundColor: 'rgba(76, 206, 172, 0.1)',
+                          padding: 2,
+                          borderRadius: 1
                         }}
-                        dateFormat="yyyy-MM-dd"
-                        filterDate={isDateAllowed}
-                        customInput={
-                          <TextField
-                            fullWidth
-                            variant="filled"
-                            label="Start Date"
-                            inputProps={{
-                              readOnly: true,
+                      >
+                        <Typography variant="body1" sx={{ color: colors.gray[100] }}>
+                          <strong style={{ color: colors.greenAccent[500] }}>Start Hour:</strong>{" "}
+                          {selectedStorePrice?.start_hour ?? "--"}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: colors.gray[100] }}>
+                          <strong style={{ color: colors.greenAccent[500] }}>End Hour:</strong>{" "}
+                          {selectedStorePrice?.end_hour ?? "--"}
+                        </Typography>
+                        <Typography variant="body1" sx={{ color: colors.gray[100] }}>
+                          <strong style={{ color: colors.greenAccent[500] }}>Price:</strong>{" "}
+                          {selectedStorePrice ? `${selectedStorePrice.price} VND` : "--"}
+                        </Typography>
+                      </Box>
+
+                      <Box sx={{ mb: 3 }}>
+                        <TextField
+                          fullWidth
+                          variant="filled"
+                          label="Duration Minutes"
+                          type="number"
+                          onBlur={handleBlur}
+                          onChange={handleChange}
+                          value={values.durationMinutes}
+                          name="durationMinutes"
+                          error={touched.durationMinutes && Boolean(errors.durationMinutes)}
+                          helperText={touched.durationMinutes && errors.durationMinutes}
+                          sx={{ 
+                            '& .MuiInputBase-input': {
+                              color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+                            },
+                            '& .MuiFormHelperText-root': {
+                              color: errors.durationMinutes ? 'error.main' : 'text.secondary',
+                            }
+                          }}
+                          disabled={!values.startDate || !selectedStorePrice}
+                          inputProps={{
+                            min: 30,
+                            max: selectedStorePrice ? (selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60 : 0
+                          }}
+                        />
+                      </Box>
+
+                      <Box 
+                        sx={{ 
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 1,
+                          flexWrap: 'wrap'
+                        }}
+                      >
+                        {selectedStorePrice && values.startDate && (
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              color: colors.gray[300],
+                              fontSize: "0.875rem",
+                              backgroundColor: "rgba(76, 206, 172, 0.1)",
+                              padding: "8px 12px",
+                              borderRadius: "4px",
+                              display: "inline-block"
                             }}
-                          />
-                        }
-                        minDate={new Date()}
-                      />
-                    </FormControl>
-                    <FormControl sx={{ marginBottom: "10px" }}>
-                      <ReactDatePicker
-                        selected={values.endDate}
-                        onChange={(date) => setFieldValue("endDate", date)}
-                        dateFormat="yyyy-MM-dd"
-                        filterDate={isDateAllowed}
-                        customInput={
-                          <TextField
-                            fullWidth
-                            variant="filled"
-                            label="End Date"
-                            inputProps={{
-                              readOnly: true,
-                            }}
-                          />
-                        }
-                        minDate={values.startDate || new Date()}
-                        disabled={!isConsecutive}
-                      />
-                    </FormControl>
+                          >
+                            Maximum duration: {(selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60} minutes
+                          </Typography>
+                        )}
 
-                    {/* Display selectedStorePrice details */}
-                    <Typography variant="body1" sx={{ marginBottom: "10px" }}>
-                      <strong>Start Hour:</strong>{" "}
-                      {selectedStorePrice?.start_hour ?? "--"}
-                    </Typography>
-                    <Typography variant="body1" sx={{ marginBottom: "10px" }}>
-                      <strong>End Hour:</strong>{" "}
-                      {selectedStorePrice?.end_hour ?? "--"}
-                    </Typography>
-                    <Typography variant="body1" sx={{ marginBottom: "10px" }}>
-                      <strong>Price:</strong>{" "}
-                      {selectedStorePrice
-                        ? `${selectedStorePrice.price} VND`
-                        : "--"}
-                    </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: colors.gray[300],
+                            fontSize: "0.875rem",
+                            backgroundColor: "rgba(244, 67, 54, 0.1)",
+                            padding: "8px 12px",
+                            borderRadius: "4px",
+                            display: "inline-block"
+                          }}
+                        >
+                         Only generate slots for the next 7 days
+                        </Typography>
 
-                    <TextField
-                      fullWidth
-                      variant="filled"
-                      label="Duration Minutes"
-                      type="number"
-                      onBlur={handleBlur}
-                      onChange={handleChange}
-                      value={values.durationMinutes}
-                      name="durationMinutes"
-                      error={touched.durationMinutes && Boolean(errors.durationMinutes)}
-                      helperText={touched.durationMinutes && errors.durationMinutes}
-                      sx={{ marginBottom: "40px" }}
-                      disabled={!values.startDate || !selectedStorePrice}
-                      inputProps={{
-                        min: 30,
-                        max: selectedStorePrice ? (selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60 : 0
-                      }}
-                    />
-
-                    {selectedStorePrice && values.startDate && (
-                      <Typography variant="body2" sx={{ marginBottom: "10px", color: "text.secondary" }}>
-                        Maximum duration: {(selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60} minutes
-                      </Typography>
-                    )}
-
-                    <Button
-                      type="submit"
-                      color="secondary"
-                      variant="contained"
-                      disabled={!selectedStorePrice || !isValid}
-                    >
-                      Generate Slot
-                    </Button>
+                        <Button
+                          type="submit"
+                          color="secondary"
+                          variant="contained"
+                          disabled={!selectedStorePrice || !isValid}
+                        >
+                          Generate Slot
+                        </Button>
+                      </Box>
+                    </Box>
                   </form>
                 </Box>
               </Box>
@@ -650,3 +774,4 @@ const GenerateSlot = () => {
 };
 
 export default GenerateSlot;
+

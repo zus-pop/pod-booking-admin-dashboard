@@ -73,7 +73,8 @@ const Booking = () => {
   const STATUS_FLOW = {
     Pending: ["Pending", "Confirmed", "Canceled"],
     Confirmed: ["Confirmed", "Ongoing", "Canceled"],
-    Ongoing: ["Ongoing", "Complete"],
+    Paused: ["Paused", "Ongoing",  "Complete"],
+    Ongoing: ["Ongoing","Paused", "Complete"],
     Complete: ["Complete"],
     Canceled: ["Canceled"],
   };

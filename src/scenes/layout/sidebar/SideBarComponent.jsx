@@ -27,9 +27,8 @@ import { ToggledContext } from "../../welcome/Welcome";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRole } from "../../../RoleContext";
-import ShowChartIcon from '@mui/icons-material/ShowChart';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import axios from "axios";
+import axiosInstance from '../../../api/axios';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 
 
@@ -53,30 +52,13 @@ const SideBar = () => {
         return;
       }
       try {
-        const response = await axios.get(`${API_URL}/api/v1/auth/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
+        const response = await axiosInstance.get("/api/v1/auth/profile");
         if (response.status === 200) {
           setUserRole(response.data.role.role_name);
           setUserName(response.data.user_name);
           setRole(response.data.role.role_name);
         }
       } catch (error) {
-        if (error.response) {
-          if (error.response.status === 401) {
-            console.error("Unauthorized access. Redirecting to login.");
-            localStorage.removeItem("token");
-            navigate("/", { replace: true });
-          } else if (error.response.status === 403) {
-            console.error("Token expired. Please login again.");
-            notify();
-            localStorage.removeItem("token");
-            navigate("/", { replace: true });
-          }
-        }
         console.error("Error fetching user profile:", error);
       }
     };
@@ -267,15 +249,10 @@ const SideBar = () => {
             colors={colors}
             icon={<BarChartIcon />}
           />
+        
           <Item
             title="POD Revenue"
             path="/web/pod-revenue"
-            colors={colors}
-            icon={<ShowChartIcon />}
-          />
-          <Item
-            title="Product Revenue"
-            path="/web/product-revenue"
             colors={colors}
             icon={<MonetizationOnIcon />}
           />
