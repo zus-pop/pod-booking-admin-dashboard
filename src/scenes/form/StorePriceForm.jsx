@@ -92,11 +92,19 @@ const StorePriceForm = () => {
     }
   };
 
+  const priorityOptions = [
+    { value: 1, label: "Highest" },
+    { value: 2, label: "High" },
+    { value: 3, label: "Medium" },
+    { value: 4, label: "Low" }
+  ];
+
   return (
     <Box m="20px">
       <Header
         title="CREATE STORE PRICE"
         subtitle="New prices for store slots"
+        showBackButton={true} 
       />
  
 
@@ -166,61 +174,82 @@ const StorePriceForm = () => {
                 error={touched.end_hour && Boolean(errors.end_hour)}
                 helperText={touched.end_hour && errors.end_hour}
               />
-              <FormGroup>
-                <InputLabel>Select Days of Week</InputLabel>
-                <FormControlLabel
-                  control={
-                    <Field
-                      as={Checkbox}
-                      name="select_all_days"
-                      checked={values.days_of_week.length === 7}
-                      onChange={(e) => {
-                        const allDays = [
-                          "Sunday",
-                          "Monday",
-                          "Tuesday",
-                          "Wednesday",
-                          "Thursday",
-                          "Friday",
-                          "Saturday",
-                        ];
-                        if (e.target.checked) {
-                          setFieldValue("days_of_week", allDays);
-                        } else {
-                          setFieldValue("days_of_week", []);
-                        }
-                      }}
-                    />
-                  }
-                  label="All Days"
-                />
-                {[
-                  "Sunday",
-                  "Monday",
-                  "Tuesday",
-                  "Wednesday",
-                  "Thursday",
-                  "Friday",
-                  "Saturday",
-                ].map((day) => (
+              <Box sx={{ mb: 2 }}>
+                <InputLabel sx={{ mb: 1 }}>Select Days of Week</InputLabel>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 1,
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  padding: 2,
+                  borderRadius: 1
+                }}>
                   <FormControlLabel
-                    key={day}
                     control={
                       <Field
                         as={Checkbox}
-                        name="days_of_week"
-                        value={day}
-                        checked={values.days_of_week.includes(day)}
+                        name="select_all_days"
+                        checked={values.days_of_week.length === 7}
+                        onChange={(e) => {
+                          const allDays = [
+                            "Sunday",
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                          ];
+                          if (e.target.checked) {
+                            setFieldValue("days_of_week", allDays);
+                          } else {
+                            setFieldValue("days_of_week", []);
+                          }
+                        }}
                       />
                     }
-                    label={day}
+                    label="All Days"
+                    sx={{ 
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                      pb: 1,
+                      mb: 1
+                    }}
                   />
-                ))}
-              </FormGroup>
-              {touched.days_of_week && errors.days_of_week && (
-                <div style={{ color: "red" }}>{errors.days_of_week}</div>
-              )}
-               <TextField
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: 1
+                  }}>
+                    {[
+                      "Sunday",
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ].map((day) => (
+                      <FormControlLabel
+                        key={day}
+                        control={
+                          <Field
+                            as={Checkbox}
+                            name="days_of_week"
+                            value={day}
+                            checked={values.days_of_week.includes(day)}
+                          />
+                        }
+                        label={day}
+                        sx={{ margin: 0 }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+                {touched.days_of_week && errors.days_of_week && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.days_of_week}</div>
+                )}
+              </Box>
+              <TextField
                 fullWidth
                 variant="filled"
                 type="number"
@@ -240,9 +269,9 @@ const StorePriceForm = () => {
                   onBlur={handleBlur}
                   name="priority"
                 >
-                  {[1, 2, 3, 4].map((value) => (
-                    <MenuItem key={value} value={value}>
-                      {value}
+                  {priorityOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
                     </MenuItem>
                   ))}
                 </Select>

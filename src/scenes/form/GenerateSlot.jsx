@@ -207,6 +207,16 @@ const GenerateSlot = () => {
     setIsConsecutive(consecutive);
   };
 
+  const getPriorityLabel = (value) => {
+    const priorityMap = {
+      1: "Highest",
+      2: "High",
+      3: "Medium",
+      4: "Low"
+    };
+    return priorityMap[value] || value;
+  };
+
   const columns = [
     // { field: "id", headerName: "ID", flex: 0.5 },
     // { field: "type_name", headerName: "POD Type", flex: 1 },
@@ -250,6 +260,11 @@ const GenerateSlot = () => {
       field: "priority",
       headerName: "Priority",
       flex: 0.3,
+      renderCell: (params) => (
+        <Typography>
+          {getPriorityLabel(params.value)}
+        </Typography>
+      ),
     },
   ];
 
