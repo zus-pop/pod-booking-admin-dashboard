@@ -202,6 +202,16 @@ const StoreDetail = () => {
     }
   };
 
+  const getPriorityLabel = (value) => {
+    const priorityMap = {
+      1: "Highest",
+      2: "High",
+      3: "Medium",
+      4: "Low"
+    };
+    return priorityMap[value] || value;
+  };
+
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
 
@@ -249,6 +259,11 @@ const StoreDetail = () => {
       field: "priority",
       headerName: "Priority",
       flex: 0.5,
+      renderCell: (params) => (
+        <Typography>
+          {getPriorityLabel(params.value)}
+        </Typography>
+      ),
     },
     {
       field: "action",

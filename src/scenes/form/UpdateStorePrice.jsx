@@ -30,6 +30,13 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
       .max(4, "Priority must be between 1 and 4"),
   });
 
+  const priorityOptions = [
+    { value: 1, label: "Highest" },
+    { value: 2, label: "High" },
+    { value: 3, label: "Medium" },
+    { value: 4, label: "Low" }
+  ];
+
   return (
     <Modal open={open} onClose={handleClose}>
       <Box
@@ -123,12 +130,11 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 <Select
                   value={values.priority}
                   onChange={handleChange}
-                
                   name="priority"
                 >
-                  {[1, 2, 3, 4].map((value) => (
-                    <MenuItem key={value} value={value}>
-                      {value}
+                  {priorityOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
                     </MenuItem>
                   ))}
                 </Select>

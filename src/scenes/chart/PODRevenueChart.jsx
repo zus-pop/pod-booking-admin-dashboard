@@ -392,7 +392,7 @@ const PODRevenueChart = () => {
 
   return (
     <Box m="20px">
-      <Header title="PRODUCT REVENUE" subtitle="Product revenue over time" />
+      <Header title="POD REVENUE" subtitle="POD revenue over time by products & slots" />
       <Box
         display="flex"
         flexDirection="column"
