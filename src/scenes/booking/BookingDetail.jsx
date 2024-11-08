@@ -78,6 +78,8 @@ const BookingDetail = () => {
   // Thêm state để quản lý việc hiển thị payment details
   const [expandedPaymentId, setExpandedPaymentId] = useState(null);
 
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -175,6 +177,7 @@ const BookingDetail = () => {
           .price,
       }));
       console.log(productsToAdd)
+
       const response = await axios.post(
         `${API_URL}/api/v1/bookings/${id}/products`,
         productsToAdd,
@@ -242,7 +245,7 @@ const BookingDetail = () => {
       const response = await axios.put(
         `${API_URL}/api/v1/bookings/${id}/slots/${selectedSlotId}`,
         {
-          is_checked_in: true
+          status:"Checked In"
         }
       );
       
@@ -251,7 +254,7 @@ const BookingDetail = () => {
         setSlots(prevSlots => 
           prevSlots.map(slot => 
             slot.slot_id === selectedSlotId 
-              ? { ...slot, is_checked_in: true }
+              ? { ...slot,  status: "Checked In"}
               : slot
           )
         );
@@ -264,7 +267,6 @@ const BookingDetail = () => {
     }
   };
 
-  // Thêm hàm tính tổng giá cho một slot cụ thể
   const calculateSlotProductsTotal = (slotId) => {
     const slotProducts = products[slotId] || [];
     return slotProducts.reduce((total, product) => {
@@ -279,26 +281,49 @@ const BookingDetail = () => {
     return now > slotEnd;
   };
 
+  // Add new function to handle absent status
+  const handleAbsentStatus = async (slotId) => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/v1/bookings/${id}/slots/${slotId}`,
+        {
+          status: "Absent"
+        }
+      );
 
-  // const isSlotNotStarted = (startTime) => {
-  //   const now = new Date();
-  //   const slotStart = new Date(startTime);
-  //   const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000); // 5 phút = 5 * 60000 milliseconds
-  //   return now < fiveMinutesBefore;
-  // };
+      if (response.status === 201) {
+        setSlots(prevSlots => 
+          prevSlots.map(slot => 
+            slot.slot_id === slotId 
+              ? { ...slot, status: "Absent" }
+              : slot
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error updating absent status:", error);
+    }
+  };
 
-  // const isWithinCheckinWindow = (startTime) => {
-  //   const now = new Date();
-  //   const slotStart = new Date(startTime);
-  //   const fiveMinutesBefore = new Date(slotStart.getTime() - 5 * 60000);
-  //   return now >= fiveMinutesBefore && now <= slotStart;
-  // };
+  // Update useEffect to check for expired slots
+  useEffect(() => {
+    const checkExpiredSlots = () => {
+      slots.forEach(slot => {
+        if (isSlotExpired(slot.end_time) && slot.status !== "Checked Out" && slot.status !== "Absent") {
+          handleAbsentStatus(slot.slot_id);
+        }
+      });
+    };
 
+    // Check on initial load and set up interval
+    checkExpiredSlots();
+    const interval = setInterval(checkExpiredSlots, 60000); // Check every minute
 
-  const isSlotCompleted = (endTime, isCheckedIn) => {
-    const now = new Date();
-    const slotEnd = new Date(endTime);
-    return isCheckedIn && now > slotEnd;
+    return () => clearInterval(interval);
+  }, [slots]);
+
+  const isSlotCompleted = ( status) => {
+    return status == "Checked Out" ;
   };
 
  
@@ -357,11 +382,6 @@ const BookingDetail = () => {
     return () => clearInterval(timer);
   }, [countdown, showQRModal]);
 
-  // Cập nhật hàm handleOpenQRModal để reset countdown
-  const handleOpenQRModal = () => {
-    setShowQRModal(true);
-    setCountdown(600); // Reset về 10 phút
-  };
 
   // Thêm hàm mới để kiểm tra trạng thái
   const isSlotDisabled = (endTime, bookingStatus) => {
@@ -393,6 +413,39 @@ const BookingDetail = () => {
   // Thêm hàm để đóng payment details
   const handleClosePaymentDetails = () => {
     setExpandedPaymentId(null);
+  };
+
+  const handleCheckout = (slotId) => {
+    setSelectedSlotId(slotId);
+    setIsCheckoutModalOpen(true);
+  };
+
+  const handleConfirmCheckout = async () => {
+    try {
+      const response = await axios.put(
+        `${API_URL}/api/v1/bookings/${id}/slots/${selectedSlotId}`,
+        {
+          status:"Checked Out"
+        }
+      );
+
+      if (response.status === 201) {
+        toast.success("Check-out successful!");
+        setSlots(prevSlots => 
+          prevSlots.map(slot => 
+            slot.slot_id === selectedSlotId 
+              ? { ...slot,  status: "Checked Out"}
+              : slot
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Error checking out:", error);
+      toast.error("Failed to check out");
+    } finally {
+      setIsCheckoutModalOpen(false);
+      setSelectedSlotId(null);
+    }
   };
 
   return (
@@ -800,7 +853,7 @@ const BookingDetail = () => {
                         </Box>
 
                         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                          <Box 
+                        <Box 
                             sx={{ 
                               px: 2,
                               py: 0.5,
@@ -825,27 +878,55 @@ const BookingDetail = () => {
                               px: 2,
                               py: 0.5,
                               borderRadius: "6px",
-                              backgroundColor: slot.is_checked_in ? "rgba(76, 206, 172, 0.1)" : "rgba(255, 152, 0, 0.1)",
-                              border: `1px solid ${slot.is_checked_in ? "#4cceac" : "#ff9800"}`
+                              backgroundColor: slot.status === "Checked In" 
+                                ? "rgba(76, 206, 172, 0.1)" 
+                                : slot.status === "Absent"
+                                  ? "rgba(244, 67, 54, 0.1)"
+                                  : "rgba(255, 152, 0, 0.1)",
+                              border: `1px solid ${
+                                slot.status === "Checked In" 
+                                  ? "#4cceac" 
+                                  : slot.status === "Absent"
+                                    ? "#f44336"
+                                    : "#ff9800"
+                              }`
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                color: slot.is_checked_in ? "#4cceac" : "#ff9800",
+                                color: slot.status === "Checked In" 
+                                  ? "#4cceac" 
+                                  : slot.status === "Absent"
+                                    ? "#f44336"
+                                    : "#ff9800",
                                 fontWeight: "500"
                               }}
                             >
-                              {slot.is_checked_in ? "Checked In" : "Not Checked In"}
+                              {slot.status}
                             </Typography>
                           </Box>
                         </Box>
                       </Box>
 
                       <Box sx={{ display: 'flex', gap: 2, width: "100%" }}>
-                        {!isSlotCompleted(slot.end_time, slot.is_checked_in) ? (
+                        {!isSlotCompleted(slot.status) ? (
                           <>
-                            {!slot.is_checked_in && (
+                            {slot.status === "Checked In" ? (
+                              <Button
+                                onClick={() => handleCheckout(slot.slot_id)}
+                                sx={{
+                                  backgroundColor: "#ff9800",
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                  "&:hover": {
+                                    backgroundColor: "#f57c00",
+                                  },
+                                }}
+                              >
+                                Check Out
+                              </Button>
+                            ) : slot.status !== "Checked Out" && (
                               <Button
                                 onClick={() => handleCheckin(slot.slot_id)}
                                 disabled={isSlotDisabled(slot.end_time, bookingDetail.booking_status)}
@@ -876,14 +957,14 @@ const BookingDetail = () => {
                                 }
                               </Button>
                             )}
-                            {slot.is_checked_in && !isSlotExpired(slot.end_time) && (
+                            {slot.status === "Checked In" && !isSlotExpired(slot.end_time) && (
                               <Button
                                 variant="contained"
                                 onClick={() => handleOpenAddProductModal(slot.slot_id)}
                                 sx={{
                                   flex: 1,
                                   backgroundColor: "#4cceac",
-                                  color: "#000", 
+                                  color: "#000",
                                   fontWeight: "600",
                                   "&:hover": {
                                     backgroundColor: "#3da58a",
@@ -895,23 +976,17 @@ const BookingDetail = () => {
                             )}
                           </>
                         ) : (
-                         
-                          
-                            <Button
-                              variant="body2"
-                              sx={{
-                               
-                                fcolor: "#fff",
-                                fontWeight: "600",
-                               disabled: true,
-                               color: "#fff",
-                               opacity: 0.8,
-                               
-                              }}
-                            >
-                              Completed
-                            </Button>
-                       
+                          <Button
+                            variant="body2"
+                            sx={{
+                              color: "#fff",
+                              fontWeight: "600",
+                              disabled: true,
+                              opacity: 0.8,
+                            }}
+                          >
+                            Completed
+                          </Button>
                         )}
                       </Box>
                     </StatBox>
@@ -966,6 +1041,53 @@ const BookingDetail = () => {
                   </Button>
                   <Button
                     onClick={handleConfirmCheckin}
+                    variant="contained"
+                    sx={{
+                      backgroundColor: "#4cceac",
+                      color: "#000",
+                      "&:hover": {
+                        backgroundColor: "#3da58a",
+                      },
+                    }}
+                  >
+                    Confirm
+                  </Button>
+                </Box>
+              </Box>
+            </Modal>
+
+            <Modal
+              open={isCheckoutModalOpen}
+              onClose={() => setIsCheckoutModalOpen(false)}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  width: 400,
+                  bgcolor: "background.paper",
+                  boxShadow: 24,
+                  p: 4,
+                  borderRadius: 2,
+                }}
+              >
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Confirm Check-out
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 3 }}>
+                  Are you sure you want to check out this slot?
+                </Typography>
+                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                  <Button
+                    onClick={() => setIsCheckoutModalOpen(false)}
+                    variant="outlined"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmCheckout}
                     variant="contained"
                     sx={{
                       backgroundColor: "#4cceac",
