@@ -15,7 +15,7 @@ import {
   Checkbox,
   ListItemText,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import axios from "axios";
 import { Header } from "../../components";
 import { toast } from "react-toastify";
@@ -38,8 +38,8 @@ const StatBox = styled(Box)(({ theme }) => ({
   transition: "transform 0.2s, box-shadow 0.2s",
   "&:hover": {
     transform: "translateY(-5px)",
-    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)"
-  }
+    boxShadow: "0 6px 20px rgba(0, 0, 0, 0.15)",
+  },
 }));
 
 const ContentWrapper = styled(Box)(({ theme }) => ({
@@ -49,15 +49,15 @@ const ContentWrapper = styled(Box)(({ theme }) => ({
   margin: "20px 0",
   boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
 }));
-
+import { tokens } from "../../theme";
 const BookingDetail = () => {
   const { id } = useParams();
   const [bookingDetail, setBookingDetail] = useState(null);
-
+  const theme = useTheme();
+  const colors = tokens(theme.palette.mode);
   const [products, setProducts] = useState({});
   const [slots, setSlots] = useState([]);
- 
-  
+
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [availableProducts, setAvailableProducts] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
@@ -83,15 +83,14 @@ const BookingDetail = () => {
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
-
   }, [id]);
 
   const fetchBookingDetail = async () => {
     const result = await axios.get(`${API_URL}/api/v1/bookings/${id}`);
 
     setBookingDetail(result.data);
-    setSlots(result.data.slots)
-    
+    setSlots(result.data.slots);
+
     // Lấy products cho từng slot
     const slotProducts = {};
     for (const slot of result.data.slots) {
@@ -107,8 +106,6 @@ const BookingDetail = () => {
     setProducts(slotProducts);
   };
 
-
-  
   const handleOpenAddProductModal = async (slotId) => {
     try {
       const storeId = bookingDetail?.pod?.store?.store_id;
@@ -116,11 +113,11 @@ const BookingDetail = () => {
         toast.error("Store information not found");
         return;
       }
-      console.log()
+      console.log();
       const response = await axios.get(`${API_URL}/api/v1/products`, {
         params: {
-          store_id: storeId
-        }
+          store_id: storeId,
+        },
       });
       setAvailableProducts(response.data.products || []);
       setSelectedSlotId(slotId);
@@ -132,7 +129,6 @@ const BookingDetail = () => {
   };
 
   const handleProductSelect = (productId) => {
-
     if (selectedProducts.includes(productId)) {
       setSelectedProducts((prev) => prev.filter((id) => id !== productId));
       setQuantities((prev) => {
@@ -150,15 +146,12 @@ const BookingDetail = () => {
   };
 
   const handleQuantityChange = (productId, value) => {
-    const product = availableProducts.find(p => p.product_id === productId);
+    const product = availableProducts.find((p) => p.product_id === productId);
     if (!product) return;
 
     // Giới hạn số lượng không vượt quá stock
-    const quantity = Math.min(
-      Math.max(1, parseInt(value) || 0),
-      product.stock
-    );
-    
+    const quantity = Math.min(Math.max(1, parseInt(value) || 0), product.stock);
+
     setQuantities((prev) => ({
       ...prev,
       [productId]: quantity,
@@ -176,7 +169,7 @@ const BookingDetail = () => {
         unit_price: availableProducts.find((p) => p.product_id === productId)
           .price,
       }));
-      console.log(productsToAdd)
+      console.log(productsToAdd);
 
       const response = await axios.post(
         `${API_URL}/api/v1/bookings/${id}/products`,
@@ -205,7 +198,7 @@ const BookingDetail = () => {
   const handleCloseQRModal = () => {
     setShowQRModal(false);
     setPaymentUrl(null);
-    fetchBookingDetail(); 
+    fetchBookingDetail();
   };
 
   const calculateTotalPrice = () => {
@@ -218,17 +211,17 @@ const BookingDetail = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     const socket = initializeSocket(token);
-  
+
     const handleNotification = (data) => {
-      const message = typeof data === 'string' ? data : data.message;
+      const message = typeof data === "string" ? data : data.message;
       toast.success(message);
       setShowQRModal(false);
       setPaymentUrl(null);
       fetchBookingDetail();
     };
-  
+
     socket.on("notification", handleNotification);
-  
+
     return () => {
       socket.off("notification", handleNotification);
       disconnectSocket();
@@ -245,16 +238,16 @@ const BookingDetail = () => {
       const response = await axios.put(
         `${API_URL}/api/v1/bookings/${id}/slots/${selectedSlotId}`,
         {
-          status:"Checked In"
+          status: "Checked In",
         }
       );
-      
+
       if (response.status === 201) {
         toast.success("Check-in successful!");
-        setSlots(prevSlots => 
-          prevSlots.map(slot => 
-            slot.slot_id === selectedSlotId 
-              ? { ...slot,  status: "Checked In"}
+        setSlots((prevSlots) =>
+          prevSlots.map((slot) =>
+            slot.slot_id === selectedSlotId
+              ? { ...slot, status: "Checked In" }
               : slot
           )
         );
@@ -270,11 +263,10 @@ const BookingDetail = () => {
   const calculateSlotProductsTotal = (slotId) => {
     const slotProducts = products[slotId] || [];
     return slotProducts.reduce((total, product) => {
-      return total + (product.price * product.quantity);
+      return total + product.price * product.quantity;
     }, 0);
   };
 
-  
   const isSlotExpired = (endTime) => {
     const now = new Date();
     const slotEnd = new Date(endTime);
@@ -287,16 +279,14 @@ const BookingDetail = () => {
       const response = await axios.put(
         `${API_URL}/api/v1/bookings/${id}/slots/${slotId}`,
         {
-          status: "Absent"
+          status: "Absent",
         }
       );
 
       if (response.status === 201) {
-        setSlots(prevSlots => 
-          prevSlots.map(slot => 
-            slot.slot_id === slotId 
-              ? { ...slot, status: "Absent" }
-              : slot
+        setSlots((prevSlots) =>
+          prevSlots.map((slot) =>
+            slot.slot_id === slotId ? { ...slot, status: "Absent" } : slot
           )
         );
       }
@@ -308,8 +298,12 @@ const BookingDetail = () => {
   // Update useEffect to check for expired slots
   useEffect(() => {
     const checkExpiredSlots = () => {
-      slots.forEach(slot => {
-        if (isSlotExpired(slot.end_time) && slot.status !== "Checked Out" && slot.status !== "Absent") {
+      slots.forEach((slot) => {
+        if (
+          isSlotExpired(slot.end_time) &&
+          slot.status !== "Checked Out" &&
+          slot.status !== "Absent"
+        ) {
           handleAbsentStatus(slot.slot_id);
         }
       });
@@ -322,48 +316,47 @@ const BookingDetail = () => {
     return () => clearInterval(interval);
   }, [slots]);
 
-  const isSlotCompleted = ( status) => {
-    return status == "Checked Out" ;
+  const isSlotCompleted = (status) => {
+    return status == "Checked Out";
   };
 
- 
   const getStatusStyles = (status) => {
     switch (status?.toLowerCase()) {
-      case 'complete':
+      case "complete":
         return {
           backgroundColor: "rgba(76, 206, 172, 0.1)",
           color: "#4cceac",
-          borderColor: "#4cceac"
+          borderColor: "#4cceac",
         };
-      case 'pending':
+      case "pending":
         return {
           backgroundColor: "rgba(255, 235, 59, 0.1)",
           color: "#ffeb3b",
-          borderColor: "#ffeb3b"
+          borderColor: "#ffeb3b",
         };
-      case 'ongoing':
+      case "ongoing":
         return {
           backgroundColor: "rgba(33, 150, 243, 0.1)",
           color: "#2196f3",
-          borderColor: "#2196f3"
+          borderColor: "#2196f3",
         };
-      case 'canceled':
+      case "canceled":
         return {
           backgroundColor: "rgba(244, 67, 54, 0.1)",
           color: "#f44336",
-          borderColor: "#f44336"
+          borderColor: "#f44336",
         };
-      case 'confirmed':
+      case "confirmed":
         return {
           backgroundColor: "rgba(255, 152, 0, 0.1)",
           color: "#ff9800",
-          borderColor: "#ff9800"
+          borderColor: "#ff9800",
         };
       default:
         return {
           backgroundColor: "rgba(158, 158, 158, 0.1)",
           color: "#9e9e9e",
-          borderColor: "#9e9e9e"
+          borderColor: "#9e9e9e",
         };
     }
   };
@@ -373,7 +366,7 @@ const BookingDetail = () => {
     let timer;
     if (showQRModal && countdown > 0) {
       timer = setInterval(() => {
-        setCountdown(prev => prev - 1);
+        setCountdown((prev) => prev - 1);
       }, 1000);
     } else if (countdown === 0 && showQRModal) {
       handleCloseQRModal();
@@ -382,7 +375,6 @@ const BookingDetail = () => {
     return () => clearInterval(timer);
   }, [countdown, showQRModal]);
 
-
   // Thêm hàm mới để kiểm tra trạng thái
   const isSlotDisabled = (endTime, bookingStatus) => {
     return isSlotExpired(endTime) || bookingStatus === "Canceled";
@@ -390,29 +382,33 @@ const BookingDetail = () => {
 
   // Thêm hàm để fetch payment details
   const fetchPaymentDetails = async (paymentId, paymentFor) => {
+    // If clicking the same payment, close it
+    if (expandedPaymentId === paymentId) {
+      setExpandedPaymentId(null);
+      return;
+    }
+
     try {
-      let endpoint = '';
-      if (paymentFor === 'Product') {
+      let endpoint = "";
+      if (paymentFor === "Product") {
         endpoint = `${API_URL}/api/v1/bookings/${id}/payments/${paymentId}/products`;
-      } else if (paymentFor === 'Slot') {
+      } else if (paymentFor === "Slot") {
         endpoint = `${API_URL}/api/v1/bookings/${id}/payments/${paymentId}/slots`;
       }
 
       const response = await axios.get(endpoint);
-      setPaymentDetails(prev => ({
+      setPaymentDetails((prev) => ({
         ...prev,
-        [paymentId]: response.data
+        [paymentId]: response.data,
       }));
       setExpandedPaymentId(paymentId);
     } catch (error) {
-      console.error(`Error fetching payment details for payment ${paymentId}:`, error);
+      console.error(
+        `Error fetching payment details for payment ${paymentId}:`,
+        error
+      );
       toast.error("Failed to load payment details");
     }
-  };
-
-  // Thêm hàm để đóng payment details
-  const handleClosePaymentDetails = () => {
-    setExpandedPaymentId(null);
   };
 
   const handleCheckout = (slotId) => {
@@ -425,16 +421,16 @@ const BookingDetail = () => {
       const response = await axios.put(
         `${API_URL}/api/v1/bookings/${id}/slots/${selectedSlotId}`,
         {
-          status:"Checked Out"
+          status: "Checked Out",
         }
       );
 
       if (response.status === 201) {
         toast.success("Check-out successful!");
-        setSlots(prevSlots => 
-          prevSlots.map(slot => 
-            slot.slot_id === selectedSlotId 
-              ? { ...slot,  status: "Checked Out"}
+        setSlots((prevSlots) =>
+          prevSlots.map((slot) =>
+            slot.slot_id === selectedSlotId
+              ? { ...slot, status: "Checked Out" }
               : slot
           )
         );
@@ -450,10 +446,10 @@ const BookingDetail = () => {
 
   return (
     <Box m="20px" height="100vh">
-      <Header 
-        title="Booking Detail" 
+      <Header
+        title="Booking Detail"
         subtitle="View and manage booking details"
-        showBackButton={true} 
+        showBackButton={true}
       />
 
       <Box mx="20px">
@@ -461,7 +457,13 @@ const BookingDetail = () => {
           <>
             <Box mb={4} display="flex" justifyContent="space-between">
               {/* Left Column */}
-              <Box flex={1} mr={4} display="flex" flexDirection="column" gap={3}>
+              <Box
+                flex={1}
+                mr={4}
+                display="flex"
+                flexDirection="column"
+                gap={3}
+              >
                 {/* Booking Information */}
                 <Box>
                   <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
@@ -473,37 +475,43 @@ const BookingDetail = () => {
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     Date: {bookingDetail.booking_date}
                   </Typography>
-                  <Box 
-                    sx={{ 
-                      display: 'inline-block',
+                  <Box
+                    sx={{
+                      display: "inline-block",
                       px: 2,
                       py: 1,
                       borderRadius: "6px",
-                      border: '1px solid',
+                      border: "1px solid",
                       ...getStatusStyles(bookingDetail.booking_status),
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
-                      }
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                      },
                     }}
                   >
                     <Typography
                       variant="h5"
                       sx={{
                         fontWeight: "600",
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
                       }}
                     >
                       <Box
                         sx={{
                           width: 8,
                           height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: getStatusStyles(bookingDetail.booking_status).color,
-                          animation: bookingDetail.booking_status?.toLowerCase() === 'ongoing' ? 'pulse 1.5s infinite' : 'none'
+                          borderRadius: "50%",
+                          backgroundColor: getStatusStyles(
+                            bookingDetail.booking_status
+                          ).color,
+                          animation:
+                            bookingDetail.booking_status?.toLowerCase() ===
+                            "ongoing"
+                              ? "pulse 1.5s infinite"
+                              : "none",
                         }}
                       />
                       {bookingDetail.booking_status}
@@ -518,7 +526,7 @@ const BookingDetail = () => {
                   </Typography>
                   {bookingDetail.pod.store ? (
                     <>
-                      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                      <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                         <Box
                           component="img"
                           src={bookingDetail.pod.store.image}
@@ -526,26 +534,37 @@ const BookingDetail = () => {
                           sx={{
                             width: 200,
                             height: 150,
-                            objectFit: 'cover',
-                            borderRadius: '8px'
+                            objectFit: "cover",
+                            borderRadius: "8px",
                           }}
                         />
                         <Box>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Store Name: {bookingDetail.pod.store.store_name}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Address: {bookingDetail.pod.store.address}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Phone: {bookingDetail.pod.store.hotline}
                           </Typography>
-                         
                         </Box>
                       </Box>
                     </>
                   ) : (
-                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{ color: "#fff", opacity: 0.7 }}
+                    >
                       No store information available
                     </Typography>
                   )}
@@ -605,40 +624,63 @@ const BookingDetail = () => {
                 </Box>
 
                 {/* Payment Information */}
-                <Box>
-                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
+                <Box sx={{ maxHeight: '500px', overflow: 'auto' }}>
+                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2, position: 'sticky', top: 0, backgroundColor: colors.primary[500], zIndex: 1, py: 1 }}>
                     Payment Information
                   </Typography>
                   {bookingDetail.payment && bookingDetail.payment.length > 0 ? (
                     bookingDetail.payment.map((payment) => (
                       <Box key={payment.payment_id} sx={{ mb: 4 }}>
                         <Box sx={{ mb: 2 }}>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Payment ID: {payment.payment_id}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Transaction ID: {payment.transaction_id}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Total Cost:{" "}
                             {new Intl.NumberFormat("vi-VN", {
                               style: "currency",
                               currency: "VND",
                             }).format(payment.total_cost)}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Payment Date: {payment.payment_date}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Status: {payment.payment_status}
                           </Typography>
-                          <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             For: {payment.payment_for}
                           </Typography>
-                          
+
                           {/* Thêm button để load chi tiết */}
                           <Button
-                            onClick={() => fetchPaymentDetails(payment.payment_id, payment.payment_for)}
+                            onClick={() =>
+                              fetchPaymentDetails(
+                                payment.payment_id,
+                                payment.payment_for
+                              )
+                            }
                             sx={{
                               backgroundColor: "#4cceac",
                               color: "#000",
@@ -652,94 +694,139 @@ const BookingDetail = () => {
                           </Button>
 
                           {/* Hiển thị chi tiết payment */}
-                          {paymentDetails[payment.payment_id] && expandedPaymentId === payment.payment_id && (
-                            <Box sx={{ mt: 2, ml: 2, position: 'relative' }}>
-                              <Box sx={{ 
-                                position: 'absolute', 
-                                right: 0, 
-                                top: 0,
-                                cursor: 'pointer',
-                                color: '#94a3b8',
-                                '&:hover': {
-                                  color: '#fff'
-                                }
-                              }} onClick={handleClosePaymentDetails}>
-                                ✕
-                              </Box>
-                              <Typography variant="h6" sx={{ color: "#4cceac", mb: 1 }}>
-                                Payment Details:
-                              </Typography>
-                              
-                              {payment.payment_for === 'Product' && (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                                  {paymentDetails[payment.payment_id].map((product) => (
-                                    <Box
-                                      key={product.product_id}
-                                      sx={{
-                                        backgroundColor: "rgba(31, 42, 64, 0.7)",
-                                        p: 2,
-                                        borderRadius: 1,
-                                        minWidth: 200
-                                      }}
-                                    >
-                                      <Typography variant="body1" sx={{ color: "#fff" }}>
-                                        {product.product_name}
-                                      </Typography>
-                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                        Quantity: {product.quantity}
-                                      </Typography>
-                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                        Price: {new Intl.NumberFormat("vi-VN", {
-                                          style: "currency",
-                                          currency: "VND",
-                                        }).format(product.price)}
-                                      </Typography>
-                                    </Box>
-                                  ))}
-                                </Box>
-                              )}
+                          {paymentDetails[payment.payment_id] &&
+                            expandedPaymentId === payment.payment_id && (
+                              <Box sx={{ mt: 2, ml: 2 }}>
+                                <Typography
+                                  variant="h6"
+                                  sx={{ color: "#4cceac", mb: 1 }}
+                                >
+                                  Payment Details:
+                                </Typography>
 
-                              {payment.payment_for === 'Slot' && (
-                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                                  {paymentDetails[payment.payment_id].map((slot) => (
-                                    <Box
-                                      key={slot.slot_id}
-                                      sx={{
-                                        backgroundColor: "rgba(31, 42, 64, 0.7)",
-                                        p: 2,
-                                        borderRadius: 1,
-                                        minWidth: 200
-                                      }}
-                                    >
-                                      <Typography variant="body1" sx={{ color: "#fff" }}>
-                                        Slot ID: {slot.slot_id}
-                                      </Typography>
-                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                        Start Time: {slot.start_time}
-                                      </Typography>
-                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                        End Time: {slot.end_time}
-                                      </Typography>
-                                      <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-                                        Price: {new Intl.NumberFormat("vi-VN", {
-                                          style: "currency",
-                                          currency: "VND",
-                                        }).format(slot.price)}
-                                      </Typography>
-                                    </Box>
-                                  ))}
-                                </Box>
-                              )}
-                            </Box>
-                          )}
+                                {payment.payment_for === "Product" && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: 2,
+                                    }}
+                                  >
+                                    {paymentDetails[payment.payment_id].map(
+                                      (product) => (
+                                        <Box
+                                          key={product.product_id}
+                                          sx={{
+                                            backgroundColor:
+                                              "rgba(31, 42, 64, 0.7)",
+                                            p: 2,
+                                            borderRadius: 1,
+                                            minWidth: 200,
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="body1"
+                                            sx={{ color: "#fff" }}
+                                          >
+                                            {product.product_name}
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ color: "#94a3b8" }}
+                                          >
+                                            Quantity: {product.quantity}
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ color: "#94a3b8" }}
+                                          >
+                                            Price:{" "}
+                                            {new Intl.NumberFormat("vi-VN", {
+                                              style: "currency",
+                                              currency: "VND",
+                                            }).format(product.price)}
+                                          </Typography>
+                                        </Box>
+                                      )
+                                    )}
+                                  </Box>
+                                )}
+
+                                {payment.payment_for === "Slot" && (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: 2,
+                                    }}
+                                  >
+                                    {paymentDetails[payment.payment_id].map(
+                                      (slot) => (
+                                        <Box
+                                          key={slot.slot_id}
+                                          sx={{
+                                            backgroundColor:
+                                              "rgba(31, 42, 64, 0.7)",
+                                            p: 2,
+                                            borderRadius: 1,
+                                            minWidth: 200,
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="body1"
+                                            sx={{ color: "#fff" }}
+                                          >
+                                            Slot ID: {slot.slot_id}
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ color: "#94a3b8" }}
+                                          >
+                                            Start Time: {slot.start_time}
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ color: "#94a3b8" }}
+                                          >
+                                            End Time: {slot.end_time}
+                                          </Typography>
+                                          <Typography
+                                            variant="body2"
+                                            sx={{ color: "#94a3b8" }}
+                                          >
+                                            Price:{" "}
+                                            {new Intl.NumberFormat("vi-VN", {
+                                              style: "currency",
+                                              currency: "VND",
+                                            }).format(slot.price)}
+                                          </Typography>
+                                        </Box>
+                                      )
+                                    )}
+                                  </Box>
+                                )}
+                              </Box>
+                            )}
                         </Box>
-                        {payment !== bookingDetail.payment[bookingDetail.payment.length - 1] && (
-                          <Box sx={{ my: 2, borderBottom: "1px solid rgba(255, 255, 255, 0.12)" }} />
+                        {payment !==
+                          bookingDetail.payment[
+                            bookingDetail.payment.length - 1
+                          ] && (
+                          <Box
+                            sx={{
+                              my: 2,
+                              borderBottom:
+                                "1px solid rgba(255, 255, 255, 0.12)",
+                            }}
+                          />
                         )}
                       </Box>
                     ))
                   ) : (
-                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{ color: "#fff", opacity: 0.7 }}
+                    >
                       No payment information available
                     </Typography>
                   )}
@@ -769,7 +856,10 @@ const BookingDetail = () => {
                       ))}
                     </Box>
                   ) : (
-                    <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{ color: "#fff", opacity: 0.7 }}
+                    >
                       No utilities available
                     </Typography>
                   )}
@@ -777,7 +867,6 @@ const BookingDetail = () => {
               </Box>
             </Box>
 
-          
             <ContentWrapper>
               <Typography variant="h4" sx={{ color: "#fff", mb: 3 }}>
                 Slots
@@ -793,35 +882,34 @@ const BookingDetail = () => {
                   slots.map((slot) => (
                     <StatBox key={slot.slot_id}>
                       <Box sx={{ width: "100%" }}>
-                        <Typography 
-                          variant="h6" 
-                          sx={{ 
+                        <Typography
+                          variant="h6"
+                          sx={{
                             color: "#4cceac",
                             mb: 2,
                             fontWeight: "600",
-                            fontSize: "1.1rem"
+                            fontSize: "1.1rem",
                           }}
                         >
-                          {slot.start_time} <br/>
-                            
-                           {slot.end_time}
+                          {slot.start_time} <br />
+                          {slot.end_time}
                         </Typography>
 
                         <Box sx={{ mb: 2 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
+                          <Typography
+                            variant="body2"
+                            sx={{
                               color: "#94a3b8",
-                              mb: 1 
+                              mb: 1,
                             }}
                           >
                             Slot ID
                           </Typography>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
+                          <Typography
+                            variant="body1"
+                            sx={{
                               color: "#fff",
-                              fontWeight: "500"
+                              fontWeight: "500",
                             }}
                           >
                             {slot.slot_id}
@@ -829,20 +917,20 @@ const BookingDetail = () => {
                         </Box>
 
                         <Box sx={{ mb: 2 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
+                          <Typography
+                            variant="body2"
+                            sx={{
                               color: "#94a3b8",
-                              mb: 1 
+                              mb: 1,
                             }}
                           >
                             Price
                           </Typography>
-                          <Typography 
-                            variant="body1" 
-                            sx={{ 
+                          <Typography
+                            variant="body1"
+                            sx={{
                               color: "#fff",
-                              fontWeight: "500"
+                              fontWeight: "500",
                             }}
                           >
                             {new Intl.NumberFormat("vi-VN", {
@@ -853,54 +941,62 @@ const BookingDetail = () => {
                         </Box>
 
                         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                        <Box 
-                            sx={{ 
+                          <Box
+                            sx={{
                               px: 2,
                               py: 0.5,
                               borderRadius: "6px",
-                              backgroundColor: slot.is_available ? "rgba(76, 206, 172, 0.1)" : "rgba(255, 0, 0, 0.1)",
-                              border: `1px solid ${slot.is_available ? "#4cceac" : "#ff0000"}`
+                              backgroundColor: slot.is_available
+                                ? "rgba(76, 206, 172, 0.1)"
+                                : "rgba(255, 0, 0, 0.1)",
+                              border: `1px solid ${
+                                slot.is_available ? "#4cceac" : "#ff0000"
+                              }`,
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                color: slot.is_available ? "#4cceac" : "#ff0000",
-                                fontWeight: "500"
+                                color: slot.is_available
+                                  ? "#4cceac"
+                                  : "#ff0000",
+                                fontWeight: "500",
                               }}
                             >
                               {slot.is_available ? "Available" : "Occupied"}
                             </Typography>
                           </Box>
 
-                          <Box 
-                            sx={{ 
+                          <Box
+                            sx={{
                               px: 2,
                               py: 0.5,
                               borderRadius: "6px",
-                              backgroundColor: slot.status === "Checked In" 
-                                ? "rgba(76, 206, 172, 0.1)" 
-                                : slot.status === "Absent"
+                              backgroundColor:
+                                slot.status === "Checked In"
+                                  ? "rgba(76, 206, 172, 0.1)"
+                                  : slot.status === "Absent"
                                   ? "rgba(244, 67, 54, 0.1)"
                                   : "rgba(255, 152, 0, 0.1)",
                               border: `1px solid ${
-                                slot.status === "Checked In" 
-                                  ? "#4cceac" 
+                                slot.status === "Checked In"
+                                  ? "#4cceac"
                                   : slot.status === "Absent"
-                                    ? "#f44336"
-                                    : "#ff9800"
-                              }`
+                                  ? "#f44336"
+                                  : "#ff9800"
+                              }`,
                             }}
                           >
                             <Typography
                               variant="body2"
                               sx={{
-                                color: slot.status === "Checked In" 
-                                  ? "#4cceac" 
-                                  : slot.status === "Absent"
+                                color:
+                                  slot.status === "Checked In"
+                                    ? "#4cceac"
+                                    : slot.status === "Absent"
                                     ? "#f44336"
                                     : "#ff9800",
-                                fontWeight: "500"
+                                fontWeight: "500",
                               }}
                             >
                               {slot.status}
@@ -909,7 +1005,7 @@ const BookingDetail = () => {
                         </Box>
                       </Box>
 
-                      <Box sx={{ display: 'flex', gap: 2, width: "100%" }}>
+                      <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
                         {!isSlotCompleted(slot.status) ? (
                           <>
                             {slot.status === "Checked In" ? (
@@ -926,54 +1022,73 @@ const BookingDetail = () => {
                               >
                                 Check Out
                               </Button>
-                            ) : slot.status !== "Checked Out" && (
-                              <Button
-                                onClick={() => handleCheckin(slot.slot_id)}
-                                disabled={isSlotDisabled(slot.end_time, bookingDetail.booking_status)}
-                                sx={{
-                                  backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
-                                    ? "#ff4d4d"
-                                    : "#4cceac",
-                                  color: "#fff",
-                                  fontWeight: "600",
-                                  "&:hover": {
-                                    backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
-                                      ? "#ff3333"
-                                      : "#3da58a",
-                                  },
-                                  "&:disabled": {
-                                    backgroundColor: isSlotDisabled(slot.end_time, bookingDetail.booking_status)
+                            ) : (
+                              slot.status !== "Checked Out" && (
+                                <Button
+                                  onClick={() => handleCheckin(slot.slot_id)}
+                                  disabled={isSlotDisabled(
+                                    slot.end_time,
+                                    bookingDetail.booking_status
+                                  )}
+                                  sx={{
+                                    backgroundColor: isSlotDisabled(
+                                      slot.end_time,
+                                      bookingDetail.booking_status
+                                    )
                                       ? "#ff4d4d"
-                                      : "rgba(0, 0, 0, 0.12)",
+                                      : "#4cceac",
                                     color: "#fff",
-                                    opacity: 0.8,
-                                    cursor: "not-allowed"
+                                    fontWeight: "600",
+                                    "&:hover": {
+                                      backgroundColor: isSlotDisabled(
+                                        slot.end_time,
+                                        bookingDetail.booking_status
+                                      )
+                                        ? "#ff3333"
+                                        : "#3da58a",
+                                    },
+                                    "&:disabled": {
+                                      backgroundColor: isSlotDisabled(
+                                        slot.end_time,
+                                        bookingDetail.booking_status
+                                      )
+                                        ? "#ff4d4d"
+                                        : "rgba(0, 0, 0, 0.12)",
+                                      color: "#fff",
+                                      opacity: 0.8,
+                                      cursor: "not-allowed",
+                                    },
+                                  }}
+                                >
+                                  {isSlotDisabled(
+                                    slot.end_time,
+                                    bookingDetail.booking_status
+                                  )
+                                    ? "Expired"
+                                    : "Check In"}
+                                </Button>
+                              )
+                            )}
+                            {slot.status === "Checked In" &&
+                              !isSlotExpired(slot.end_time) && (
+                                <Button
+                                  variant="contained"
+                                  onClick={() =>
+                                    handleOpenAddProductModal(slot.slot_id)
                                   }
-                                }}
-                              >
-                                {isSlotDisabled(slot.end_time, bookingDetail.booking_status)
-                                  ? "Expired"
-                                  : "Check In"
-                                }
-                              </Button>
-                            )}
-                            {slot.status === "Checked In" && !isSlotExpired(slot.end_time) && (
-                              <Button
-                                variant="contained"
-                                onClick={() => handleOpenAddProductModal(slot.slot_id)}
-                                sx={{
-                                  flex: 1,
-                                  backgroundColor: "#4cceac",
-                                  color: "#000",
-                                  fontWeight: "600",
-                                  "&:hover": {
-                                    backgroundColor: "#3da58a",
-                                  },
-                                }}
-                              >
-                                Add Products
-                              </Button>
-                            )}
+                                  sx={{
+                                    flex: 1,
+                                    backgroundColor: "#4cceac",
+                                    color: "#000",
+                                    fontWeight: "600",
+                                    "&:hover": {
+                                      backgroundColor: "#3da58a",
+                                    },
+                                  }}
+                                >
+                                  Add Products
+                                </Button>
+                              )}
                           </>
                         ) : (
                           <Button
@@ -1032,7 +1147,9 @@ const BookingDetail = () => {
                 <Typography variant="body1" sx={{ mb: 3 }}>
                   Are you sure you want to check in this slot?
                 </Typography>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}
+                >
                   <Button
                     onClick={() => setIsCheckinModalOpen(false)}
                     variant="outlined"
@@ -1079,7 +1196,9 @@ const BookingDetail = () => {
                 <Typography variant="body1" sx={{ mb: 3 }}>
                   Are you sure you want to check out this slot?
                 </Typography>
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}
+                >
                   <Button
                     onClick={() => setIsCheckoutModalOpen(false)}
                     variant="outlined"
@@ -1102,7 +1221,7 @@ const BookingDetail = () => {
                 </Box>
               </Box>
             </Modal>
-            
+
             {slots.map((slot) => (
               <ContentWrapper key={slot.slot_id}>
                 <Box
@@ -1114,7 +1233,6 @@ const BookingDetail = () => {
                   <Typography variant="h4" sx={{ color: "#fff" }}>
                     Products for Slot {slot.slot_id}
                   </Typography>
-                 
                 </Box>
                 <Box display="flex" flexDirection="column" gap={2}>
                   <Box
@@ -1125,19 +1243,30 @@ const BookingDetail = () => {
                     minHeight="180px"
                   >
                     {products[slot.slot_id]?.length > 0 ? (
-                      products[slot.slot_id].map((product) => (
-                        <StatBox key={product.product_id}>
-                          <Typography variant="h5" sx={{ color: "#4cceac", mb: 1 }}>
+                      products[slot.slot_id].map((product, productIndex) => (
+                        <StatBox
+                          key={`product-${slot.slot_id}-${product.product_id}-${productIndex}`}
+                        >
+                          <Typography
+                            variant="h5"
+                            sx={{ color: "#4cceac", mb: 1 }}
+                          >
                             {product.product_name}
                           </Typography>
-                          <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Price:{" "}
                             {new Intl.NumberFormat("vi-VN", {
                               style: "currency",
                               currency: "VND",
                             }).format(product.price)}
                           </Typography>
-                          <Typography variant="body1" sx={{ color: "#fff", mb: 1 }}>
+                          <Typography
+                            variant="body1"
+                            sx={{ color: "#fff", mb: 1 }}
+                          >
                             Quantity: {product.quantity}
                           </Typography>
                           <Typography variant="body1" sx={{ color: "#fff" }}>
@@ -1156,7 +1285,10 @@ const BookingDetail = () => {
                         alignItems="center"
                         width="100%"
                       >
-                        <Typography variant="h5" sx={{ color: "#fff", opacity: 0.7 }}>
+                        <Typography
+                          variant="h5"
+                          sx={{ color: "#fff", opacity: 0.7 }}
+                        >
                           No products yet
                         </Typography>
                       </Box>
@@ -1170,11 +1302,14 @@ const BookingDetail = () => {
                   mt={2}
                   sx={{
                     borderTop: "1px solid rgba(255, 255, 255, 0.12)",
-                    paddingTop: 2
+                    paddingTop: 2,
                   }}
                 >
-                  <Typography variant="h5" sx={{ color: "#4cceac", fontWeight: "600" }}>
-                    Total: {" "}
+                  <Typography
+                    variant="h5"
+                    sx={{ color: "#4cceac", fontWeight: "600" }}
+                  >
+                    Total:{" "}
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
@@ -1216,7 +1351,12 @@ const BookingDetail = () => {
                   },
                 }}
               >
-                <Typography variant="h6" component="h2" gutterBottom sx={{ color: "#fff" }}>
+                <Typography
+                  variant="h6"
+                  component="h2"
+                  gutterBottom
+                  sx={{ color: "#fff" }}
+                >
                   Add Products to Booking
                 </Typography>
 
@@ -1238,7 +1378,7 @@ const BookingDetail = () => {
                         checked={selectedProducts.includes(product.product_id)}
                         onChange={() => handleProductSelect(product.product_id)}
                       />
-                      
+
                       <Box
                         component="img"
                         src={product.image}
@@ -1251,9 +1391,12 @@ const BookingDetail = () => {
                           ml: 2,
                         }}
                       />
-                      
+
                       <Box sx={{ flex: 1, ml: 2 }}>
-                        <Typography variant="subtitle1" sx={{ color: "#fff", fontWeight: "500" }}>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ color: "#fff", fontWeight: "500" }}
+                        >
                           {product.product_name}
                         </Typography>
                         <Typography variant="body2" sx={{ color: "#94a3b8" }}>
@@ -1265,7 +1408,9 @@ const BookingDetail = () => {
                         </Typography>
                       </Box>
 
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                      >
                         {selectedProducts.includes(product.product_id) && (
                           <>
                             <TextField
@@ -1273,7 +1418,10 @@ const BookingDetail = () => {
                               label="Quantity"
                               value={quantities[product.product_id] || 1}
                               onChange={(e) =>
-                                handleQuantityChange(product.product_id, e.target.value)
+                                handleQuantityChange(
+                                  product.product_id,
+                                  e.target.value
+                                )
                               }
                               sx={{
                                 width: 100,
@@ -1303,12 +1451,18 @@ const BookingDetail = () => {
                               }}
                               helperText={`Available: ${product.stock}`}
                             />
-                            <Typography variant="body1" sx={{ minWidth: 150, color: "#4cceac" }}>
+                            <Typography
+                              variant="body1"
+                              sx={{ minWidth: 150, color: "#4cceac" }}
+                            >
                               Total:{" "}
                               {new Intl.NumberFormat("vi-VN", {
                                 style: "currency",
                                 currency: "VND",
-                              }).format(product.price * (quantities[product.product_id] || 1))}
+                              }).format(
+                                product.price *
+                                  (quantities[product.product_id] || 1)
+                              )}
                             </Typography>
                           </>
                         )}
@@ -1328,13 +1482,13 @@ const BookingDetail = () => {
                   }}
                 >
                   <Typography variant="h6" sx={{ color: "#4cceac" }}>
-                    Total: {" "}
+                    Total:{" "}
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     }).format(calculateTotalPrice())}
                   </Typography>
-                  
+
                   <Button
                     onClick={handleAddProducts}
                     disabled={selectedProducts.length === 0}
@@ -1367,10 +1521,9 @@ const BookingDetail = () => {
                   fontSize: "14px",
                   fontWeight: "bold",
                   padding: "10px 20px",
-                   marginBottom: "10px",
+                  marginBottom: "10px",
                   "&:hover": {
                     backgroundColor: "#3da58a",
-                   
                   },
                 }}
               >
@@ -1384,31 +1537,33 @@ const BookingDetail = () => {
       <Modal open={showQRModal} onClose={handleCloseQRModal}>
         <Box
           sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
             width: 400,
-            bgcolor: 'background.paper',
+            bgcolor: "background.paper",
             borderRadius: 2,
             boxShadow: 24,
             p: 4,
-            textAlign: 'center'
-          }}>
+            textAlign: "center",
+          }}
+        >
           <Typography variant="h6" component="h2" gutterBottom>
             Scan QR code to pay via ZaloPay
           </Typography>
 
           {/* Thêm đồng hồ đếm ngược */}
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              color: countdown <= 60 ? '#f44336' : '#2196f3',
-              fontWeight: 'bold',
-              mb: 2 
+          <Typography
+            variant="subtitle1"
+            sx={{
+              color: countdown <= 60 ? "#f44336" : "#2196f3",
+              fontWeight: "bold",
+              mb: 2,
             }}
           >
-            Time remaining: {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+            Time remaining: {Math.floor(countdown / 60)}:
+            {(countdown % 60).toString().padStart(2, "0")}
           </Typography>
 
           <Box

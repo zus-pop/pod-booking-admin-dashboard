@@ -13,6 +13,7 @@ export const initializeSocket = (token) => {
 
     socket.on('connect', () => {
       console.log('Connected to server');
+      
     });
 
     socket.on('disconnect', () => {
@@ -21,6 +22,11 @@ export const initializeSocket = (token) => {
 
     socket.on('connect_error', (err) => {
       console.log('Error connecting to server: ', err.message);
+      if (err.message.includes("jwt expired")) {
+        toast.warning("Session expired! Please login again.");
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
     });
   }
   return socket;
