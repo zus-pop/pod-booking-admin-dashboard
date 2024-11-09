@@ -224,15 +224,16 @@ const Payment = () => {
         }
       );
       
-      toast.success("Refund successful");
+      toast.warning(`Refund Slot ${refundingSlot.slot_id} processing...`);
       setIsRefundModalOpen(false);
       setRefundingSlot(null);
       handleCloseModal();
 
-      setTimeout(async () => {
+      setTimeout(async () => {  
         await fetchData();
+        toast.success(`Refund Slot ${refundingSlot.slot_id} successfully`);
       }, 5000);
-
+     
     } catch (error) {
       console.error("Error refunding slot:", error);
       toast.error(error.response?.data?.message || "Failed to process refund");
@@ -240,58 +241,78 @@ const Payment = () => {
   };
 
   const columns = [
-    { field: "payment_id", headerName: "Payment_ID", flex: 0.5 },
+    { 
+      field: "payment_id", 
+      headerName: "Payment ID", 
+      flex: 0.7,
+      minWidth: 100 
+    },
     {
       field: "transaction_id",
-      headerName: "Transaction_ID",
-      flex: 1,
+      headerName: "Transaction ID",
+      flex: 1.2,
+      minWidth: 150,
       cellClassName: "name-column--cell",
     },
     {
       field: "booking_id",
-      headerName: "Booking_ID",
-      flex: 1,
+      headerName: "Booking ID",
+      flex: 0.7,
+      minWidth: 100,
       cellClassName: "name-column--cell",
     },
     {
       field: "payment_date",
       headerName: "Payment Date",
       flex: 1,
-      
+      minWidth: 160,
     },
-    
     {
       field: "total_cost",
       headerName: "Total Cost",
-      flex: 1,
+      flex: 0.8,
+      minWidth: 120,
       valueFormatter: (params) => {
         return new Intl.NumberFormat('vi-VN', {
-                  style: 'currency',
-                  currency: 'VND',
-         
+          style: 'currency',
+          currency: 'VND',
         }).format(params.value)
       }
     },
     {
       field: "refunded_amount",
       headerName: "Refund Amount",
-      flex: 1,
+      flex: 0.8,
+      minWidth: 120,
       valueFormatter: (params) => {
         return new Intl.NumberFormat('vi-VN', {
-                  style: 'currency',
-                  currency: 'VND',
-         
+          style: 'currency',
+          currency: 'VND',
         }).format(params.value)
       }
     },
     {
-      field: "payment_status",
-      headerName: "Status",
+      field: "refunded_date",
+      headerName: "Refund Date",
       flex: 1,
+      minWidth: 160,
+      renderCell: (params) => (
+        <Typography>
+          {params.value ? params.value : "Not refunded yet"}
+        </Typography>
+      ),
     },
     {
-      field: "detail",  
+      field: "payment_status",
+      headerName: "Status",
+      flex: 0.8,
+      minWidth: 100,
+    },
+    {
+      field: "detail",
       headerName: "Detail",
+      flex: 0.8,
+      minWidth: 120,
       renderCell: (params) => (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Button
@@ -303,7 +324,6 @@ const Payment = () => {
           </Button>
         </div>
       ),
-      flex: 1,
     },
   ];
 
@@ -562,6 +582,9 @@ const Payment = () => {
                       currency: "VND",
                     }).format(selectedPayment.total_cost)}
                   </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                    Refund Date: {selectedPayment.refunded_date ? selectedPayment.refunded_date : "Not refunded yet"}
+                  </Typography>
                 </Box>
               )}
 
@@ -601,52 +624,55 @@ const Payment = () => {
 
               {selectedPayment?.payment_for === "Slot" && (
                 <Box>
-                  {paymentDetails.map((slot) => (
-                    <Box
-                      key={slot.slot_id}
-                      sx={{
-                        mb: 2,
-                        p: 2,
-                        bgcolor: colors.primary[500],
-                        borderRadius: 1,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                      }}
-                    >
-                      <Box>
-                        <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
-                          Start Time: {new Date(slot.start_time).toLocaleString()}
-                        </Typography>
-                        <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
-                          End Time: {new Date(slot.end_time).toLocaleString()}
-                        </Typography>
-                        <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
-                          Price:{" "}
-                          {new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(slot.price)}
-                        </Typography>
+                  {paymentDetails.map((slot) => {
+                    const isSlotExpired = new Date() > new Date(slot.end_time);
+                    return (
+                      <Box
+                        key={slot.slot_id}
+                        sx={{
+                          mb: 2,
+                          p: 2,
+                          bgcolor: colors.primary[500],
+                          borderRadius: 1,
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center"
+                        }}
+                      >
+                        <Box>
+                          <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                            Start Time: {new Date(slot.start_time).toLocaleString()}
+                          </Typography>
+                          <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                            End Time: {new Date(slot.end_time).toLocaleString()}
+                          </Typography>
+                          <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
+                            Price:{" "}
+                            {new Intl.NumberFormat("vi-VN", {
+                              style: "currency",
+                              currency: "VND",
+                            }).format(slot.price)}
+                          </Typography>
+                        </Box>
+                        
+                        {(selectedPayment.payment_status === "Paid" || selectedPayment.payment_status === "Refunded") && (
+                          <Button
+                            variant="contained"
+                            color="error"
+                            disabled={slot.status === "Refunded" || isSlotExpired}
+                            onClick={() => handleRefundClick(slot, selectedPayment.payment_id)}
+                            sx={{
+                              ml: 2,
+                              bgcolor: 'red',
+                              "&:hover": { bgcolor: 'red' },
+                            }}
+                          >
+                            {slot.status === "Refunded" ? "Refunded" : isSlotExpired ? "Expired" : "Refund"}
+                          </Button>
+                        )}
                       </Box>
-                      
-                      {(selectedPayment.payment_status === "Paid" || selectedPayment.payment_status === "Refunded")  && (
-                        <Button
-                          variant="contained"
-                          color="error"
-                          disabled={slot.status === "Refunded"}
-                          onClick={() => handleRefundClick(slot, selectedPayment.payment_id)}
-                          sx={{
-                            ml: 2,
-                            bgcolor: 'red',
-                            "&:hover": { bgcolor: 'red' },
-                          }}
-                        >
-                          {slot.status === "Refunded" ? "Refunded" : "Refund"}
-                        </Button>
-                      )}
-                    </Box>
-                  ))}
+                    );
+                  })}
                 </Box>
               )}
 

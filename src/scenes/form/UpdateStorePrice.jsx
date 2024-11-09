@@ -20,7 +20,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
   const validationSchema = Yup.object({
     price: Yup.number().required("Price is required"),
     start_hour: Yup.number().required("Start hour is required").min(0).max(23),
-    end_hour: Yup.number().required("End hour is required").min(0).max(23),
+    end_hour: Yup.number().required("End hour is required").min(1).max(24),
     days_of_week: Yup.array()
       .min(1, "Select at least one day")
       .required("Days of week are required"),

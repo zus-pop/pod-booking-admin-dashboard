@@ -136,6 +136,21 @@ const GenerateSlot = () => {
   };
 
   const handleFormSubmit = async (values, actions) => {
+    const now = new Date();
+    const startDate = values.startDate;
+    const startHour = selectedStorePrice?.start_hour || 0;
+    
+    const slotStartTime = new Date(startDate);
+    slotStartTime.setHours(startHour, 0, 0, 0);
+
+    if (
+      startDate.toDateString() === now.toDateString() && 
+      slotStartTime < now
+    ) {
+      toast.error("Cannot generate slots in the past");
+      return;
+    }
+
     console.log({
       ...values,
       startDate: values.startDate.toISOString().split("T")[0],
@@ -158,6 +173,7 @@ const GenerateSlot = () => {
       if (response.status === 201) {
         toast.success(response.data.message);
         actions.resetForm();
+        fetchData();
       } } catch (error) {
         if (error.response && error.response.status === 400) {
        
@@ -299,29 +315,7 @@ const GenerateSlot = () => {
     );
   };
 
-  const getStatusStyles = (isAvailable) => {
-    if (isAvailable) {
-      return {
-        backgroundColor: "rgba(76, 206, 172, 0.1)",
-        color: "#4cceac",
-        borderColor: "#4cceac",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "12px",
-        fontWeight: "500"
-      };
-    } else {
-      return {
-        backgroundColor: "rgba(244, 67, 54, 0.1)", 
-        color: "#f44336",
-        borderColor: "#f44336",
-        padding: "2px 8px",
-        borderRadius: "4px",
-        fontSize: "12px",
-        fontWeight: "500"
-      };
-    }
-  };
+
 
   return (
     <Box m="20px">

@@ -26,6 +26,7 @@ import LineChart from "./scenes/chart/LineChart";
 
 import StoreRevenue from "./scenes/chart/StoreRevenue";
 import PODRevenueChart from "./scenes/chart/PODRevenueChart";
+import RefundAnalysisChart from "./scenes/chart/RefundAnalysisChart";
 
 
 function App() {
@@ -65,7 +66,7 @@ function App() {
        
           <Route path="pod-revenue" element={<PODRevenueChart/>} />
           <Route path="store-revenue" element={<StoreRevenue />} />
-
+          <Route path="refund-analysis" element={<RefundAnalysisChart />} />
           
      
         </Route>

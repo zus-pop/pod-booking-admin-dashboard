@@ -83,6 +83,10 @@ const BookingDetail = () => {
   // Add new state for cash payment confirmation modal
   const [isCashConfirmModalOpen, setIsCashConfirmModalOpen] = useState(false);
 
+  // Add new state for refund modal and refunding slot
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundingSlot, setRefundingSlot] = useState(null);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -510,6 +514,131 @@ const BookingDetail = () => {
       setIsCashConfirmModalOpen(false);
     }
   };
+
+  // Add new handler for refund click
+  const handleRefundClick = (slot) => {
+    setRefundingSlot(slot);
+    setIsRefundModalOpen(true);
+  };
+
+  // Add new handler for refund confirmation
+  const handleRefundSlot = async () => {
+    try {
+      console.log(refundingSlot)
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API_URL}/api/v1/payments/${refundingSlot.payment_id}/refund`,
+        {
+          bookingSlots: [
+            {
+              slot_id: refundingSlot.slot_id,
+              unit_price: refundingSlot.price,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+      toast.warning(`Refund Slot ${refundingSlot.slot_id} processing...`);
+      setIsRefundModalOpen(false);
+      setRefundingSlot(null);
+
+      setTimeout(async () => {  
+        await fetchBookingDetail();
+        toast.success(`Refund Slot ${refundingSlot.slot_id} successfully`);
+      }, 5000);
+    }
+    } catch (error) {
+      console.error("Error refunding slot:", error);
+      toast.error(error.response?.data?.message || "Failed to process refund");
+    }
+  };
+
+
+  // Add new refund confirmation modal
+  const RefundModal = () => (
+    <Modal
+      open={isRefundModalOpen}
+      onClose={() => {
+        setIsRefundModalOpen(false);
+        setRefundingSlot(null);
+      }}
+    >
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: 400,
+          bgcolor: "#1F2A40",
+          border: "1px solid #434957",
+          boxShadow: 24,
+          p: 4,
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h6" sx={{ color: "#fff", mb: 3 }}>
+          Confirm Refund
+        </Typography>
+
+        {refundingSlot && (
+          <>
+            <Typography sx={{ color: "#fff", mb: 2 }}>
+              Are you sure you want to refund this slot?
+            </Typography>
+            <Typography sx={{ color: "#fff", mb: 1 }}>
+              Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
+            </Typography>
+            <Typography sx={{ color: "#fff", mb: 1 }}>
+              End Time: {new Date(refundingSlot.end_time).toLocaleString()}
+            </Typography>
+            <Typography sx={{ color: "#fff", mb: 2 }}>
+              Amount to Refund:{" "}
+              {new Intl.NumberFormat("vi-VN", {
+                style: "currency",
+                currency: "VND",
+              }).format(refundingSlot.price)}
+            </Typography>
+          </>
+        )}
+
+        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+          <Button
+            onClick={() => {
+              setIsRefundModalOpen(false);
+              setRefundingSlot(null);
+            }}
+            variant="outlined"
+            sx={{
+              color: "#fff",
+              borderColor: "#fff",
+              "&:hover": {
+                borderColor: "#ccc",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleRefundSlot}
+            variant="contained"
+            color="error"
+            sx={{
+              bgcolor: "red",
+              "&:hover": { bgcolor: "darkred" },
+            }}
+          >
+            Confirm Refund
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+  );
 
   return (
     <Box m="20px" height="100vh">
@@ -982,7 +1111,26 @@ const BookingDetail = () => {
                             {slot.slot_id}
                           </Typography>
                         </Box>
-
+                        <Box sx={{ mb: 2 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: "#94a3b8",
+                              mb: 1,
+                            }}
+                          >
+                            Payment ID
+                          </Typography>
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              color: "#fff",
+                              fontWeight: "500",
+                            }}
+                          >
+                            {slot.payment_id}
+                          </Typography>
+                        </Box>
                         <Box sx={{ mb: 2 }}>
                           <Typography
                             variant="body2"
@@ -1135,6 +1283,7 @@ const BookingDetail = () => {
                                     : "Check In"}
                                 </Button>
                               ) : (
+                                
                                 <Button
                                   disabled
                                   sx={{
@@ -1148,7 +1297,7 @@ const BookingDetail = () => {
                                     }
                                   }}
                                 >
-                                  Under Maintenance
+                                  Slot is refunded
                                 </Button>
                               )
                             )}
@@ -1172,6 +1321,23 @@ const BookingDetail = () => {
                                   Add Products
                                 </Button>
                               )}
+                            {/* Add Refund Button */}
+                            {slot.status === "Not Yet" && 
+                             !isSlotDisabled(slot.end_time, bookingDetail.booking_status) && (
+                              <Button
+                                onClick={() => handleRefundClick(slot)}
+                                sx={{
+                                  backgroundColor: "#f44336",
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                  "&:hover": {
+                                    backgroundColor: "#d32f2f",
+                                  },
+                                }}
+                              >
+                                Refund
+                              </Button>
+                            )}
                           </>
                         ) : (
                           <Button
@@ -1804,6 +1970,7 @@ const BookingDetail = () => {
           </Box>
         </Box>
       </Modal>
+      <RefundModal />
     </Box>
   );
 };
