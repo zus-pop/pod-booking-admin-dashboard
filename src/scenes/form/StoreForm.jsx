@@ -6,6 +6,7 @@ import {
   Select,
   InputLabel,
   FormControl,
+  Typography,
 } from "@mui/material";
 import React from "react";
 import { Header } from "../../components";
@@ -25,13 +26,41 @@ const failnotify = () => toast.error("Fail to create! Please try again later");
 const initialValues = {
   store_name: "",
   address: "",
+  district: "",
   image: null,
   hotline: "",
 };
 
+const districts = [
+  "District 1",
+  "District 2",
+  "District 3",
+  "District 4",
+  "District 5",
+  "District 6",
+  "District 7",
+  "District 8",
+  "District 9",
+  "District 10",
+  "District 11",
+  "District 12",
+  "Binh Thanh",
+  "Binh Tan",
+  "Phu Nhuan",
+  "Tan Binh",
+  "Tan Phu",
+  "Go Vap",
+  "Can Gio",
+  "Cu Chi",
+  "Binh Chanh",
+  "Hoc Mon",
+  "Nha Be",
+];
+
 const checkoutSchema = yup.object().shape({
   store_name: yup.string() .matches(/^[a-zA-Z0-9_ ]*$/, "Store Name không được chứa ký tự đặc biệt").required("Store name is required"),
   address: yup.string().required("Address is required"),
+  district: yup.string().required("District is required"),
   image: yup.mixed().required("Image is required"),
   hotline: yup
     .string()
@@ -57,8 +86,10 @@ const StoreForm = () => {
   };
   const handleFormSubmit = async (values, actions) => {
     const formData = new FormData();
+    const fullAddress = `${values.address}, ${values.district}, Ho Chi Minh City`;
+    
     formData.append("store_name", values.store_name);
-    formData.append("address", values.address);
+    formData.append("address", fullAddress);
     formData.append("image", values.image);
     formData.append("hotline", values.hotline);
     formData.forEach((value, key) => {
@@ -106,7 +137,7 @@ const StoreForm = () => {
           
               display="flex" flexDirection="column" gap="30px"
             >
-           
+               
               <TextField
                 fullWidth
                 variant="filled"
@@ -119,11 +150,41 @@ const StoreForm = () => {
                 helperText={touched.store_name && errors.store_name}
                 sx={{ gridColumn: "span 2" }}
               />
+               <Typography>
+                Choose address for new store in <Box component="span" sx={{ fontWeight: 'bold'  }}>Ho Chi Minh City</Box>
+              </Typography>
+              
+              <FormControl fullWidth variant="filled" error={touched.district && Boolean(errors.district)}>
+                <InputLabel>District Of New Store</InputLabel>
+                <Select
+                  value={values.district}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="district"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200, // Set maximum height for scrollable area
+                        width: 250,
+                      },
+                    },
+                  }}
+                >
+                  {districts.map((district) => (
+                    <MenuItem key={district} value={district}>
+                      {district}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.district && errors.district && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.district}</div>
+                )}
+              </FormControl>
               <TextField
                 fullWidth
                 multiline
                 variant="filled"
-                label="Address Of New Store"
+                label="Street Address Of New Store"
                 onBlur={handleBlur}
                 onChange={handleChange}
                 value={values.address}
@@ -132,6 +193,7 @@ const StoreForm = () => {
                 helperText={touched.address && errors.address}
                 sx={{ gridColumn: "span 2" }}
               />
+             
               <TextField
                 fullWidth
                 multiline
@@ -152,7 +214,7 @@ const StoreForm = () => {
                   startIcon={<CloudUpload />}
                   sx={{ p: 2, width: "100%" }}
                 >
-                  Upload Image
+                  Upload Image For Store
                   <VisuallyHiddenInput
                     type="file"
                     hidden

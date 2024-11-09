@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "@mui/material/Modal";
 import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
+import { SearchOutlined } from "@mui/icons-material";
 
 const Payment = () => {
   const theme = useTheme();
@@ -43,6 +44,12 @@ const Payment = () => {
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [searchById, setSearchById] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
+
+  const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
+  const [refundingSlot, setRefundingSlot] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -151,6 +158,87 @@ const Payment = () => {
     setPaymentDetails([]);
   };
 
+  const handleSearchByIdChange = (e) => {
+    const value = e.target.value;
+    setSearchById(value);
+    
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    const timeoutId = setTimeout(() => {
+      if (!value) {
+        fetchData();
+      } else {
+        handleSearchById(value);
+      }
+    }, 500); 
+
+    setSearchTimeout(timeoutId);
+  };
+
+  const handleSearchById = async (value) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${API_URL}/api/v1/payments/${value}`
+      );
+      if (response.data) {
+        const payment = response.data;
+        setData([payment]);
+        setTotal(1);
+      }
+    } catch (error) {
+      console.error("Error searching payment:", error);
+      setData([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefundClick = (slot, paymentId) => {
+    setRefundingSlot({
+      ...slot,
+      paymentId
+    });
+    setIsRefundModalOpen(true);
+  };
+
+  const handleRefundSlot = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${API_URL}/api/v1/payments/${refundingSlot.paymentId}/refund`,
+        {
+          bookingSlots: [
+            {
+              slot_id: refundingSlot.slot_id,
+              unit_price: refundingSlot.price,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      toast.success("Refund successful");
+      setIsRefundModalOpen(false);
+      setRefundingSlot(null);
+      handleCloseModal();
+
+      setTimeout(async () => {
+        await fetchData();
+      }, 5000);
+
+    } catch (error) {
+      console.error("Error refunding slot:", error);
+      toast.error(error.response?.data?.message || "Failed to process refund");
+    }
+  };
+
   const columns = [
     { field: "payment_id", headerName: "Payment_ID", flex: 0.5 },
     {
@@ -167,13 +255,26 @@ const Payment = () => {
     },
     {
       field: "payment_date",
-      headerName: "Date",
+      headerName: "Payment Date",
       flex: 1,
       
     },
+    
     {
       field: "total_cost",
       headerName: "Total Cost",
+      flex: 1,
+      valueFormatter: (params) => {
+        return new Intl.NumberFormat('vi-VN', {
+                  style: 'currency',
+                  currency: 'VND',
+         
+        }).format(params.value)
+      }
+    },
+    {
+      field: "refunded_amount",
+      headerName: "Refund Amount",
       flex: 1,
       valueFormatter: (params) => {
         return new Intl.NumberFormat('vi-VN', {
@@ -202,7 +303,7 @@ const Payment = () => {
           </Button>
         </div>
       ),
-      flex: 0.5,
+      flex: 1,
     },
   ];
 
@@ -260,6 +361,26 @@ const Payment = () => {
         sx={{ display:"flex" }}
       >
         <FormControl sx={{ minWidth: 200, mr: 2 }}>
+          <TextField
+            label="Search by Booking ID"
+            variant="filled"
+            value={searchById}
+            onChange={handleSearchByIdChange}
+            InputProps={{
+              endAdornment: (
+                <IconButton disabled>
+                  <SearchOutlined />
+                </IconButton>
+              ),
+            }}
+            sx={{
+              "& .MuiInputBase-root": {
+                height: "50px",
+              },
+            }}
+          />
+        </FormControl>
+        <FormControl sx={{ minWidth: 200, mr: 2 }}>
           <InputLabel id="type-select-label">Payment Status</InputLabel>
           <Select
             labelId="type-select-label"
@@ -271,6 +392,7 @@ const Payment = () => {
             <MenuItem value="Paid">Paid</MenuItem>
             <MenuItem value="Failed">Failed</MenuItem>
             <MenuItem value="Unpaid">Unpaid</MenuItem>
+            <MenuItem value="Refunded">Refunded</MenuItem>
           </Select>
         </FormControl>
         <FormControl sx={{ minWidth: 200 }}>
@@ -487,21 +609,42 @@ const Payment = () => {
                         p: 2,
                         bgcolor: colors.primary[500],
                         borderRadius: 1,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
                       }}
                     >
-                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
-                        Start Time: {new Date(slot.start_time).toLocaleString()}
-                      </Typography>
-                      <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
-                        End Time: {new Date(slot.end_time).toLocaleString()}
-                      </Typography>
-                      <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
-                        Price:{" "}
-                        {new Intl.NumberFormat("vi-VN", {
-                          style: "currency",
-                          currency: "VND",
-                        }).format(slot.price)}
-                      </Typography>
+                      <Box>
+                        <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                          Start Time: {new Date(slot.start_time).toLocaleString()}
+                        </Typography>
+                        <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                          End Time: {new Date(slot.end_time).toLocaleString()}
+                        </Typography>
+                        <Typography sx={{ color: colors.gray[100], fontSize: "16px" }}>
+                          Price:{" "}
+                          {new Intl.NumberFormat("vi-VN", {
+                            style: "currency",
+                            currency: "VND",
+                          }).format(slot.price)}
+                        </Typography>
+                      </Box>
+                      
+                      {(selectedPayment.payment_status === "Paid" || selectedPayment.payment_status === "Refunded")  && (
+                        <Button
+                          variant="contained"
+                          color="error"
+                          disabled={slot.status === "Refunded"}
+                          onClick={() => handleRefundClick(slot, selectedPayment.payment_id)}
+                          sx={{
+                            ml: 2,
+                            bgcolor: 'red',
+                            "&:hover": { bgcolor: 'red' },
+                          }}
+                        >
+                          {slot.status === "Refunded" ? "Refunded" : "Refund"}
+                        </Button>
+                      )}
                     </Box>
                   ))}
                 </Box>
@@ -521,6 +664,89 @@ const Payment = () => {
               </Box>
             </>
           )}
+        </Box>
+      </Modal>
+
+      <Modal
+        open={isRefundModalOpen}
+        onClose={() => {
+          setIsRefundModalOpen(false);
+          setRefundingSlot(null);
+        }}
+        aria-labelledby="refund-confirmation-modal"
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "#000000",
+            border: `1px solid ${colors.primary[500]}`,
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography
+            variant="h6"
+            component="h2"
+            sx={{ color: colors.gray[100], mb: 3 }}
+          >
+            Confirm Refund
+          </Typography>
+
+          {refundingSlot && (
+            <>
+              <Typography sx={{ color: colors.gray[100], mb: 2 }}>
+                Are you sure you want to refund this slot?
+              </Typography>
+              <Typography sx={{ color: colors.gray[100], mb: 1 }}>
+                Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
+              </Typography>
+              <Typography sx={{ color: colors.gray[100], mb: 1 }}>
+                End Time: {new Date(refundingSlot.end_time).toLocaleString()}
+              </Typography>
+              <Typography sx={{ color: colors.gray[100], mb: 2 }}>
+                Amount to Refund:{" "}
+                {new Intl.NumberFormat("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                }).format(refundingSlot.price)}
+              </Typography>
+            </>
+          )}
+
+          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button
+              onClick={() => {
+                setIsRefundModalOpen(false);
+                setRefundingSlot(null);
+              }}
+              variant="outlined"
+              sx={{
+                color: colors.gray[100],
+                borderColor: colors.gray[100],
+                "&:hover": {
+                  borderColor: colors.gray[300],
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRefundSlot}
+              variant="contained"
+              color="error"
+              sx={{
+                bgcolor: "red",
+                "&:hover": { bgcolor: "darkred" },
+              }}
+            >
+              Confirm Refund
+            </Button>
+          </Box>
         </Box>
       </Modal>
     </Box>
