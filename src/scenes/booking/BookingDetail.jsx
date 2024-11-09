@@ -80,6 +80,9 @@ const BookingDetail = () => {
 
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
+  // Add new state for cash payment confirmation modal
+  const [isCashConfirmModalOpen, setIsCashConfirmModalOpen] = useState(false);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -91,14 +94,34 @@ const BookingDetail = () => {
     setBookingDetail(result.data);
     setSlots(result.data.slots);
 
-    // Lấy products cho từng slot
+    // Lấy và combine products cho từng slot
     const slotProducts = {};
     for (const slot of result.data.slots) {
       try {
         const productsResponse = await axios.get(
           `${API_URL}/api/v1/bookings/${id}/slots/${slot.slot_id}/products`
         );
-        slotProducts[slot.slot_id] = productsResponse.data || [];
+        
+        // Combine duplicate products
+        const combinedProducts = productsResponse.data.reduce((acc, product) => {
+          const existingProduct = acc.find(p => p.product_id === product.product_id);
+          
+          if (existingProduct) {
+            // Update existing product
+            existingProduct.quantity += product.quantity;
+            existingProduct.subtotal = existingProduct.quantity * existingProduct.unit_price;
+          } else {
+            // Add new product with subtotal
+            acc.push({
+              ...product,
+              subtotal: product.quantity * product.unit_price
+            });
+          }
+          
+          return acc;
+        }, []);
+
+        slotProducts[slot.slot_id] = combinedProducts || [];
       } catch (error) {
         slotProducts[slot.slot_id] = [];
       }
@@ -186,8 +209,7 @@ const BookingDetail = () => {
         setPaymentUrl(response.data.payment_url);
         setShowQRModal(true);
         setIsAddProductModalOpen(false);
-        setSelectedProducts([]);
-        setQuantities({});
+      
       }
     } catch (error) {
       console.error("Error adding products:", error);
@@ -218,6 +240,8 @@ const BookingDetail = () => {
       setShowQRModal(false);
       setPaymentUrl(null);
       fetchBookingDetail();
+      setSelectedProducts([]);
+      setQuantities({});
     };
 
     socket.on("notification", handleNotification);
@@ -301,6 +325,8 @@ const BookingDetail = () => {
       slots.forEach((slot) => {
         if (
           isSlotExpired(slot.end_time) &&
+        
+          slot.status !== "Checked In"   &&
           slot.status !== "Checked Out" &&
           slot.status !== "Absent"
         ) {
@@ -441,6 +467,47 @@ const BookingDetail = () => {
     } finally {
       setIsCheckoutModalOpen(false);
       setSelectedSlotId(null);
+    }
+  };
+
+  // Add new handler for cash payment
+  const handleCashPayment = () => {
+    setIsCashConfirmModalOpen(true);
+  };
+
+  // Add new handler for confirmed cash payment
+  const handleConfirmCashPayment = async () => {
+    try {
+      const productsToAdd = selectedProducts.map((productId) => ({
+        booking_id: parseInt(id),
+        slot_id: selectedSlotId,
+        product_id: productId,
+        quantity: quantities[productId],
+        unit_price: availableProducts.find((p) => p.product_id === productId).price,
+      }));
+
+      const response = await axios.post(
+        `${API_URL}/api/v1/bookings/${id}/cash-products`,
+        productsToAdd,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        toast.success("Cash payment processed successfully");
+        setIsAddProductModalOpen(false);
+        setSelectedProducts([]);
+        setQuantities({});
+        fetchBookingDetail();
+      }
+    } catch (error) {
+      console.error("Error processing cash payment:", error);
+      toast.error("Failed to process cash payment");
+    } finally {
+      setIsCashConfirmModalOpen(false);
     }
   };
 
@@ -1023,7 +1090,7 @@ const BookingDetail = () => {
                                 Check Out
                               </Button>
                             ) : (
-                              slot.status !== "Checked Out" && (
+                              slot.status !== "Checked Out" && slot.status !== "Refunded" ? (
                                 <Button
                                   onClick={() => handleCheckin(slot.slot_id)}
                                   disabled={isSlotDisabled(
@@ -1066,6 +1133,22 @@ const BookingDetail = () => {
                                   )
                                     ? "Expired"
                                     : "Check In"}
+                                </Button>
+                              ) : (
+                                <Button
+                                  disabled
+                                  sx={{
+                                    backgroundColor: "#f44336",
+                                    color: "#fff",
+                                    fontWeight: "600",
+                                    opacity: 0.7,
+                                    "&:disabled": {
+                                      backgroundColor: "#f44336",
+                                      color: "#fff",
+                                    }
+                                  }}
+                                >
+                                  Under Maintenance
                                 </Button>
                               )
                             )}
@@ -1489,24 +1572,44 @@ const BookingDetail = () => {
                     }).format(calculateTotalPrice())}
                   </Typography>
 
-                  <Button
-                    onClick={handleAddProducts}
-                    disabled={selectedProducts.length === 0}
-                    sx={{
-                      backgroundColor: "#4cceac",
-                      color: "#000",
-                      px: 4,
-                      "&:hover": {
-                        backgroundColor: "#3da58a",
-                      },
-                      "&:disabled": {
-                        backgroundColor: "rgba(76, 206, 172, 0.5)",
-                        color: "rgba(0, 0, 0, 0.7)",
-                      },
-                    }}
-                  >
-                    Add Selected Products
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                      onClick={handleCashPayment}
+                      disabled={selectedProducts.length === 0}
+                      sx={{
+                        backgroundColor: "#f44336",
+                        color: "#fff",
+                        px: 4,
+                        "&:hover": {
+                          backgroundColor: "#d32f2f",
+                        },
+                        "&:disabled": {
+                          backgroundColor: "rgba(244, 67, 54, 0.5)",
+                          color: "rgba(255, 255, 255, 0.7)",
+                        },
+                      }}
+                    >
+                      Pay with Cash
+                    </Button>
+                    <Button
+                      onClick={handleAddProducts}
+                      disabled={selectedProducts.length === 0}
+                      sx={{
+                        backgroundColor: "#4cceac",
+                        color: "#000",
+                        px: 4,
+                        "&:hover": {
+                          backgroundColor: "#3da58a",
+                        },
+                        "&:disabled": {
+                          backgroundColor: "rgba(76, 206, 172, 0.5)",
+                          color: "rgba(0, 0, 0, 0.7)",
+                        },
+                      }}
+                    >
+                      Pay with ZaloPay
+                    </Button>
+                  </Box>
                 </Box>
               </Box>
             </Modal>
@@ -1637,6 +1740,70 @@ const BookingDetail = () => {
           }
         `}
       </style>
+
+      {/* Cash Payment Confirmation Modal */}
+      <Modal open={isCashConfirmModalOpen} onClose={() => setIsCashConfirmModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h6" component="h2" gutterBottom>
+            Confirm Cash Payment
+          </Typography>
+
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            Total Amount: {" "}
+            {new Intl.NumberFormat("vi-VN", {
+              style: "currency",
+              currency: "VND",
+            }).format(calculateTotalPrice())}
+          </Typography>
+
+          <Typography variant="body2" sx={{ mb: 4, color: "text.secondary" }}>
+            Are you sure you want to process this cash payment?
+          </Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+            <Button
+              onClick={() => setIsCashConfirmModalOpen(false)}
+              variant="outlined"
+              sx={{
+                borderColor: "#4cceac",
+                color: "#4cceac",
+                "&:hover": {
+                  borderColor: "#3da58a",
+                  backgroundColor: "rgba(76, 206, 172, 0.1)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmCashPayment}
+              variant="contained"
+              sx={{
+                backgroundColor: "#4cceac",
+                color: "#000",
+                "&:hover": {
+                  backgroundColor: "#3da58a",
+                },
+              }}
+            >
+              Confirm Payment
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };

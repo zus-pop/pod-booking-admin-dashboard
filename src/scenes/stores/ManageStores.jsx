@@ -21,6 +21,9 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import UpdateStore from "../form/UpdateStore";
 import { useRole } from "../../RoleContext";
+import StarIcon from '@mui/icons-material/Star';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarHalfIcon from '@mui/icons-material/StarHalf';
 
 const Stores = () => {
   const { userRole } = useRole();
@@ -100,6 +103,7 @@ const Stores = () => {
           address: store.address,
           hotline: store.hotline,
           image: store.image,
+          rating: store.rating || 0,
         }));
       } else {
         formattedData = [];
@@ -212,6 +216,52 @@ const Stores = () => {
     setPageSize(newPaginationModel.pageSize);
   };
 
+  const renderStarRating = (rating) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    // Add full stars
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <StarIcon 
+          key={`full-${i}`} 
+          sx={{ color: colors.greenAccent[500] }} 
+        />
+      );
+    }
+
+    // Add half star if needed
+    if (hasHalfStar) {
+      stars.push(
+        <StarHalfIcon 
+          key="half" 
+          sx={{ color: colors.greenAccent[500] }} 
+        />
+      );
+    }
+
+    // Add empty stars
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <StarBorderIcon 
+          key={`empty-${i}`} 
+          sx={{ color: colors.greenAccent[500] }} 
+        />
+      );
+    }
+
+    return (
+      <Box display="flex" alignItems="center">
+        {stars}
+        <Typography sx={{ ml: 1, color: colors.greenAccent[500] }}>
+          ({rating.toFixed(1)})
+        </Typography>
+      </Box>
+    );
+  };
+
   const columns = [
     { field: "store_id", headerName: "ID", flex: 0.2 },
     {
@@ -253,6 +303,12 @@ const Stores = () => {
           {params.value}
         </div>
       )
+    },
+    {
+      field: "rating",
+      headerName: "Rating",
+      flex: 1,
+      renderCell: (params) => renderStarRating(params.value),
     },
     {
       field: "detail",
