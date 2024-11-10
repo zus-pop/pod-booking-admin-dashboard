@@ -150,11 +150,16 @@ const GenerateSlot = () => {
       toast.error("Cannot generate slots in the past");
       return;
     }
-
+    const formatToLocalDate = (date) => {
+      const localDate = new Date(
+        date.getTime() - date.getTimezoneOffset() * 60000
+      );
+      return localDate.toISOString().split("T")[0];
+    };
     console.log({
       ...values,
-      startDate: values.startDate.toISOString().split("T")[0],
-      endDate: values.endDate.toISOString().split("T")[0],
+      startDate: formatToLocalDate(values.startDate),
+      endDate: formatToLocalDate(values.endDate),
       pod_id: +pod_id,
       startHour: selectedStorePrice?.start_hour,
       endHour: selectedStorePrice?.end_hour,
@@ -163,8 +168,8 @@ const GenerateSlot = () => {
     try {
       const response = await axios.post(`${API_URL}/api/v1/slots`, {
         ...values,
-        startDate: values.startDate.toISOString().split("T")[0],
-        endDate: values.endDate.toISOString().split("T")[0],
+        startDate: formatToLocalDate(values.startDate),
+      endDate: formatToLocalDate(values.endDate),
         pod_id: +pod_id,
         startHour: selectedStorePrice?.start_hour,
         endHour: selectedStorePrice?.end_hour,
