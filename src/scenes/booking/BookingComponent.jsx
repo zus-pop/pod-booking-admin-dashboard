@@ -27,7 +27,6 @@ import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Alert } from "@mui/material";
-import { Modal } from "@mui/material";
 import { useRole } from "../../RoleContext";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -47,8 +46,6 @@ const Booking = () => {
   const [anchorEl, setAnchorEl] = useState(null);
 
   const [searchById, setSearchById] = useState("");
-  const [editStatusId, setEditStatusId] = useState(null);
-  const [newStatus, setNewStatus] = useState("");
   const [selectedBookingId, setSelectedBookingId] = useState(null);
 
   const [selectedDate, setSelectedDate] = useState(null);
@@ -57,9 +54,6 @@ const Booking = () => {
     booking_status: "",
     booking_date: "",
   });
-
-  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const [confirmStatus, setConfirmStatus] = useState("");
 
   const [total, setTotal] = useState(0);
   const [pages, setPages] = useState(0);
@@ -132,11 +126,6 @@ const Booking = () => {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const handleEditStatus = (bookingId, newStatus) => {
-    setSelectedBookingId(bookingId);
-    setConfirmStatus(newStatus);
-    setIsConfirmModalOpen(true);
-  };
 
   const handleSearchByIdChange = (e) => {
     const value = e.target.value;
@@ -185,74 +174,6 @@ const Booking = () => {
     }
   };
 
-  const handleUpdate = () => {
-    if (selectedBookingId) {
-      console.log("Updating booking with ID:", selectedBookingId);
-      setEditStatusId(selectedBookingId);
-      const bookingToUpdate = data.find(
-        (booking) => booking.booking_id === selectedBookingId
-      );
-      if (bookingToUpdate) {
-        setNewStatus(bookingToUpdate.booking_status);
-      } else {
-        console.error("Booking not found for ID:", selectedBookingId);
-      }
-    }
-  };
-
-  const handleConfirmUpdate = async (id) => {
-    try {
-      const currentBooking = data.find((booking) => booking.booking_id === id);
-      if (!currentBooking) {
-        throw new Error("Booking not found");
-      }
-
-      if (!isValidStatusTransition(currentBooking.booking_status, newStatus)) {
-        toast.error(
-          `Cannot change from ${currentBooking.booking_status} to ${newStatus}`
-        );
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/api/v1/bookings/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ booking_status: newStatus }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update booking status");
-      }
-
-      toast.success("Booking status updated successfully!");
-      fetchData();
-      setEditStatusId(null);
-    } catch (error) {
-      console.error("Error updating booking status:", error.message);
-      toast.error("Failed to update booking status. Please try again.");
-    }
-  };
-  const isValidStatusTransition = (currentStatus, newStatus) => {
-    const allowedTransitions = STATUS_FLOW[currentStatus] || [];
-    return allowedTransitions.includes(newStatus);
-  };
-
-  const validateDate = (date) => {
-    if (date) {
-      const regex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!regex.test(date)) {
-        setDateError("Vui lòng nhập ngày theo định dạng YYYY-MM-DD");
-        return false;
-      }
-      setDateError("");
-      return true;
-    }
-    setDateError("");
-    return true;
-  };
-
   const handleStatusChange = (e) => {
     setSearchByStatus(e.target.value);
     setPages(0);
@@ -293,6 +214,20 @@ const Booking = () => {
     }
   };
 
+  const validateDate = (date) => {
+    if (date) {
+      const regex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!regex.test(date)) {
+        setDateError("Vui lòng nhập ngày theo định dạng YYYY-MM-DD");
+        return false;
+      }
+      setDateError("");
+      return true;
+    }
+    setDateError("");
+    return true;
+  };
+
   const columns = [
     {
       field: "booking_id",
@@ -318,41 +253,7 @@ const Booking = () => {
       field: "booking_status",
       headerName: "Status",
       flex: 1,
-      renderCell: (params) =>
-        editStatusId === params.row.booking_id ? (
-          <div>
-            <Select
-              value={newStatus}
-              onChange={(e) => {
-                const nextStatus = e.target.value;
-                if (
-                  isValidStatusTransition(params.row.booking_status, nextStatus)
-                ) {
-                  setNewStatus(nextStatus);
-                } else {
-                  toast.error(
-                    `Không thể chuyển từ ${params.row.booking_status} sang ${nextStatus}`
-                  );
-                }
-              }}
-            >
-              {STATUS_FLOW[params.row.booking_status]?.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </Select>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => handleEditStatus(params.row.booking_id, newStatus)}
-            >
-              Choose
-            </Button>
-          </div>
-        ) : (
-          <div>{params.value}</div>
-        ),
+      renderCell: (params) => <div>{params.value}</div>,
     },
     {
       field: "detail",
@@ -366,23 +267,6 @@ const Booking = () => {
           >
             View Detail
           </Button>
-          <IconButton
-            onClick={(event) => handleClick(event, params.row.booking_id)}
-          >
-            <MoreVertIcon />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleUpdate}>
-              Update <UpdateIcon />
-            </MenuItem>
-            {/* <MenuItem onClick={() => handleDelete(params.row.booking_id)}>
-              Delete <DeleteIcon />
-            </MenuItem> */}
-          </Menu>
         </div>
       ),
       flex: 1,
@@ -528,48 +412,6 @@ const Booking = () => {
           </Typography>
         </Box>
       </Box>
-      <Modal
-        open={isConfirmModalOpen}
-        onClose={() => setIsConfirmModalOpen(false)}
-        aria-labelledby="confirm-modal-title"
-        aria-describedby="confirm-modal-description"
-      >
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 400,
-            bgcolor: "background.paper",
-            boxShadow: 24,
-            p: 4,
-            borderRadius: 2,
-          }}
-        >
-          <Typography id="confirm-modal-title" variant="h6" component="h2">
-            Confirm Update Status
-          </Typography>
-          <Typography id="confirm-modal-description" sx={{ mt: 2 }}>
-            Are you sure about updating to this status: {confirmStatus} ?
-          </Typography>
-          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end" }}>
-            <Button onClick={() => setIsConfirmModalOpen(false)} sx={{ mr: 2 }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                handleConfirmUpdate(selectedBookingId, confirmStatus);
-                setIsConfirmModalOpen(false);
-              }}
-              variant="contained"
-              color="primary"
-            >
-              Confirm
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
     </Box>
   );
 };

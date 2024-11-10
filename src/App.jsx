@@ -26,6 +26,7 @@ import LineChart from "./scenes/chart/LineChart";
 
 import StoreRevenue from "./scenes/chart/StoreRevenue";
 import PODRevenueChart from "./scenes/chart/PODRevenueChart";
+import RefundAnalysisChart from "./scenes/chart/RefundAnalysisChart";
 
 
 function App() {
@@ -50,9 +51,9 @@ function App() {
           <Route path="product" element={<Product />} />
           <Route path="pod" element={<PODManage />} />
           <Route path="pod/:pod_id" element={<Slots/>} />
-          <Route path="pod/:pod_id/slot" element={<ProtectedRoute><GenerateSlot/></ProtectedRoute>} />
+          <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
           <Route path="stores/:id/storeprice-form" element={<PrivateRoute><CreateStorePriceForm/></PrivateRoute>}/>
-          <Route path="productform" element={<CreateProduct/>} />
+          <Route path="productform" element={<ProtectedRoute><CreateProduct/></ProtectedRoute>} />
           <Route 
           path="podform"  
           element={
@@ -65,7 +66,7 @@ function App() {
        
           <Route path="pod-revenue" element={<PODRevenueChart/>} />
           <Route path="store-revenue" element={<StoreRevenue />} />
-
+          <Route path="refund-analysis" element={<RefundAnalysisChart />} />
           
      
         </Route>

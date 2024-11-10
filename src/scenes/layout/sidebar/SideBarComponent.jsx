@@ -12,6 +12,7 @@ import {
   PeopleAltOutlined,
   PersonOutlined,
   InventoryOutlined,
+  AttachMoneyTwoTone,
 } from "@mui/icons-material";
 import BarChartIcon from '@mui/icons-material/BarChart';
 import StoreIcon from "@mui/icons-material/Store";
@@ -30,6 +31,7 @@ import { useRole } from "../../../RoleContext";
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import axiosInstance from '../../../api/axios';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 
 
 const notify = () => toast.warning("Session expired! Please login again.");
@@ -261,6 +263,12 @@ const SideBar = () => {
             path="/web/store-revenue"
             colors={colors}
             icon={<StorefrontIcon />}
+          />
+          <Item
+            title="Refund Analysis"
+            path="/web/refund-analysis"
+            colors={colors}
+            icon={<AttachMoneyTwoTone />}
           />
           
         </Menu>
