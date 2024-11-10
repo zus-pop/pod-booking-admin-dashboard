@@ -51,9 +51,9 @@ function App() {
           <Route path="product" element={<Product />} />
           <Route path="pod" element={<PODManage />} />
           <Route path="pod/:pod_id" element={<Slots/>} />
-          <Route path="pod/:pod_id/slot" element={<ProtectedRoute><GenerateSlot/></ProtectedRoute>} />
+          <Route path="pod/:pod_id/slot" element={<GenerateSlot/>} />
           <Route path="stores/:id/storeprice-form" element={<PrivateRoute><CreateStorePriceForm/></PrivateRoute>}/>
-          <Route path="productform" element={<CreateProduct/>} />
+          <Route path="productform" element={<ProtectedRoute><CreateProduct/></ProtectedRoute>} />
           <Route 
           path="podform"  
           element={

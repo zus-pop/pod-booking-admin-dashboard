@@ -370,7 +370,7 @@ const Product = () => {
              }}}
           
           onClick={() => navigate("/web/productform")}
-          // disabled={isCreateDisabled()}
+          disabled={isActionDisabled()}
         >
           Create a new product
         </Button>
