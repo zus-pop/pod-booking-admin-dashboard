@@ -31,7 +31,7 @@ import axios from "axios";
   const checkoutSchema = yup.object().shape({
     product_name: yup
       .string()
-      .matches(/^[a-zA-Z0-9_ ]*$/, "Product Name không được chứa ký tự đặc biệt")
+      .matches(/^[a-zA-Z0-9_ ]*$/, "Product Name cannot contain special characters")
       .required("Product name is required"),
     description: yup.string().required("Description is required"),
     image: yup.mixed().required("image is required"),

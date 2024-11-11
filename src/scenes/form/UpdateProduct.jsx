@@ -36,7 +36,7 @@ const UpdateProduct = ({ open, handleClose, product, onSubmit }) => {
   const validationSchema = yup.object({
     product_name: yup
       .string()
-      .matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt")
+      .matches(/^[a-zA-Z0-9_ ]*$/, "POD Name cannot contain special characters")
       .required("Product name is required"),
     description: yup.string().required("Description is required"),
     price: yup.number().required("Price is required"),

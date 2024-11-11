@@ -58,7 +58,8 @@ const districts = [
 ];
 
 const checkoutSchema = yup.object().shape({
-  store_name: yup.string() .matches(/^[a-zA-Z0-9_ ]*$/, "Store Name không được chứa ký tự đặc biệt").required("Store name is required"),
+  store_name: yup.string() .matches(/^[a-zA-Z0-9_ ]*$/, "Store Name cannot contain special characters")
+  .required("Store name is required"),
   address: yup.string().required("Address is required"),
   district: yup.string().required("District is required"),
   image: yup.mixed().required("Image is required"),

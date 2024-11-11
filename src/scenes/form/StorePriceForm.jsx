@@ -21,7 +21,7 @@ import { useParams } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const validationSchema = Yup.object({
-  price: Yup.number().required("Price is required").min(100000, "Price > 100.000"),
+  price: Yup.number().required("Price is required").min(80000, "Price > 80.000"),
   start_hour: Yup.number().required("Start hour is required").min(0).max(23),
   end_hour: Yup.number().required("End hour is required").min(1).max(24),
   days_of_week: Yup.array()

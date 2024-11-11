@@ -377,14 +377,14 @@ const ManageSlots = () => {
                       </div>
                       <div style="
                         margin-top: 4px;
-                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
-                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                       
+                        color: ${arg.event.extendedProps.is_available ? colors.greenAccent[500] : colors.greenAccent[900]};
                         padding: 2px 8px;
                         border-radius: 4px;
-                        font-size: 12px;
+                        font-size: 15px;
                         font-weight: 500;
                       ">
-                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'This slot is booked or expired'}
                       </div>
                     </div>
                   `
@@ -420,14 +420,14 @@ const ManageSlots = () => {
                       </div>
                       <div style="
                         margin-top: 4px;
-                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
-                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        
+                        color: ${arg.event.extendedProps.is_available ? colors.greenAccent[500] : colors.greenAccent[900]};
                         padding: 2px 8px;
                         border-radius: 4px;
-                        font-size: 12px;
+                        font-size: 22px;
                         font-weight: 500;
                       ">
-                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'This slot is booked or expired'}
                       </div>
                     </div>
                   `
@@ -482,7 +482,7 @@ const ManageSlots = () => {
                 Status:{" "}
                 {selectedSlot.extendedProps.is_available
                   ? "Available"
-                  : "Occupied"}
+                  : 'This slot is booked or expired'}
               </Typography>
 
               <Typography sx={{ color: "#ffffff", mb: 1 }}>

@@ -1,17 +1,17 @@
-import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,InputBase,IconButton,TextField,Button } from "@mui/material";
+import { Box, useTheme,Typography,FormControl,InputLabel,Select,MenuItem,TextField,Button } from "@mui/material";
 import { Header } from "../../components";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { DataGrid } from "@mui/x-data-grid";
 import { tokens } from "../../theme";
 import { useState, useEffect } from 'react';
 import axios from "axios";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Alert } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import Modal from "@mui/material/Modal";
 import CircularProgress from "@mui/material/CircularProgress";
 import { toast } from "react-toastify";
-import { SearchOutlined } from "@mui/icons-material";
+import { Formik, Form } from "formik";
+import * as yup from "yup";
+
 
 const Payment = () => {
   const theme = useTheme();
@@ -39,14 +39,10 @@ const Payment = () => {
     payment_date: "",
   });
 
-  const navigate = useNavigate();
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [paymentDetails, setPaymentDetails] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [searchById, setSearchById] = useState("");
-  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const [isRefundModalOpen, setIsRefundModalOpen] = useState(false);
   const [refundingSlot, setRefundingSlot] = useState(null);
@@ -158,44 +154,6 @@ const Payment = () => {
     setPaymentDetails([]);
   };
 
-  const handleSearchByIdChange = (e) => {
-    const value = e.target.value;
-    setSearchById(value);
-    
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-    const timeoutId = setTimeout(() => {
-      if (!value) {
-        fetchData();
-      } else {
-        handleSearchById(value);
-      }
-    }, 500); 
-
-    setSearchTimeout(timeoutId);
-  };
-
-  const handleSearchById = async (value) => {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `${API_URL}/api/v1/payments/${value}`
-      );
-      if (response.data) {
-        const payment = response.data;
-        setData([payment]);
-        setTotal(1);
-      }
-    } catch (error) {
-      console.error("Error searching payment:", error);
-      setData([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRefundClick = (slot, paymentId) => {
     setRefundingSlot({
       ...slot,
@@ -204,7 +162,15 @@ const Payment = () => {
     setIsRefundModalOpen(true);
   };
 
-  const handleRefundSlot = async () => {
+  const refundValidationSchema = yup.object({
+    description: yup
+      .string()
+      .required("Description is required")
+      .min(10, "Description must be at least 10 characters")
+      .max(500, "Description must not exceed 500 characters"),
+  });
+
+  const handleRefundSlot = async (values, { resetForm }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -216,6 +182,7 @@ const Payment = () => {
               unit_price: refundingSlot.price,
             },
           ],
+          description: values.description
         },
         {
           headers: {
@@ -227,6 +194,7 @@ const Payment = () => {
       toast.warning(`Refund Slot ${refundingSlot.slot_id} processing...`);
       setIsRefundModalOpen(false);
       setRefundingSlot(null);
+      resetForm();
       handleCloseModal();
 
       setTimeout(async () => {  
@@ -380,26 +348,7 @@ const Payment = () => {
         borderRadius="3px"
         sx={{ display:"flex" }}
       >
-        <FormControl sx={{ minWidth: 200, mr: 2 }}>
-          <TextField
-            label="Search by Booking ID"
-            variant="filled"
-            value={searchById}
-            onChange={handleSearchByIdChange}
-            InputProps={{
-              endAdornment: (
-                <IconButton disabled>
-                  <SearchOutlined />
-                </IconButton>
-              ),
-            }}
-            sx={{
-              "& .MuiInputBase-root": {
-                height: "50px",
-              },
-            }}
-          />
-        </FormControl>
+       
         <FormControl sx={{ minWidth: 200, mr: 2 }}>
           <InputLabel id="type-select-label">Payment Status</InputLabel>
           <Select
@@ -640,6 +589,9 @@ const Payment = () => {
                         }}
                       >
                         <Box>
+                        <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
+                            Slot ID: {slot.slot_id}
+                          </Typography>
                           <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
                             Start Time: {new Date(slot.start_time).toLocaleString()}
                           </Typography>
@@ -724,55 +676,104 @@ const Payment = () => {
           </Typography>
 
           {refundingSlot && (
-            <>
-              <Typography sx={{ color: colors.gray[100], mb: 2 }}>
-                Are you sure you want to refund this slot?
-              </Typography>
-              <Typography sx={{ color: colors.gray[100], mb: 1 }}>
-                Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
-              </Typography>
-              <Typography sx={{ color: colors.gray[100], mb: 1 }}>
-                End Time: {new Date(refundingSlot.end_time).toLocaleString()}
-              </Typography>
-              <Typography sx={{ color: colors.gray[100], mb: 2 }}>
-                Amount to Refund:{" "}
-                {new Intl.NumberFormat("vi-VN", {
-                  style: "currency",
-                  currency: "VND",
-                }).format(refundingSlot.price)}
-              </Typography>
-            </>
-          )}
+            <Formik
+              initialValues={{
+                description: "",
+              }}
+              validationSchema={refundValidationSchema}
+              onSubmit={handleRefundSlot}
+            >
+              {({ values, errors, touched, handleChange, handleBlur, isValid }) => (
+                <Form>
+                  <Typography sx={{ color: colors.gray[100], mb: 2 }}>
+                    Are you sure you want to refund this slot?
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1 }}>
+                    Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 1 }}>
+                    End Time: {new Date(refundingSlot.end_time).toLocaleString()}
+                  </Typography>
+                  <Typography sx={{ color: colors.gray[100], mb: 2 }}>
+                    Amount to Refund:{" "}
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(refundingSlot.price)}
+                  </Typography>
 
-          <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-            <Button
-              onClick={() => {
-                setIsRefundModalOpen(false);
-                setRefundingSlot(null);
-              }}
-              variant="outlined"
-              sx={{
-                color: colors.gray[100],
-                borderColor: colors.gray[100],
-                "&:hover": {
-                  borderColor: colors.gray[300],
-                },
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleRefundSlot}
-              variant="contained"
-              color="error"
-              sx={{
-                bgcolor: "red",
-                "&:hover": { bgcolor: "darkred" },
-              }}
-            >
-              Confirm Refund
-            </Button>
-          </Box>
+                  <TextField
+                    fullWidth
+                    name="description"
+                    label="Reason for Refund"
+                    multiline
+                    rows={3}
+                    value={values.description}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.description && Boolean(errors.description)}
+                    helperText={touched.description && errors.description}
+                    required
+                    sx={{
+                      mb: 3,
+                      "& .MuiOutlinedInput-root": {
+                        color: colors.gray[100],
+                        "& fieldset": {
+                          borderColor: colors.primary[500],
+                        },
+                        "&:hover fieldset": {
+                          borderColor: colors.primary[300],
+                        },
+                        "&.Mui-focused fieldset": {
+                          borderColor: colors.primary[300],
+                        },
+                      },
+                      "& .MuiInputLabel-root": {
+                        color: colors.gray[100],
+                        "&.Mui-focused": {
+                          color: colors.primary[300],
+                        },
+                      },
+                      "& .MuiFormHelperText-root": {
+                        color: "#f44336",
+                      },
+                    }}
+                  />
+
+                  <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                    <Button
+                      onClick={() => {
+                        setIsRefundModalOpen(false);
+                        setRefundingSlot(null);
+                      }}
+                      variant="outlined"
+                      sx={{
+                        color: colors.gray[100],
+                        borderColor: colors.gray[100],
+                        "&:hover": {
+                          borderColor: colors.gray[300],
+                        },
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="error"
+                      disabled={!isValid}
+                      sx={{
+                        bgcolor: "red",
+                        "&:hover": { bgcolor: "darkred" },
+                      }}
+                    >
+                      Confirm Refund
+                    </Button>
+                  </Box>
+                </Form>
+              )}
+            </Formik>
+          )}
         </Box>
       </Modal>
     </Box>

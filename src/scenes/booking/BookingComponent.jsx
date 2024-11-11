@@ -104,7 +104,7 @@ const Booking = () => {
     } catch (error) {
       console.error("Error fetching data:", error.message);
       if (error.response && error.response.status === 404) {
-        console.error("Không tìm thấy Store với tên đã cho.");
+        console.error("Store not found with the given name");
         setData([]);
       }
     } finally {
@@ -218,7 +218,7 @@ const Booking = () => {
     if (date) {
       const regex = /^\d{4}-\d{2}-\d{2}$/;
       if (!regex.test(date)) {
-        setDateError("Vui lòng nhập ngày theo định dạng YYYY-MM-DD");
+        setDateError("Input date by type YYYY-MM-DD");
         return false;
       }
       setDateError("");

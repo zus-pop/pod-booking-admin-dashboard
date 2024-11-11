@@ -77,6 +77,7 @@ const GenerateSlot = () => {
     fetchData();
     fetchStorePrices();
     fetchPodName();
+
   }, []);
 
   useEffect(() => {
@@ -87,6 +88,10 @@ const GenerateSlot = () => {
 
   const fetchData = async () => {
     try {
+      console.log(new Date()
+      )
+      console.log("format", formatToLocalDate(new Date()))
+      console.log("format", formatToLocalDate2(new Date()))
       const result = await axios.get(`${API_URL}/api/v1/slots`, {
         params: {
           pod_id: +pod_id,
@@ -134,7 +139,16 @@ const GenerateSlot = () => {
       console.error("Error fetching pod name:", error.message);
     }
   };
-
+  const formatToLocalDate = (date) => {
+    const localDate = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    );
+    return localDate.toISOString().split("T")[0];
+  };
+  const formatToLocalDate2 = (date) => {
+    
+    return date.toISOString().split("T")[0];
+  };
   const handleFormSubmit = async (values, actions) => {
     const now = new Date();
     const startDate = values.startDate;
@@ -150,12 +164,7 @@ const GenerateSlot = () => {
       toast.error("Cannot generate slots in the past");
       return;
     }
-    const formatToLocalDate = (date) => {
-      const localDate = new Date(
-        date.getTime() - date.getTimezoneOffset() * 60000
-      );
-      return localDate.toISOString().split("T")[0];
-    };
+ 
     console.log({
       ...values,
       startDate: formatToLocalDate(values.startDate),
@@ -500,14 +509,14 @@ const GenerateSlot = () => {
                       </div>
                       <div style="
                         margin-top: 4px;
-                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
-                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                
+                        color: ${arg.event.extendedProps.is_available ? colors.greenAccent[500] : colors.greenAccent[900]};
                         padding: 2px 8px;
                         border-radius: 4px;
-                        font-size: 12px;
+                        font-size: 15px;
                         font-weight: 500;
                       ">
-                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'This slot is booked or expired'}
                       </div>
                     </div>
                   `
@@ -543,14 +552,14 @@ const GenerateSlot = () => {
                       </div>
                       <div style="
                         margin-top: 4px;
-                        background-color: ${arg.event.extendedProps.is_available ? 'rgba(76, 206, 172, 0.1)' : 'rgba(244, 67, 54, 0.1)'};
-                        color: ${arg.event.extendedProps.is_available ? '#4cceac' : '#f44336'};
+                        
+                        color: ${arg.event.extendedProps.is_available ? colors.greenAccent[500] : colors.greenAccent[900]};
                         padding: 2px 8px;
                         border-radius: 4px;
-                        font-size: 12px;
+                        font-size:20px;
                         font-weight: 500;
                       ">
-                        ${arg.event.extendedProps.is_available ? 'Available' : 'Occupied'}
+                        ${arg.event.extendedProps.is_available ? 'Available' : 'This slot is booked or expired'}
                       </div>
                     </div>
                   `
