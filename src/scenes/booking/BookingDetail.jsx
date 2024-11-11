@@ -21,6 +21,8 @@ import { Header } from "../../components";
 import { toast } from "react-toastify";
 import { QRCodeSVG } from "qrcode.react";
 import { initializeSocket, disconnectSocket } from "../../socket";
+import { Formik, Form } from "formik";
+import * as yup from "yup";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const StatBox = styled(Box)(({ theme }) => ({
@@ -90,6 +92,12 @@ const BookingDetail = () => {
   const [isUpdateStatusModalOpen, setIsUpdateStatusModalOpen] = useState(false);
   const [newStatus, setNewStatus] = useState("");
 
+  // Thêm state để lưu description
+  const [refundDescription, setRefundDescription] = useState("");
+
+  // Thêm state mới
+  const [isConfirmUpdateStatusModalOpen, setIsConfirmUpdateStatusModalOpen] = useState(false);
+
   const navigate = useNavigate();
   useEffect(() => {
     fetchBookingDetail();
@@ -108,25 +116,31 @@ const BookingDetail = () => {
         const productsResponse = await axios.get(
           `${API_URL}/api/v1/bookings/${id}/slots/${slot.slot_id}/products`
         );
-        
+
         // Combine duplicate products
-        const combinedProducts = productsResponse.data.reduce((acc, product) => {
-          const existingProduct = acc.find(p => p.product_id === product.product_id);
-          
-          if (existingProduct) {
-            // Update existing product
-            existingProduct.quantity += product.quantity;
-            existingProduct.subtotal = existingProduct.quantity * existingProduct.unit_price;
-          } else {
-            // Add new product with subtotal
-            acc.push({
-              ...product,
-              subtotal: product.quantity * product.unit_price
-            });
-          }
-          
-          return acc;
-        }, []);
+        const combinedProducts = productsResponse.data.reduce(
+          (acc, product) => {
+            const existingProduct = acc.find(
+              (p) => p.product_id === product.product_id
+            );
+
+            if (existingProduct) {
+              // Update existing product
+              existingProduct.quantity += product.quantity;
+              existingProduct.subtotal =
+                existingProduct.quantity * existingProduct.unit_price;
+            } else {
+              // Add new product with subtotal
+              acc.push({
+                ...product,
+                subtotal: product.quantity * product.unit_price,
+              });
+            }
+
+            return acc;
+          },
+          []
+        );
 
         slotProducts[slot.slot_id] = combinedProducts || [];
       } catch (error) {
@@ -216,7 +230,6 @@ const BookingDetail = () => {
         setPaymentUrl(response.data.payment_url);
         setShowQRModal(true);
         setIsAddProductModalOpen(false);
-      
       }
     } catch (error) {
       console.error("Error adding products:", error);
@@ -330,11 +343,7 @@ const BookingDetail = () => {
   useEffect(() => {
     const checkExpiredSlots = () => {
       slots.forEach((slot) => {
-        if (
-          isSlotExpired(slot.end_time) &&
-          
-          slot.status === "Not Yet"  
-        ) {
+        if (isSlotExpired(slot.end_time) && slot.status === "Not Yet") {
           handleAbsentStatus(slot.slot_id);
         }
       });
@@ -488,7 +497,8 @@ const BookingDetail = () => {
         slot_id: selectedSlotId,
         product_id: productId,
         quantity: quantities[productId],
-        unit_price: availableProducts.find((p) => p.product_id === productId).price,
+        unit_price: availableProducts.find((p) => p.product_id === productId)
+          .price,
       }));
 
       const response = await axios.post(
@@ -522,10 +532,19 @@ const BookingDetail = () => {
     setIsRefundModalOpen(true);
   };
 
-  // Add new handler for refund confirmation
-  const handleRefundSlot = async () => {
+  // Thêm validation schema cho refund form
+  const refundValidationSchema = yup.object({
+    description: yup
+      .string()
+      .required("Description is required")
+      .min(10, "Description must be at least 10 characters")
+      .max(100, "Description must not exceed 100 characters"),
+  });
+
+  // Cập nhật hàm handleRefundSlot để nhận description từ form values
+  const handleRefundSlot = async (values, { resetForm }) => {
     try {
-      console.log(refundingSlot)
+      console.log(refundingSlot);
       const token = localStorage.getItem("token");
       const response = await axios.post(
         `${API_URL}/api/v1/payments/${refundingSlot.payment_id}/refund`,
@@ -536,6 +555,7 @@ const BookingDetail = () => {
               unit_price: refundingSlot.price,
             },
           ],
+          description: values.description
         },
         {
           headers: {
@@ -544,23 +564,23 @@ const BookingDetail = () => {
         }
       );
       if (response.status === 200) {
-      toast.warning(`Refund Slot ${refundingSlot.slot_id} processing...`);
-      setIsRefundModalOpen(false);
-      setRefundingSlot(null);
+        toast.warning(`Refund Slot ${refundingSlot.slot_id} processing...`);
+        setIsRefundModalOpen(false);
+        setRefundingSlot(null);
+        resetForm();
 
-      setTimeout(async () => {  
-        await fetchBookingDetail();
-        toast.success(`Refund Slot ${refundingSlot.slot_id} successfully`);
-      }, 5000);
-    }
+        setTimeout(async () => {
+          await fetchBookingDetail();
+          toast.success(`Refund Slot ${refundingSlot.slot_id} successfully`);
+        }, 5000);
+      }
     } catch (error) {
       console.error("Error refunding slot:", error);
       toast.error(error.response?.data?.message || "Failed to process refund");
     }
   };
 
-
-  // Add new refund confirmation modal
+  // Cập nhật RefundModal component để sử dụng Formik
   const RefundModal = () => (
     <Modal
       open={isRefundModalOpen}
@@ -588,55 +608,104 @@ const BookingDetail = () => {
         </Typography>
 
         {refundingSlot && (
-          <>
-            <Typography sx={{ color: "#fff", mb: 2 }}>
-              Are you sure you want to refund this slot?
-            </Typography>
-            <Typography sx={{ color: "#fff", mb: 1 }}>
-              Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
-            </Typography>
-            <Typography sx={{ color: "#fff", mb: 1 }}>
-              End Time: {new Date(refundingSlot.end_time).toLocaleString()}
-            </Typography>
-            <Typography sx={{ color: "#fff", mb: 2 }}>
-              Amount to Refund:{" "}
-              {new Intl.NumberFormat("vi-VN", {
-                style: "currency",
-                currency: "VND",
-              }).format(refundingSlot.price)}
-            </Typography>
-          </>
-        )}
+          <Formik
+            initialValues={{
+              description: "",
+            }}
+            validationSchema={refundValidationSchema}
+            onSubmit={handleRefundSlot}
+          >
+            {({ values, errors, touched, handleChange, handleBlur, isValid }) => (
+              <Form>
+                <Typography sx={{ color: "#fff", mb: 2 }}>
+                  Are you sure you want to refund this slot?
+                </Typography>
+                <Typography sx={{ color: "#fff", mb: 1 }}>
+                  Start Time: {new Date(refundingSlot.start_time).toLocaleString()}
+                </Typography>
+                <Typography sx={{ color: "#fff", mb: 1 }}>
+                  End Time: {new Date(refundingSlot.end_time).toLocaleString()}
+                </Typography>
+                <Typography sx={{ color: "#fff", mb: 2 }}>
+                  Amount to Refund:{" "}
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(refundingSlot.price)}
+                </Typography>
 
-        <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-          <Button
-            onClick={() => {
-              setIsRefundModalOpen(false);
-              setRefundingSlot(null);
-            }}
-            variant="outlined"
-            sx={{
-              color: "#fff",
-              borderColor: "#fff",
-              "&:hover": {
-                borderColor: "#ccc",
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleRefundSlot}
-            variant="contained"
-            color="error"
-            sx={{
-              bgcolor: "red",
-              "&:hover": { bgcolor: "darkred" },
-            }}
-          >
-            Confirm Refund
-          </Button>
-        </Box>
+                <TextField
+                  fullWidth
+                  name="description"
+                  label="Reason for Refund"
+                  multiline
+                  rows={3}
+                  value={values.description}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  error={touched.description && Boolean(errors.description)}
+                  helperText={touched.description && errors.description}
+                  required
+                  sx={{
+                    mb: 3,
+                    "& .MuiOutlinedInput-root": {
+                      color: "#fff",
+                      "& fieldset": {
+                        borderColor: "#434957",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#4cceac",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#4cceac",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "#fff",
+                      "&.Mui-focused": {
+                        color: "#4cceac",
+                      },
+                    },
+                    "& .MuiFormHelperText-root": {
+                      color: "#f44336",
+                    },
+                  }}
+                />
+
+                <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2 }}>
+                  <Button
+                    onClick={() => {
+                      setIsRefundModalOpen(false);
+                      setRefundingSlot(null);
+                    }}
+                    variant="outlined"
+                    sx={{
+                      color: "#fff",
+                      borderColor: "#fff",
+                      "&:hover": {
+                        borderColor: "#ccc",
+                      },
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="error"
+                    disabled={!isValid}
+                    sx={{
+                      bgcolor: "red",
+                      "&:hover": { bgcolor: "darkred" },
+                    }}
+                  >
+                    Confirm Refund
+                  </Button>
+                </Box>
+              </Form>
+            )}
+          </Formik>
+        )}
       </Box>
     </Modal>
   );
@@ -648,7 +717,11 @@ const BookingDetail = () => {
     }
   };
 
-  const handleConfirmStatusUpdate = async () => {
+  const handleConfirmStatusUpdate = () => {
+    setIsConfirmUpdateStatusModalOpen(true);
+  };
+
+  const handleProcessStatusUpdate = async () => {
     try {
       if (!isValidStatusTransition(bookingDetail.booking_status, newStatus)) {
         toast.error(
@@ -673,8 +746,11 @@ const BookingDetail = () => {
       }
     } catch (error) {
       console.error("Error updating booking status:", error);
-      toast.error(error.response?.data?.message || "Failed to update booking status");
+      toast.error(
+        error.response?.data?.message || "Failed to update booking status"
+      );
     } finally {
+      setIsConfirmUpdateStatusModalOpen(false);
       setIsUpdateStatusModalOpen(false);
     }
   };
@@ -724,7 +800,7 @@ const BookingDetail = () => {
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     Date: {bookingDetail.booking_date}
                   </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Box
                       sx={{
                         display: "inline-block",
@@ -768,20 +844,23 @@ const BookingDetail = () => {
                       </Typography>
                     </Box>
 
-                    <Button
-                      onClick={handleUpdateStatus}
-                      variant="contained"
-                      sx={{
-                        backgroundColor: "#4cceac",
-                        color: "#000",
-                        ml: 2,
-                        "&:hover": {
-                          backgroundColor: "#3da58a",
-                        },
-                      }}
-                    >
-                      Update Status
-                    </Button>
+                    {bookingDetail.booking_status !== "Complete" &&
+                      bookingDetail.booking_status !== "Canceled" && (
+                        <Button
+                          onClick={handleUpdateStatus}
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#4cceac",
+                            color: "#000",
+                            ml: 2,
+                            "&:hover": {
+                              backgroundColor: "#3da58a",
+                            },
+                          }}
+                        >
+                          Update Status
+                        </Button>
+                      )}
                   </Box>
                 </Box>
 
@@ -887,11 +966,25 @@ const BookingDetail = () => {
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     Email: {bookingDetail.user?.email}
                   </Typography>
+                  <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
+                    Phone Number: {bookingDetail.user?.phone_number}
+                  </Typography>
                 </Box>
 
                 {/* Payment Information */}
-                <Box sx={{ maxHeight: '500px', overflow: 'auto' }}>
-                  <Typography variant="h4" sx={{ color: "#4cceac", mb: 2, position: 'sticky', top: 0, backgroundColor: colors.primary[500], zIndex: 1, py: 1 }}>
+                <Box sx={{ maxHeight: "500px", overflow: "auto" }}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      color: "#4cceac",
+                      mb: 2,
+                      position: "sticky",
+                      top: 0,
+                      backgroundColor: colors.primary[500],
+                      zIndex: 1,
+                      py: 1,
+                    }}
+                  >
                     Payment Information
                   </Typography>
                   {bookingDetail.payment && bookingDetail.payment.length > 0 ? (
@@ -1226,7 +1319,7 @@ const BookingDetail = () => {
                         </Box>
 
                         <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-                          <Box
+                          {/* <Box
                             sx={{
                               px: 2,
                               py: 0.5,
@@ -1248,9 +1341,9 @@ const BookingDetail = () => {
                                 fontWeight: "500",
                               }}
                             >
-                              {slot.is_available ? "Available" : "Occupied"}
+                              {slot.is_available ? "Available" : "Booked or Expired"}
                             </Typography>
-                          </Box>
+                          </Box> */}
 
                           <Box
                             sx={{
@@ -1307,69 +1400,67 @@ const BookingDetail = () => {
                               >
                                 Check Out
                               </Button>
-                            ) : (
-                              slot.status !== "Checked Out" && slot.status !== "Refunded" ? (
-                                <Button
-                                  onClick={() => handleCheckin(slot.slot_id)}
-                                  disabled={isSlotDisabled(
+                            ) : slot.status !== "Checked Out" &&
+                              slot.status !== "Refunded" ? (
+                              <Button
+                                onClick={() => handleCheckin(slot.slot_id)}
+                                disabled={isSlotDisabled(
+                                  slot.end_time,
+                                  bookingDetail.booking_status
+                                )}
+                                sx={{
+                                  backgroundColor: isSlotDisabled(
                                     slot.end_time,
                                     bookingDetail.booking_status
-                                  )}
-                                  sx={{
+                                  )
+                                    ? "#ff4d4d"
+                                    : "#4cceac",
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                  "&:hover": {
+                                    backgroundColor: isSlotDisabled(
+                                      slot.end_time,
+                                      bookingDetail.booking_status
+                                    )
+                                      ? "#ff3333"
+                                      : "#3da58a",
+                                  },
+                                  "&:disabled": {
                                     backgroundColor: isSlotDisabled(
                                       slot.end_time,
                                       bookingDetail.booking_status
                                     )
                                       ? "#ff4d4d"
-                                      : "#4cceac",
+                                      : "rgba(0, 0, 0, 0.12)",
                                     color: "#fff",
-                                    fontWeight: "600",
-                                    "&:hover": {
-                                      backgroundColor: isSlotDisabled(
-                                        slot.end_time,
-                                        bookingDetail.booking_status
-                                      )
-                                        ? "#ff3333"
-                                        : "#3da58a",
-                                    },
-                                    "&:disabled": {
-                                      backgroundColor: isSlotDisabled(
-                                        slot.end_time,
-                                        bookingDetail.booking_status
-                                      )
-                                        ? "#ff4d4d"
-                                        : "rgba(0, 0, 0, 0.12)",
-                                      color: "#fff",
-                                      opacity: 0.8,
-                                      cursor: "not-allowed",
-                                    },
-                                  }}
-                                >
-                                  {isSlotDisabled(
-                                    slot.end_time,
-                                    bookingDetail.booking_status
-                                  )
-                                    ? "Expired"
-                                    : "Check In"}
-                                </Button>
-                              ) : (
-                                
-                                <Button
-                                  disabled
-                                  sx={{
+                                    opacity: 0.8,
+                                    cursor: "not-allowed",
+                                  },
+                                }}
+                              >
+                                {isSlotDisabled(
+                                  slot.end_time,
+                                  bookingDetail.booking_status
+                                )
+                                  ? "Expired"
+                                  : "Check In"}
+                              </Button>
+                            ) : (
+                              <Button
+                                disabled
+                                sx={{
+                                  backgroundColor: "#f44336",
+                                  color: "#fff",
+                                  fontWeight: "600",
+                                  opacity: 0.7,
+                                  "&:disabled": {
                                     backgroundColor: "#f44336",
                                     color: "#fff",
-                                    fontWeight: "600",
-                                    opacity: 0.7,
-                                    "&:disabled": {
-                                      backgroundColor: "#f44336",
-                                      color: "#fff",
-                                    }
-                                  }}
-                                >
-                                  Slot is refunded
-                                </Button>
-                              )
+                                  },
+                                }}
+                              >
+                                Slot is refunded
+                              </Button>
                             )}
                             {slot.status === "Checked In" &&
                               !isSlotExpired(slot.end_time) && (
@@ -1392,22 +1483,25 @@ const BookingDetail = () => {
                                 </Button>
                               )}
                             {/* Add Refund Button */}
-                            {slot.status === "Not Yet" && 
-                             !isSlotDisabled(slot.end_time, bookingDetail.booking_status) && (
-                              <Button
-                                onClick={() => handleRefundClick(slot)}
-                                sx={{
-                                  backgroundColor: "#f44336",
-                                  color: "#fff",
-                                  fontWeight: "600",
-                                  "&:hover": {
-                                    backgroundColor: "#d32f2f",
-                                  },
-                                }}
-                              >
-                                Refund
-                              </Button>
-                            )}
+                            {slot.status === "Not Yet" &&
+                              !isSlotDisabled(
+                                slot.end_time,
+                                bookingDetail.booking_status
+                              ) && (
+                                <Button
+                                  onClick={() => handleRefundClick(slot)}
+                                  sx={{
+                                    backgroundColor: "#f44336",
+                                    color: "#fff",
+                                    fontWeight: "600",
+                                    "&:hover": {
+                                      backgroundColor: "#d32f2f",
+                                    },
+                                  }}
+                                >
+                                  Refund
+                                </Button>
+                              )}
                           </>
                         ) : (
                           <Button
@@ -1471,7 +1565,15 @@ const BookingDetail = () => {
                 >
                   <Button
                     onClick={() => setIsCheckinModalOpen(false)}
-                    variant="outlined"
+                    variant= "outlined"
+                    sx={{
+                      color: "#fff",
+                     
+                      borderColor: "#fff",
+                      "&:hover": {
+                        borderColor: "#ccc",
+                      },
+                    }}
                   >
                     Cancel
                   </Button>
@@ -1520,7 +1622,15 @@ const BookingDetail = () => {
                 >
                   <Button
                     onClick={() => setIsCheckoutModalOpen(false)}
-                    variant="outlined"
+                    variant= "outlined"
+                    sx={{
+                      color: "#fff",
+                     
+                      borderColor: "#fff",
+                      "&:hover": {
+                        borderColor: "#ccc",
+                      },
+                    }}
                   >
                     Cancel
                   </Button>
@@ -1808,7 +1918,7 @@ const BookingDetail = () => {
                     }).format(calculateTotalPrice())}
                   </Typography>
 
-                  <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Box sx={{ display: "flex", gap: 2 }}>
                     <Button
                       onClick={handleCashPayment}
                       disabled={selectedProducts.length === 0}
@@ -1978,7 +2088,10 @@ const BookingDetail = () => {
       </style>
 
       {/* Cash Payment Confirmation Modal */}
-      <Modal open={isCashConfirmModalOpen} onClose={() => setIsCashConfirmModalOpen(false)}>
+      <Modal
+        open={isCashConfirmModalOpen}
+        onClose={() => setIsCashConfirmModalOpen(false)}
+      >
         <Box
           sx={{
             position: "absolute",
@@ -1998,7 +2111,7 @@ const BookingDetail = () => {
           </Typography>
 
           <Typography variant="body1" sx={{ mb: 3 }}>
-            Total Amount: {" "}
+            Total Amount:{" "}
             {new Intl.NumberFormat("vi-VN", {
               style: "currency",
               currency: "VND",
@@ -2041,7 +2154,10 @@ const BookingDetail = () => {
         </Box>
       </Modal>
       <RefundModal />
-      <Modal open={isUpdateStatusModalOpen} onClose={() => setIsUpdateStatusModalOpen(false)}>
+      <Modal
+        open={isUpdateStatusModalOpen}
+        onClose={() => setIsUpdateStatusModalOpen(false)}
+      >
         <Box
           sx={{
             position: "absolute",
@@ -2059,9 +2175,11 @@ const BookingDetail = () => {
           <Typography variant="h6" sx={{ color: "#fff", mb: 3 }}>
             Update Booking Status
           </Typography>
-          
+
           <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel id="status-select-label" sx={{ color: "#fff" }}>New Status</InputLabel>
+            <InputLabel id="status-select-label" sx={{ color: "#fff" }}>
+              New Status
+            </InputLabel>
             <Select
               labelId="status-select-label"
               value={newStatus}
@@ -2104,7 +2222,61 @@ const BookingDetail = () => {
           </Box>
         </Box>
       </Modal>
-   
+      {/* Confirm Update Status Modal */}
+      <Modal
+        open={isConfirmUpdateStatusModalOpen}
+        onClose={() => setIsConfirmUpdateStatusModalOpen(false)}
+      >
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 400,
+            bgcolor: "#1F2A40",
+            border: "1px solid #434957",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" sx={{ color: "#fff", mb: 3 }}>
+            Xác nhận cập nhật trạng thái
+          </Typography>
+
+          <Typography sx={{ color: "#fff", mb: 3 }}>
+            Bạn có chắc chắn muốn thay đổi trạng thái từ "{bookingDetail?.booking_status}" sang "{newStatus}"?
+          </Typography>
+
+          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2 }}>
+            <Button
+              onClick={() => setIsConfirmUpdateStatusModalOpen(false)}
+              variant="outlined"
+              sx={{
+                color: "#fff",
+                borderColor: "#fff",
+                "&:hover": {
+                  borderColor: "#ccc",
+                },
+              }}
+            >
+              Hủy
+            </Button>
+            <Button
+              onClick={handleProcessStatusUpdate}
+              variant="contained"
+              sx={{
+                bgcolor: "#4cceac",
+                color: "#000",
+                "&:hover": { bgcolor: "#3da58a" },
+              }}
+            >
+              Xác nhận
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </Box>
   );
 };

@@ -31,7 +31,7 @@ const initialValues = {
 const checkoutSchema = yup.object().shape({
   pod_name: yup
     .string()
-    .matches(/^[a-zA-Z0-9_ ]*$/, "POD Name không được chứa ký tự đặc biệt")
+    .matches(/^[a-zA-Z0-9_ ]*$/, "POD Name cannot contain special characters")
     .required("Pod name is required"),
   description: yup.string().required("Description is required"),
   image: yup.mixed().required("Image is required"),
