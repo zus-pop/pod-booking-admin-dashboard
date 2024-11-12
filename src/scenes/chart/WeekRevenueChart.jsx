@@ -27,7 +27,7 @@ ChartJS.register(
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const RevenueChart = () => {
+const WeekRevenueChart = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [chartData, setChartData] = useState({
@@ -47,18 +47,35 @@ const RevenueChart = () => {
       // Sắp xếp dữ liệu theo ngày tăng dần
       const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
   
-      const labels = sortedData.map(item => item.date);
-      const revenues = sortedData.map(item => item.daily_revenue);
+      // Lấy 7 ngày gần nhất
+      const last7Days = sortedData.slice(-7);
+  
+      // Format ngày thành dd/MM/yyyy
+      const labels = last7Days.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('vi-VN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+      });
+      const revenues = last7Days.map(item => item.daily_revenue);
   
       setChartData({
-        labels, 
+        labels,
         datasets: [
           {
             label: 'Daily Revenue',
             data: revenues,
             borderColor: colors.greenAccent[500],
-            backgroundColor: colors.greenAccent[500],
-            tension: 0.4
+            backgroundColor: `${colors.greenAccent[500]}33`,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: colors.greenAccent[500],
+            pointBorderColor: colors.primary[400],
+            pointBorderWidth: 2,
           }
         ]
       });
@@ -109,15 +126,15 @@ const RevenueChart = () => {
       boxShadow={3}
       mt={2}
       height={500}
-     width="50%"
+      width="50%"
     >
       <Header
-        title="Daily Revenue"
-        subtitle="Daily revenue over time"
+        title="Last 7 Days Revenue"
+        subtitle="Overview of daily revenue for the past 7 days"
       />
       <Line data={chartData} options={options} />
     </Box>
   );
 };
 
-export default RevenueChart;
+export default WeekRevenueChart;

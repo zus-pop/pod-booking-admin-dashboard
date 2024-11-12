@@ -6,6 +6,8 @@ import {
   useTheme,
   Menu,
   MenuItem,
+  Tooltip,
+  Zoom,
 } from "@mui/material";
 import { tokens, ColorModeContext } from "../../../theme";
 import { useContext, useState } from "react";
@@ -18,7 +20,7 @@ import {
   SearchOutlined,
   SettingsOutlined,
 } from "@mui/icons-material";
-
+import RuleIcon from '@mui/icons-material/Rule';
 import { useNavigate } from "react-router-dom";
 import { ToggledContext } from "../../welcome/Welcome";
 
@@ -48,6 +50,10 @@ const Navbar = () => {
     handleClose();
   };
 
+  const handleRuleClick = () => {
+    navigate("/web/rules");
+  };
+
   return (
     <Box display="flex" alignItems="center" justifyContent="space-between" p={2}>
       <Box display="flex" alignItems="center" gap={2}>
@@ -59,11 +65,15 @@ const Navbar = () => {
         </IconButton>
       </Box>
 
-      <Box>
-     
-        <IconButton onClick={handleMenuClick}>
-        <SettingsOutlined />   
+      <Box display="flex" alignItems="center" gap={1}>
+        <IconButton onClick={handleRuleClick}>
+          <RuleIcon />
         </IconButton>
+
+        <IconButton onClick={handleMenuClick}>
+          <SettingsOutlined />
+        </IconButton>
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -71,7 +81,6 @@ const Navbar = () => {
         >
           <MenuItem onClick={handleLogout}>Log Out</MenuItem>
         </Menu>
-      
       </Box>
     </Box>
   );

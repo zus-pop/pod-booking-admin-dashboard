@@ -1,10 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const axiosInstance = axios.create({
-  baseURL: API_URL
+  baseURL: API_URL,
 });
 
 // Add a response interceptor
@@ -14,11 +14,15 @@ axiosInstance.interceptors.response.use(
     if (error.response) {
       if (error.response.status === 403) {
         // Token expired
+        console.log("1111");
         toast.warning("Session expired! Please login again.");
-        localStorage.removeItem("token");
-        window.location.href = "/"; // Use window.location for hard redirect
+        setTimeout(() => {
+          localStorage.removeItem("token");
+          window.location.href = "/";
+        }, 1000); // Use window.location for hard redirect
       } else if (error.response.status === 401) {
         // Unauthorized
+        console.log("11121");
         localStorage.removeItem("token");
         window.location.href = "/";
       }
@@ -41,4 +45,4 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-export default axiosInstance; 
+export default axiosInstance;

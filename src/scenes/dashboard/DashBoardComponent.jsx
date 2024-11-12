@@ -17,7 +17,7 @@ import { tokens } from "../../theme";
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import RevenueChart from "../chart/RevenueChart";
+import WeekRevenueChart from "../chart/WeekRevenueChart";
 import PieChart from "../chart/PieChart";
 
 import { useNavigate } from "react-router-dom";
@@ -166,7 +166,7 @@ function Dashboard() {
   gap="10px"
   flexDirection={isXlDevices ? "row" : "column"}
 >
-  <RevenueChart />
+  <WeekRevenueChart />
   <PieChart />
 </Box>
 

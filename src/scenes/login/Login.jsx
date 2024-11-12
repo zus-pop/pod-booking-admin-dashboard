@@ -44,13 +44,6 @@ const Login = () => {
 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
-  useEffect(() => {
-    // Kiểm tra token khi component mount
-    const token = localStorage.getItem("token");
-    if (token && location.pathname === "/") {
-        navigate("/web");
-    }
-}, [navigate, location.pathname]);
 
   const handleLogin = async (values, actions) => {
     try {
@@ -108,7 +101,14 @@ const Login = () => {
       actions.setSubmitting(false);
     }
   };
-  
+  useEffect(() => {
+    // Kiểm tra token khi component mount
+    const token = localStorage.getItem("token");
+    if (token && location.pathname === "/") {
+        navigate("/web");
+    }
+}, [navigate, location.pathname]);
+
   return (
     <Container>
       <LeftPanel> 

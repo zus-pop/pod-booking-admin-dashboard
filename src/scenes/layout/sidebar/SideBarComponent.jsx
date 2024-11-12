@@ -50,6 +50,7 @@ const SideBar = () => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
+        console.log("sidebar")
         navigate("/", { replace: true });
         return;
       }
