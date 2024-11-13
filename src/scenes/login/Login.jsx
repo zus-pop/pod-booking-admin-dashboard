@@ -44,6 +44,37 @@ const Login = () => {
 
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const profileResponse = await fetch(`${API_URL}/api/v1/auth/profile`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            if (["Admin", "Staff", "Manager"].includes(profileData.role.role_name)) {
+              navigate('/web');
+            }
+          } else {
+            localStorage.removeItem('token');
+          }
+        } catch (error) {
+          console.error('Error checking auth:', error);
+          localStorage.removeItem('token');
+        }
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleLogin = async (values, actions) => {
     try {
@@ -98,7 +129,7 @@ const Login = () => {
         navigate("/", { replace: true });
       } else if (profileResponse.status === 403) {
         console.error("Token expired. Please login again.");
-        notify();
+        // notify();
         localStorage.removeItem("token");
         navigate("/", { replace: true });
       } else {
@@ -114,13 +145,6 @@ const Login = () => {
       actions.setSubmitting(false);
     }
   };
-  useEffect(() => {
-    // Kiểm tra token khi component mount
-    const token = localStorage.getItem("token");
-    if (token && location.pathname === "/") {
-        navigate("/web");
-    }
-}, [navigate, location.pathname]);
 
   return (
     <Container>

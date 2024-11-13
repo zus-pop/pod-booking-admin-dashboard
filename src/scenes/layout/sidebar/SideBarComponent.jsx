@@ -33,9 +33,6 @@ import axiosInstance from '../../../api/axios';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 
-
-const notify = () => toast.warning("Session expired! Please login again.");
-const API_URL = import.meta.env.VITE_API_URL
 const SideBar = () => {
   const { setUserRole } = useRole();
   const [collapsed, setCollapsed] = useState(false);

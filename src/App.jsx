@@ -30,6 +30,7 @@ import Rules from './scenes/rules/Rules';
 import TotalRevenueChart from "./scenes/chart/TotalRevenueChart";
 
 
+
 function App() {
   
   return (

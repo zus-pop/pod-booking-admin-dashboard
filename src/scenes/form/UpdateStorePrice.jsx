@@ -19,8 +19,17 @@ import * as Yup from "yup";
 const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
   const validationSchema = Yup.object({
     price: Yup.number().required("Price is required"),
-    start_hour: Yup.number().required("Start hour is required").min(0).max(23),
-    end_hour: Yup.number().required("End hour is required").min(1).max(24),
+    start_hour: Yup.number().required("Start hour is required").min(7).max(22),
+    end_hour: Yup.number()
+      .required("End hour is required")
+      .min(8)
+      .max(23)
+      .when('start_hour', (start_hour, schema) => {
+        return schema.test({
+          test: end_hour => !start_hour || !end_hour || end_hour > start_hour,
+          message: 'End hour must be greater than start hour'
+        });
+      }),
     days_of_week: Yup.array()
       .min(1, "Select at least one day")
       .required("Days of week are required"),
@@ -57,6 +66,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
+          validateOnChange={true}
           onSubmit={onSubmit}
         >
           {({ errors, touched, values, setFieldValue, handleChange }) => (
@@ -93,6 +103,7 @@ const UpdateStorePrice = ({ open, handleClose, initialValues, onSubmit }) => {
                 value={values.end_hour}
                 error={touched.end_hour && Boolean(errors.end_hour)}
                 helperText={touched.end_hour && errors.end_hour}
+                disabled={!values.start_hour}
               />
 
               <FormGroup>
