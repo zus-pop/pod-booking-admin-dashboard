@@ -16,7 +16,7 @@ export const handleSessionExpired = () => {
   localStorage.setItem('lastEmail', localStorage.getItem('userEmail'));
 
   // Hiển thị thông báo
-  toast.warning("Session expired! Please login again.");
+  toast.warning("Session expired! Please login again.", { autoClose: 3000 });
 
   // Xóa token và chuyển hướng sau 3 giây
   setTimeout(() => {
