@@ -8,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { RoleProvider } from "../../RoleContext";
+import { AuthProvider } from "../../AuthContext";
 export const ToggledContext = createContext(null);
 
 export default function Welcome() {
@@ -38,6 +39,7 @@ export default function Welcome() {
     }, [location.pathname, navigate]);
 
     return (
+        <AuthProvider>
         <ColorModeContext.Provider value={colorMode}>
             <ThemeProvider theme={theme}>
             <RoleProvider>
@@ -107,5 +109,6 @@ export default function Welcome() {
               </RoleProvider>
             </ThemeProvider>
         </ColorModeContext.Provider>
+        </AuthProvider>
     );
 }
