@@ -244,6 +244,12 @@ const Product = () => {
       ),
     },
     {
+      field: "product_name",
+      headerName: "Name",
+      flex: 1,
+      cellClassName: "name-column--cell",
+    },
+    {
       field: "store_id",
       headerName: "Store",
       flex: 1,
@@ -252,12 +258,7 @@ const Product = () => {
         return store ? store.store_name : params.value;
       },
     },
-    {
-      field: "product_name",
-      headerName: "Name",
-      flex: 1,
-      cellClassName: "name-column--cell",
-    },
+ 
     {
       field: "category_id",
       headerName: "Category",
