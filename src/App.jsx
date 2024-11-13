@@ -22,11 +22,12 @@ import ProtectedRoute from './ProtectedRoute';
 import Unauthorized from './scenes/unauthorized/Unauthorized';
 import PrivateRoute from "./PrivateRoute";
 import CreateProduct from "./scenes/form/CreateProduct";
-import LineChart from "./scenes/chart/LineChart";
 
 import StoreRevenue from "./scenes/chart/StoreRevenue";
 import PODRevenueChart from "./scenes/chart/PODRevenueChart";
 import RefundAnalysisChart from "./scenes/chart/RefundAnalysisChart";
+import Rules from './scenes/rules/Rules';
+import TotalRevenueChart from "./scenes/chart/TotalRevenueChart";
 
 
 function App() {
@@ -62,11 +63,12 @@ function App() {
             </ProtectedRoute>
           } 
           />
-          <Route path="line" element={<LineChart />} />
+          <Route path="line" element={<TotalRevenueChart />} />
        
           <Route path="pod-revenue" element={<PODRevenueChart/>} />
           <Route path="store-revenue" element={<StoreRevenue />} />
           <Route path="refund-analysis" element={<RefundAnalysisChart />} />
+          <Route path="rules" element={<Rules />} />
           
      
         </Route>

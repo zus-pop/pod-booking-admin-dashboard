@@ -27,7 +27,7 @@ ChartJS.register(
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const LineChart = () => {
+const TotalRevenueChart = () => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [chartData, setChartData] = useState({
@@ -94,7 +94,7 @@ const LineChart = () => {
         return date.toLocaleDateString('vi-VN', {
           day: '2-digit',
           month: '2-digit',
-          year: 'numeric'
+           year: 'numeric'
         });
       });
       const revenues = sortedData.map(item => item.daily_revenue);
@@ -282,7 +282,10 @@ const LineChart = () => {
           font: {
             size: 12
           },
-          padding: 10
+          padding: 10,
+          maxRotation: 0,
+          autoSkip: true,
+          autoSkipPadding: 10
         },
         grid: {
           display: false
@@ -421,4 +424,4 @@ const LineChart = () => {
   );
 };
 
-export default LineChart;
+export default TotalRevenueChart;

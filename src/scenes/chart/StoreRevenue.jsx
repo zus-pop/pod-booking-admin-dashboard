@@ -119,7 +119,13 @@ const StoreRevenue = () => {
       const sortedData = data.sort((a, b) => new Date(a.date) - new Date(b.date));
       
       setChartData({
-        labels: sortedData.map(item => item.date),
+        labels: sortedData.map(item => {
+          const date = new Date(item.date);
+          return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit'
+          });
+        }),
         datasets: [{
           label: 'Daily Store Revenue',
           data: sortedData.map(item => item.daily_revenue),
@@ -243,7 +249,10 @@ const StoreRevenue = () => {
       },
       x: {
         ticks: {
-          color: colors.gray[100]
+          color: colors.gray[100],
+          maxRotation: 0,
+          autoSkip: true,
+          autoSkipPadding: 10
         },
         grid: {
           color: colors.gray[700]

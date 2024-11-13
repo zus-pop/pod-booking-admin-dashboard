@@ -427,7 +427,7 @@ const BookingDetail = () => {
       setExpandedPaymentId(null);
       return;
     }
-
+    
     try {
       let endpoint = "";
       if (paymentFor === "Product") {
@@ -435,12 +435,13 @@ const BookingDetail = () => {
       } else if (paymentFor === "Slot") {
         endpoint = `${API_URL}/api/v1/bookings/${id}/payments/${paymentId}/slots`;
       }
-
+    
       const response = await axios.get(endpoint);
       setPaymentDetails((prev) => ({
         ...prev,
         [paymentId]: response.data,
       }));
+      console.log(response)
       setExpandedPaymentId(paymentId);
     } catch (error) {
       console.error(

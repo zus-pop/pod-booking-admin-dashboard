@@ -6,6 +6,7 @@ import {
   FormControl,
   useTheme,
   Card,
+  MenuItem,
 } from "@mui/material";
 import { Header } from "../../components";
 import { Formik } from "formik";
@@ -44,18 +45,8 @@ const slotSchema = yup.object().shape({
     .required("End date is required"),
   durationMinutes: yup
     .number()
-    .min(30, "Duration must be > 30 minutes")
-    .test("duration-test", "Duration exceeds available time", function(value) {
-      if (!value) return true;
-      const { selectedStorePrice } = this.options.context;
-      if (!selectedStorePrice) return true;
-      
-      const startHour = selectedStorePrice.start_hour;
-      const endHour = selectedStorePrice.end_hour;
-      const maxMinutes = (endHour - startHour) * 60;
-      
-      return value <= maxMinutes;
-    }),
+    .required("Duration is required")
+    .oneOf([30, 60, 90], "Duration must be 30, 60 or 90 minutes")
 });
 
 const GenerateSlot = () => {
@@ -514,7 +505,7 @@ const GenerateSlot = () => {
                         padding: 2px 8px;
                         border-radius: 4px;
                         font-size: 15px;
-                        font-weight: 500;
+                        font-weight: 400;
                       ">
                         ${arg.event.extendedProps.is_available ? 'Available' : 'This slot is booked or expired'}
                       </div>
@@ -712,8 +703,8 @@ const GenerateSlot = () => {
                         <TextField
                           fullWidth
                           variant="filled"
+                          select
                           label="Duration Minutes"
-                          type="number"
                           onBlur={handleBlur}
                           onChange={handleChange}
                           value={values.durationMinutes}
@@ -729,11 +720,15 @@ const GenerateSlot = () => {
                             }
                           }}
                           disabled={!values.startDate || !selectedStorePrice}
-                          inputProps={{
-                            min: 30,
-                            max: selectedStorePrice ? (selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60 : 0
+                          SelectProps={{
+                            native: false
                           }}
-                        />
+                        >
+                          <MenuItem value="">Select Duration</MenuItem>
+                          <MenuItem value={30}>30 minutes</MenuItem>
+                          <MenuItem value={60}>60 minutes</MenuItem>
+                          <MenuItem value={90}>90 minutes</MenuItem>
+                        </TextField>
                       </Box>
 
                       <Box 
@@ -744,21 +739,7 @@ const GenerateSlot = () => {
                           flexWrap: 'wrap'
                         }}
                       >
-                        {selectedStorePrice && values.startDate && (
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
-                              color: colors.gray[300],
-                              fontSize: "0.875rem",
-                              backgroundColor: "rgba(76, 206, 172, 0.1)",
-                              padding: "8px 12px",
-                              borderRadius: "4px",
-                              display: "inline-block"
-                            }}
-                          >
-                            Maximum duration: {(selectedStorePrice.end_hour - selectedStorePrice.start_hour) * 60} minutes
-                          </Typography>
-                        )}
+                    
 
                         <Typography 
                           variant="body2" 
@@ -778,7 +759,7 @@ const GenerateSlot = () => {
                           type="submit"
                           color="secondary"
                           variant="contained"
-                          disabled={!selectedStorePrice || !isValid}
+                          disabled={!selectedStorePrice || !isValid }
                         >
                           Generate Slot
                         </Button>

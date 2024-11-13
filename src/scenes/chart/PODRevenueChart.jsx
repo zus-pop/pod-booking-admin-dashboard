@@ -239,11 +239,12 @@ const PODRevenueChart = () => {
           ]);
 
           // Chuyển Set thành Array và sắp xếp
-          const sortedMonths = Array.from(allMonths).sort((a, b) => a - b);
+          const sortedMonths = Array.from(allMonths).sort();
 
           // Tạo labels cho các tháng
           const monthLabels = sortedMonths.map(month => {
-            return new Date(2024, month - 1).toLocaleString('en-US', { month: 'long' });
+            const [year, monthNum] = month.split('-');
+            return `${monthNum}/${year}`;
           });
 
           // Map dữ liệu revenue theo tháng
@@ -371,7 +372,10 @@ const PODRevenueChart = () => {
           font: {
             size: 12
           },
-          padding: 10
+          padding: 10,
+          maxRotation: 0,
+          autoSkip: true,
+          autoSkipPadding: 10
         },
         grid: {
           display: false

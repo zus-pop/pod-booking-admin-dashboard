@@ -266,7 +266,7 @@ const Payment = () => {
       minWidth: 160,
       renderCell: (params) => (
         <Typography>
-          {params.value ? params.value : "Not refunded yet"}
+          {params.value ? params.value : "None"}
         </Typography>
       ),
     },
@@ -532,7 +532,7 @@ const Payment = () => {
                     }).format(selectedPayment.total_cost)}
                   </Typography>
                   <Typography sx={{ color: colors.gray[100], mb: 1, fontSize: "16px" }}>
-                    Refund Date: {selectedPayment.refunded_date ? selectedPayment.refunded_date : "Not refunded yet"}
+                    Refund Date: {selectedPayment.refunded_date ? selectedPayment.refunded_date : "None"}
                   </Typography>
                 </Box>
               )}
