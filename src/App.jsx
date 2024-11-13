@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
 import Login from "./scenes/login/Login";
 import { Dashboard, } from "./scenes";
 import ManageUsers from "./scenes/users/ManageUsers";
@@ -28,11 +28,17 @@ import PODRevenueChart from "./scenes/chart/PODRevenueChart";
 import RefundAnalysisChart from "./scenes/chart/RefundAnalysisChart";
 import Rules from './scenes/rules/Rules';
 import TotalRevenueChart from "./scenes/chart/TotalRevenueChart";
+import { registerNavigationCallback } from './utils/auth';
 
 
 
 function App() {
+  const navigate = useNavigate();
   
+  useEffect(() => {
+    registerNavigationCallback((path) => navigate(path, { replace: true }));
+  }, [navigate]);
+
   return (
 
       <Routes>

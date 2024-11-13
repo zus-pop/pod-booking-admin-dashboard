@@ -18,7 +18,6 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import StoreIcon from "@mui/icons-material/Store";
 import PaymentIcon from "@mui/icons-material/Payment";
 import ChecklistIcon from "@mui/icons-material/Checklist";
-import avatar from "../../../assets/images/avatar.png";
 import logo from "../../../assets/images/logo.png";
 import Item from "./Item";
 
