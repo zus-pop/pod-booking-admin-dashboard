@@ -1,5 +1,6 @@
 import axios from "axios";
 import { toast } from "react-toastify";
+import { handleSessionExpired } from '../utils/auth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,16 +14,8 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       if (error.response.status === 403 || error.response.status === 401) {
-        // Lưu current URL và email trước khi redirect
-        localStorage.setItem('lastPath', window.location.pathname);
-        localStorage.setItem('lastEmail', localStorage.getItem('userEmail'));
-        console.log("1111");
-        toast.warning("Session expired! Please login again.");
-        setTimeout(() => {
-          localStorage.removeItem("token");
-          window.location.href = "/";
-        }, 5000);
-      } 
+        handleSessionExpired();
+      }
     }
     return Promise.reject(error);
   }

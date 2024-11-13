@@ -158,7 +158,7 @@ const PodForm = () => {
                 <InputLabel id="select-store-label">Store</InputLabel>
                 <Select
                   variant="filled"
-                  labelID="select-store-label"
+                  labelId="select-store-label"
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.store_id}
@@ -225,33 +225,7 @@ const PodForm = () => {
                   ))}
                 </Select>
               </FormControl>
-           
-              <Box display="flex" justifyContent="space-around">
-                <Button
-                  variant="contained"
-                  component="label"
-                  startIcon={<CloudUpload />}
-                  sx={{ p: 2, width: "100%" }}
-                >
-                  Upload Image
-                  <VisuallyHiddenInput
-                    type="file"
-                    hidden
-                    onChange={(event) => {
-                      const selectedFile = event.currentTarget.files[0];
-                      setFilePreview(URL.createObjectURL(selectedFile));
-                      setFieldValue("image", selectedFile);
-                    }}
-                    onBlur={handleBlur}
-                    name="image"
-                    accept="image/*"
-                  />
-                </Button>
-                {filePreview && (
-                  <img width={300} height={200} alt="image" src={filePreview} />
-                )}
-              </Box>
-              {touched.image && errors.image && <div>{errors.image}</div>}
+
               <FormControl fullWidth margin="normal">
                 <InputLabel id="utilities-label">Utilities</InputLabel>
                 <Select
@@ -286,6 +260,34 @@ const PodForm = () => {
                   ))}
                 </Select>
               </FormControl>
+
+              <Box display="flex" justifyContent="space-around">
+                <Button
+                  variant="contained"
+                  component="label"
+                  startIcon={<CloudUpload />}
+                  sx={{ p: 2, width: "100%" }}
+                >
+                  Upload Image
+                  <VisuallyHiddenInput
+                    type="file"
+                    hidden
+                    onChange={(event) => {
+                      const selectedFile = event.currentTarget.files[0];
+                      setFilePreview(URL.createObjectURL(selectedFile));
+                      setFieldValue("image", selectedFile);
+                    }}
+                    onBlur={handleBlur}
+                    name="image"
+                    accept="image/*"
+                  />
+                </Button>
+                {filePreview && (
+                  <img width={300} height={200} alt="image" src={filePreview} />
+                )}
+              </Box>
+              {touched.image && errors.image && <div>{errors.image}</div>}
+            
             </Box>
 
             <Box

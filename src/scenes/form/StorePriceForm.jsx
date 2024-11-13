@@ -22,8 +22,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 const validationSchema = Yup.object({
   price: Yup.number().required("Price is required").min(80000, "Price > 80.000"),
-  start_hour: Yup.number().required("Start hour is required").min(0).max(23),
-  end_hour: Yup.number().required("End hour is required").min(1).max(24),
+  start_hour: Yup.number().required("Start hour is required").min(7).max(22),
+  end_hour: Yup.number().required("End hour is required").min(8).max(23),
   days_of_week: Yup.array()
     .min(1, "Select at least one day")
     .required("Days of week are required"),
@@ -99,6 +99,16 @@ const StorePriceForm = () => {
     { value: 4, label: "Low" }
   ];
 
+  const startHours = Array.from({ length: 16 }, (_, i) => ({
+    value: i + 7,
+    label: `${i + 7}:00`
+  }));
+
+  const endHours = Array.from({ length: 17 }, (_, i) => ({
+    value: i + 7,
+    label: `${i + 7}:00`
+  }));
+
   return (
     <Box m="20px">
       <Header
@@ -150,30 +160,68 @@ const StorePriceForm = () => {
                   <div style={{ color: "red", marginTop: "8px" }}>{errors.type_id}</div>
                 )}
               </FormControl>
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="Start Hour"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.start_hour}
-                name="start_hour"
-                error={touched.start_hour && Boolean(errors.start_hour)}
-                helperText={touched.start_hour && errors.start_hour}
-              />
-              <TextField
-                fullWidth
-                variant="filled"
-                type="number"
-                label="End Hour"
-                onBlur={handleBlur}
-                onChange={handleChange}
-                value={values.end_hour}
-                name="end_hour"
-                error={touched.end_hour && Boolean(errors.end_hour)}
-                helperText={touched.end_hour && errors.end_hour}
-              />
+              <FormControl fullWidth variant="filled" error={touched.start_hour && Boolean(errors.start_hour)}>
+                <InputLabel>Start Hour</InputLabel>
+                <Select
+                  value={values.start_hour}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="start_hour"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200,
+                        overflow: 'auto'
+                      }
+                    }
+                  }}
+                >
+                  {startHours.map((hour) => (
+                    <MenuItem 
+                      key={hour.value} 
+                      value={hour.value}
+                      sx={{ minHeight: '35px' }}
+                    >
+                      {hour.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.start_hour && errors.start_hour && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.start_hour}</div>
+                )}
+              </FormControl>
+
+              <FormControl fullWidth variant="filled" error={touched.end_hour && Boolean(errors.end_hour)}>
+                <InputLabel>End Hour</InputLabel>
+                <Select
+                  value={values.end_hour}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  name="end_hour"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 200,
+                        overflow: 'auto'
+                      }
+                    }
+                  }}
+                >
+                  {endHours.map((hour) => (
+                    <MenuItem 
+                      key={hour.value} 
+                      value={hour.value}
+                      disabled={hour.value <= values.start_hour}
+                      sx={{ minHeight: '35px' }}
+                    >
+                      {hour.label}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {touched.end_hour && errors.end_hour && (
+                  <div style={{ color: "red", marginTop: "8px" }}>{errors.end_hour}</div>
+                )}
+              </FormControl>
               <Box sx={{ mb: 2 }}>
                 <InputLabel sx={{ mb: 1 }}>Select Days of Week</InputLabel>
                 <Box sx={{ 
