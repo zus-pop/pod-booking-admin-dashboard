@@ -75,7 +75,20 @@ const Login = () => {
         if (profileData.role.role_name === "Admin" || profileData.role.role_name === "Staff" || profileData.role.role_name === "Manager") {
           console.log('Login successful:', data);
           localStorage.setItem("token", data.token);
-          navigate('/web');
+          localStorage.setItem("userEmail", values.email);
+          
+          const lastPath = localStorage.getItem('lastPath');
+          const lastEmail = localStorage.getItem('lastEmail');
+          
+          if (lastPath && lastEmail === values.email) {
+            navigate(lastPath);
+            localStorage.removeItem('lastPath');
+            localStorage.removeItem('lastEmail');  
+          } else {
+            localStorage.removeItem('lastPath'); 
+            localStorage.removeItem('lastEmail');
+            navigate('/web');
+          }
         } else {
           setErrorMessage('You need permission to log in this website');
         }

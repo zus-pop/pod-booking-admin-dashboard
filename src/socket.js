@@ -23,12 +23,13 @@ export const initializeSocket = (token) => {
       console.log("Error connecting to server: ", err.message);
       if (err.message.includes("jwt expired")) {
         console.log("socket expired");
-        toast.warning("Session expired! Please login again.");
+        localStorage.setItem('lastPath', window.location.pathname);
+        localStorage.setItem('lastEmail', localStorage.getItem('userEmail'));
         toast.warning("Session expired! Please login again.");
         setTimeout(() => {
           localStorage.removeItem("token");
           window.location.href = "/";
-        }, 1000);
+        }, 5000);
       }
     });
   }
