@@ -918,9 +918,23 @@ const BookingDetail = () => {
 
                 {/* POD Information */}
                 <Box>
+                 
                   <Typography variant="h4" sx={{ color: "#4cceac", mb: 2 }}>
                     POD Information
                   </Typography>
+                  <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+                  <Box
+                          component="img"
+                          src={bookingDetail.pod.image}
+                          alt={bookingDetail.pod.pod_name}
+                          sx={{
+                            width: 200,
+                            height: 150,
+                            objectFit: "cover",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Box>
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     POD ID: {bookingDetail.pod?.pod_id}
                   </Typography>
@@ -933,6 +947,8 @@ const BookingDetail = () => {
                   <Typography variant="h5" sx={{ color: "#fff", mb: 1 }}>
                     Description: {bookingDetail.pod?.description}
                   </Typography>
+                  </Box>
+                </Box>
                 </Box>
 
                 {/* Rating & Comments (if exists) */}
@@ -1677,6 +1693,26 @@ const BookingDetail = () => {
                         <StatBox
                           key={`product-${slot.slot_id}-${product.product_id}-${productIndex}`}
                         >
+                          <Box
+                            sx={{
+                              width: "100%",
+                              height: "150px",
+                              mb: 2,
+                              borderRadius: "8px",
+                              overflow: "hidden"
+                            }}
+                          >
+                            <Box
+                              component="img"
+                              src={product.image}
+                              alt={product.product_name}
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover"
+                              }}
+                            />
+                          </Box>
                           <Typography
                             variant="h5"
                             sx={{ color: "#4cceac", mb: 1 }}

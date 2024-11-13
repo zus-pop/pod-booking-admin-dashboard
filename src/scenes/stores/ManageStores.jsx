@@ -219,7 +219,7 @@ const Stores = () => {
   const renderStarRating = (rating) => {
     const stars = [];
     const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
+    const hasHalfStar = rating % 1 > 0;
 
     // Add full stars
     for (let i = 0; i < fullStars; i++) {
