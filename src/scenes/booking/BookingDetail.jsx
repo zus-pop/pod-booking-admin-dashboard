@@ -72,7 +72,7 @@ const BookingDetail = () => {
   const [selectedSlotId, setSelectedSlotId] = useState(null);
 
   // Thêm state để quản lý thời gian đếm ngược
-  const [countdown, setCountdown] = useState(600); // 600 seconds = 10 minutes
+  const [countdown, setCountdown] = useState(600); 
 
   // Thêm states mới
   const [paymentDetails, setPaymentDetails] = useState({});
