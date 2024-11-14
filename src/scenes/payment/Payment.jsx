@@ -574,7 +574,7 @@ const Payment = () => {
               {selectedPayment?.payment_for === "Slot" && (
                 <Box>
                   {paymentDetails.map((slot) => {
-                    const isSlotExpired = new Date() > new Date(slot.end_time);
+                    const isSlotExpired = new Date() > new Date(slot.end_time) || slot.status !== "Not Yet";
                     return (
                       <Box
                         key={slot.slot_id}
